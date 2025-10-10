@@ -1,0 +1,491 @@
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Plus, 
+  Edit3, 
+  Trash2, 
+  Search,
+  Filter,
+  CheckCircle,
+  Circle,
+  Clock,
+  AlertCircle,
+  User,
+  Calendar,
+  Tag,
+  MoreHorizontal,
+  Eye,
+  EyeOff
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: "todo" | "in-progress" | "review" | "done";
+  priority: "low" | "medium" | "high" | "urgent";
+  assignee: string;
+  assigneeAvatar?: string;
+  dueDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  tags: string[];
+  projectId?: string;
+  subtasks?: Task[];
+  visibility: "public" | "team" | "private";
+}
+
+interface ViewableTasksProps {
+  projectId?: string;
+  currentUser?: string;
+}
+
+const mockTasks: Task[] = [
+  {
+    id: "t1",
+    title: "Design System Implementation",
+    description: "Create and implement a comprehensive design system for the application",
+    status: "in-progress",
+    priority: "high",
+    assignee: "Emily Johnson",
+    assigneeAvatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face",
+    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    tags: ["design", "frontend", "ui"],
+    projectId: "p1",
+    visibility: "team",
+    subtasks: [
+      {
+        id: "t1-1",
+        title: "Create color palette",
+        description: "Define primary and secondary colors",
+        status: "done",
+        priority: "medium",
+        assignee: "Emily Johnson",
+        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        tags: ["design"],
+        projectId: "p1",
+        visibility: "team"
+      },
+      {
+        id: "t1-2",
+        title: "Typography guidelines",
+        description: "Define font families and sizing",
+        status: "in-progress",
+        priority: "medium",
+        assignee: "Emily Johnson",
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        tags: ["design"],
+        projectId: "p1",
+        visibility: "team"
+      }
+    ]
+  },
+  {
+    id: "t2",
+    title: "API Integration",
+    description: "Integrate with third-party APIs for data synchronization",
+    status: "todo",
+    priority: "high",
+    assignee: "Mike Rodriguez",
+    assigneeAvatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face",
+    dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    tags: ["backend", "api", "integration"],
+    projectId: "p1",
+    visibility: "team"
+  },
+  {
+    id: "t3",
+    title: "User Authentication",
+    description: "Implement secure user authentication and authorization",
+    status: "review",
+    priority: "urgent",
+    assignee: "Sarah Chen",
+    assigneeAvatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=32&h=32&fit=crop&crop=face",
+    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    tags: ["security", "auth", "backend"],
+    projectId: "p1",
+    visibility: "team"
+  },
+  {
+    id: "t4",
+    title: "Mobile Responsiveness",
+    description: "Ensure the application works well on mobile devices",
+    status: "todo",
+    priority: "medium",
+    assignee: "Emily Johnson",
+    assigneeAvatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face",
+    dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    tags: ["mobile", "responsive", "frontend"],
+    projectId: "p1",
+    visibility: "public"
+  }
+];
+
+export default function ViewableTasks({ projectId, currentUser = "Current User" }: ViewableTasksProps) {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | Task["status"]>("all");
+  const [priorityFilter, setPriorityFilter] = useState<"all" | Task["priority"]>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
+
+  // Load tasks from localStorage or use mock data
+  useEffect(() => {
+    const savedTasks = localStorage.getItem('viewableTasks');
+    if (savedTasks) {
+      const parsedTasks = JSON.parse(savedTasks).map((task: Task & { createdAt: string; updatedAt: string; dueDate?: string }) => ({
+        ...task,
+        createdAt: new Date(task.createdAt),
+        updatedAt: new Date(task.updatedAt),
+        dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+        subtasks: task.subtasks?.map((subtask: Task & { createdAt: string; updatedAt: string }) => ({
+          ...subtask,
+          createdAt: new Date(subtask.createdAt),
+          updatedAt: new Date(subtask.updatedAt)
+        }))
+      }));
+      setTasks(parsedTasks);
+    } else {
+      setTasks(mockTasks);
+    }
+  }, []);
+
+  // Filter tasks
+  useEffect(() => {
+    let filtered = tasks;
+
+    if (projectId) {
+      filtered = filtered.filter(task => task.projectId === projectId);
+    }
+
+    if (searchQuery) {
+      filtered = filtered.filter(task =>
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        task.assignee.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(task => task.status === statusFilter);
+    }
+
+    if (priorityFilter !== "all") {
+      filtered = filtered.filter(task => task.priority === priorityFilter);
+    }
+
+    if (assigneeFilter !== "all") {
+      filtered = filtered.filter(task => task.assignee === assigneeFilter);
+    }
+
+    if (selectedTag) {
+      filtered = filtered.filter(task => task.tags.includes(selectedTag));
+    }
+
+    setFilteredTasks(filtered);
+  }, [tasks, projectId, searchQuery, statusFilter, priorityFilter, assigneeFilter, selectedTag]);
+
+  // Get unique values for filters
+  const allTags = Array.from(new Set(tasks.flatMap(task => task.tags)));
+  const allAssignees = Array.from(new Set(tasks.map(task => task.assignee)));
+
+  const toggleTaskExpansion = (taskId: string) => {
+    const newExpanded = new Set(expandedTasks);
+    if (newExpanded.has(taskId)) {
+      newExpanded.delete(taskId);
+    } else {
+      newExpanded.add(taskId);
+    }
+    setExpandedTasks(newExpanded);
+  };
+
+  const getStatusColor = (status: Task["status"]) => {
+    switch (status) {
+      case "todo": return "bg-gray-100 text-gray-800";
+      case "in-progress": return "bg-blue-100 text-blue-800";
+      case "review": return "bg-yellow-100 text-yellow-800";
+      case "done": return "bg-green-100 text-green-800";
+    }
+  };
+
+  const getPriorityColor = (priority: Task["priority"]) => {
+    switch (priority) {
+      case "low": return "bg-gray-100 text-gray-800";
+      case "medium": return "bg-blue-100 text-blue-800";
+      case "high": return "bg-orange-100 text-orange-800";
+      case "urgent": return "bg-red-100 text-red-800";
+    }
+  };
+
+  const getStatusIcon = (status: Task["status"]) => {
+    switch (status) {
+      case "todo": return <Circle className="w-4 h-4" />;
+      case "in-progress": return <Clock className="w-4 h-4" />;
+      case "review": return <Eye className="w-4 h-4" />;
+      case "done": return <CheckCircle className="w-4 h-4" />;
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
+  const getDaysUntilDue = (dueDate: Date) => {
+    const now = new Date();
+    const diffTime = dueDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const getTaskProgress = (task: Task) => {
+    if (!task.subtasks || task.subtasks.length === 0) {
+      return task.status === "done" ? 100 : task.status === "in-progress" ? 50 : 0;
+    }
+    
+    const completedSubtasks = task.subtasks.filter(subtask => subtask.status === "done").length;
+    return Math.round((completedSubtasks / task.subtasks.length) * 100);
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-2">Viewable Tasks</h2>
+        <p className="text-muted-foreground">
+          {projectId ? "Project tasks and progress tracking" : "Team tasks and progress tracking"}
+        </p>
+      </div>
+
+      {/* Controls */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="flex gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-none">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full sm:w-64"
+            />
+          </div>
+        </div>
+
+        <Button variant="outline" className="w-full sm:w-auto">
+          <Plus className="w-4 h-4 mr-2" />
+          New Task
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Status:</span>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+            className="px-3 py-1 border rounded-md text-sm"
+          >
+            <option value="all">All</option>
+            <option value="todo">To Do</option>
+            <option value="in-progress">In Progress</option>
+            <option value="review">Review</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Priority:</span>
+          <select
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value as typeof priorityFilter)}
+            className="px-3 py-1 border rounded-md text-sm"
+          >
+            <option value="all">All</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Assignee:</span>
+          <select
+            value={assigneeFilter}
+            onChange={(e) => setAssigneeFilter(e.target.value)}
+            className="px-3 py-1 border rounded-md text-sm"
+          >
+            <option value="all">All</option>
+            {allAssignees.map(assignee => (
+              <option key={assignee} value={assignee}>{assignee}</option>
+            ))}
+          </select>
+        </div>
+
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <span className="text-sm text-muted-foreground mr-2">Tags:</span>
+            {allTags.map(tag => (
+              <Badge
+                key={tag}
+                variant={selectedTag === tag ? "default" : "secondary"}
+                className="cursor-pointer hover:bg-primary/10"
+                onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+              >
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Tasks List */}
+      <div className="space-y-4">
+        {filteredTasks.map(task => {
+          const progress = getTaskProgress(task);
+          const daysUntilDue = task.dueDate ? getDaysUntilDue(task.dueDate) : null;
+          const isOverdue = daysUntilDue !== null && daysUntilDue < 0;
+          const isExpanded = expandedTasks.has(task.id);
+
+          return (
+            <Card key={task.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(task.status)}
+                      <CardTitle className="text-lg leading-tight">{task.title}</CardTitle>
+                    </div>
+                    <div className="flex gap-2 ml-auto">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => toggleTaskExpansion(task.id)}
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center gap-4">
+                    <Badge className={cn("text-xs", getStatusColor(task.status))}>
+                      {task.status.replace("-", " ")}
+                    </Badge>
+                    <Badge className={cn("text-xs", getPriorityColor(task.priority))}>
+                      {task.priority}
+                    </Badge>
+                    {task.dueDate && (
+                      <div className={cn(
+                        "flex items-center gap-1 text-xs",
+                        isOverdue ? "text-red-600" : daysUntilDue !== null && daysUntilDue <= 3 ? "text-yellow-600" : "text-muted-foreground"
+                      )}>
+                        <Calendar className="w-3 h-3" />
+                        {isOverdue ? `Overdue by ${Math.abs(daysUntilDue)} days` : 
+                         daysUntilDue === 0 ? "Due today" :
+                         daysUntilDue === 1 ? "Due tomorrow" :
+                         `Due in ${daysUntilDue} days`}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {task.assigneeAvatar && (
+                      <img 
+                        src={task.assigneeAvatar} 
+                        alt={task.assignee}
+                        className="w-6 h-6 rounded-full"
+                      />
+                    )}
+                    <span className="text-sm text-muted-foreground">{task.assignee}</span>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="pt-0">
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                  {task.description}
+                </p>
+                
+                {/* Progress Bar */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Progress</span>
+                    <span className="text-sm text-muted-foreground">{progress}%</span>
+                  </div>
+                  <Progress value={progress} className="h-2" />
+                </div>
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {task.tags.map(tag => (
+                    <Badge key={tag} variant="secondary" className="text-xs">
+                      <Tag className="w-3 h-3 mr-1" />
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+
+                {/* Subtasks */}
+                {task.subtasks && task.subtasks.length > 0 && isExpanded && (
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="text-sm font-medium mb-3">Subtasks ({task.subtasks.length})</h4>
+                    <div className="space-y-2">
+                      {task.subtasks.map(subtask => (
+                        <div key={subtask.id} className="flex items-center gap-3 p-2 bg-secondary/50 rounded-md">
+                          {getStatusIcon(subtask.status)}
+                          <span className="text-sm flex-1">{subtask.title}</span>
+                          <Badge className={cn("text-xs", getStatusColor(subtask.status))}>
+                            {subtask.status.replace("-", " ")}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {filteredTasks.length === 0 && (
+        <div className="text-center py-12">
+          <CheckCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium mb-2">No tasks found</h3>
+          <p className="text-muted-foreground mb-4">
+            {searchQuery || statusFilter !== "all" || priorityFilter !== "all" || assigneeFilter !== "all" || selectedTag
+              ? "Try adjusting your search or filter criteria."
+              : "No tasks have been created yet."
+            }
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

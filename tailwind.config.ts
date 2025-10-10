@@ -88,6 +88,22 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.5" },
         },
+        "float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-4px)" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { boxShadow: "0 0 0 0 hsl(213 94% 68% / 0.4)" },
+          "50%": { boxShadow: "0 0 0 8px hsl(213 94% 68% / 0)" },
+        },
+        "shimmer": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
+        "fade-in-up": {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -96,8 +112,15 @@ export default {
         "scale-in": "scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
         "slide-in": "slide-in 0.4s ease-out",
         "glow": "glow 2s ease-in-out infinite",
+        "float": "float 3s ease-in-out infinite",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "shimmer": "shimmer 2s ease-in-out infinite",
+        "fade-in-up": "fade-in-up 0.5s ease-out",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require("tailwindcss-animate")
+  ],
 } satisfies Config;
