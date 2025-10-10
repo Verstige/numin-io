@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import NovaShowcase from "./NovaShowcase";
 import { 
   ArrowRight, 
   Sparkles, 
@@ -294,6 +295,9 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Nova AI Showcase */}
+      <NovaShowcase />
 
       {/* Features Section */}
       <section id="features" className="relative z-10 px-6 py-20">
