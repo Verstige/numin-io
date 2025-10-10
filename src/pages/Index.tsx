@@ -13,7 +13,8 @@ import BuiltInNotes from "@/components/BuiltInNotes";
 import ViewableTasks from "@/components/ViewableTasks";
 import TeamManagement from "@/components/TeamManagement";
 import TimeTracker from "@/components/TimeTracker";
-import RenaChatInterface from "@/components/RenaChatInterface";
+import NovaChatInterface from "@/components/NovaChatInterface";
+import ResourcesSection from "@/components/ResourcesSection";
 import { mockTeamMembers, mockActivityFeed, type TeamMember, type ActivityItem } from "@/lib/collaboration";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -621,11 +622,11 @@ export default function Index() {
             </p>
           </div>
 
-          {/* Rena AI Chat Interface */}
+          {/* Nova AI Chat Interface */}
           <div className="mb-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <RenaChatInterface 
+            <NovaChatInterface 
               userName="Julylyan"
-              onSendMessage={(message) => console.log("Rena AI Message:", message)}
+              onSendMessage={(message) => console.log("Nova AI Message:", message)}
             />
           </div>
 
@@ -716,7 +717,17 @@ export default function Index() {
           </div>
         </div>
 
-          {/* Activity Feed - below the project overview */}
+          {/* Resources Section - below the project overview */}
+          <div className="mt-8 animate-fade-in" style={{ animationDelay: "0.35s" }}>
+            <div className="max-w-4xl mx-auto">
+              <ResourcesSection 
+                projectId={activeProject?.id} 
+                projectName={activeProject?.name}
+              />
+            </div>
+          </div>
+
+          {/* Activity Feed - below the resources */}
           <div className="mt-8 animate-fade-in" style={{ animationDelay: "0.4s" }}>
             <div className="max-w-4xl mx-auto">
             <ActivityFeed 

@@ -1,6 +1,6 @@
-# Rena AI - Netlify Deployment Guide
+# Nexus AI - Netlify Deployment Guide
 
-This guide will help you deploy the Rena AI project to Netlify.
+This guide will help you deploy the Nexus AI project to Netlify.
 
 ## 🚀 Quick Deploy
 

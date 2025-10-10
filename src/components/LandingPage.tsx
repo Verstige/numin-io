@@ -76,12 +76,12 @@ const LandingPage = () => {
       description: "Team management, activity feeds, and real-time collaboration tools",
       color: "from-blue-500 to-blue-600"
     },
-    {
-      icon: MessageSquare,
-      title: "AI Chat",
-      description: "Intelligent project assistant with voice input and smart suggestions",
-      color: "from-blue-500 to-blue-600"
-    }
+            {
+              icon: MessageSquare,
+              title: "Nova AI",
+              description: "Your intelligent project companion with voice input and smart suggestions",
+              color: "from-blue-500 to-blue-600"
+            }
   ];
 
   const stats = [
@@ -185,12 +185,12 @@ const LandingPage = () => {
       {/* Navigation */}
       <nav className="relative z-10 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Network className="w-8 h-8 text-blue-400" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-              Rena AI
-            </span>
-          </div>
+                  <div className="flex items-center space-x-2">
+                    <Network className="w-8 h-8 text-blue-400" />
+                    <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                      Nexus AI
+                    </span>
+                  </div>
           <div className="hidden md:flex items-center space-x-8">
             <a href="#features" className="hover:text-blue-400 transition-colors">Features</a>
             <a href="#testimonials" className="hover:text-blue-400 transition-colors">Testimonials</a>
@@ -215,17 +215,17 @@ const LandingPage = () => {
               Mapping Things Together
             </Badge>
             
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Map Your
-              <span className="block bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 bg-clip-text text-transparent">
-                Project Universe
-              </span>
-            </h1>
-            
-            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Connect projects, tasks, and systems in one unified ProjectMap. 
-              See how everything works together with Rena AI's intelligent mapping platform.
-            </p>
+                    <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                      Where Everything
+                      <span className="block bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 bg-clip-text text-transparent">
+                        Connects
+                      </span>
+                    </h1>
+                    
+                    <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+                      Connect projects, tasks, and systems in one unified ProjectMap. 
+                      See how everything works together with Nexus AI's intelligent mapping platform.
+                    </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <Button 
@@ -299,15 +299,15 @@ const LandingPage = () => {
       <section id="features" className="relative z-10 px-6 py-20">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Everything Connected in
-              <span className="block bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-                One Platform
-              </span>
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              From ProjectMaps to time tracking, task management to AI chat - all your tools work together seamlessly.
-            </p>
+                      <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                        Everything Connected in
+                        <span className="block bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                          Nexus AI
+                        </span>
+                      </h2>
+                      <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+                        From ProjectMaps to time tracking, task management to Nova AI - all your tools work together seamlessly.
+                      </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -389,15 +389,15 @@ const LandingPage = () => {
         <div className="max-w-4xl mx-auto text-center">
           <Card className="bg-gradient-to-r from-blue-500/20 to-blue-600/20 backdrop-blur-md border-blue-500/30">
             <CardContent className="p-12">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                Ready to Map Your
-                <span className="block bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-                  Project Universe?
-                </span>
-              </h2>
-              <p className="text-xl text-gray-300 mb-8">
-                Join teams already using Rena AI to connect, visualize, and scale their project ecosystems.
-              </p>
+                      <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                        Ready to Connect
+                        <span className="block bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                          Everything?
+                        </span>
+                      </h2>
+                      <p className="text-xl text-gray-300 mb-8">
+                        Join teams already using Nexus AI to connect, visualize, and scale their project ecosystems.
+                      </p>
               <Button 
                 size="lg"
                 onClick={() => window.location.href = '/workspace'}
@@ -415,15 +415,15 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="relative z-10 px-6 py-12 border-t border-white/10">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Network className="w-6 h-6 text-blue-400" />
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-              Rena AI
-            </span>
-          </div>
-          <p className="text-gray-400 mb-4">
-            Mapping the future of project management
-          </p>
+                  <div className="flex items-center justify-center space-x-2 mb-4">
+                    <Network className="w-6 h-6 text-blue-400" />
+                    <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                      Nexus AI
+                    </span>
+                  </div>
+                  <p className="text-gray-400 mb-4">
+                    Where Everything Connects
+                  </p>
           <div className="flex justify-center space-x-6 text-gray-400">
             <a href="#" className="hover:text-blue-400 transition-colors">Privacy</a>
             <a href="#" className="hover:text-blue-400 transition-colors">Terms</a>
