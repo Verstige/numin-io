@@ -32,40 +32,9 @@ interface Project {
   priority: "low" | "medium" | "high";
 }
 
-const initialProjects: Project[] = [
-  {
-    id: "p1",
-    name: "VitaTech",
-    description: "Early stage wellness wearable focused on contactless biometrics. Priority: investor one-pager due Oct 20.",
-    status: "Active",
-    priority: "high"
-  },
-  {
-    id: "p2",
-    name: "Velocity",
-    description: "SaaS platform for startup collaboration. Building MVP, seeking product-market fit.",
-    status: "Planning",
-    priority: "medium"
-  },
-  {
-    id: "p3",
-    name: "Verstige",
-    description: "Web3 identity verification for enterprise. Pilot program with 3 companies.",
-    status: "Active",
-    priority: "high"
-  }
-];
+// Mock data removed - users start with empty workspace
 
-const mindmapNodes = [
-  { id: "n1", x: 300, y: 200, r: 26, title: "VitaTech", projectId: "p1" },
-  { id: "n2", x: 600, y: 120, r: 22, title: "Velocity", projectId: "p2" },
-  { id: "n3", x: 900, y: 300, r: 24, title: "Verstige", projectId: "p3" },
-];
-
-const mindmapEdges = [
-  { from: "n1", to: "n2" },
-  { from: "n2", to: "n3" },
-];
+// Mock mindmap data removed - users start with empty mindmap
 
 export default function Index() {
   const { profile } = useAuth();
@@ -259,8 +228,8 @@ export default function Index() {
                   <MindmapSkeleton />
                 ) : projects.length > 0 ? (
                   <RenaMindmap
-                    nodes={mindmapNodes}
-                    edges={mindmapEdges}
+                    nodes={[]}
+                    edges={[]}
                     onOpenProject={handleOpenProject}
                     activeProjectId={activeProject?.id}
                   />
@@ -274,8 +243,8 @@ export default function Index() {
               notesContent={<BuiltInNotes projectId={activeProject?.id} currentUser={getUserDisplayName(profile)} />}
               tasksContent={<ViewableTasks projectId={activeProject?.id} currentUser={getUserDisplayName(profile)} />}
               teamContent={<TeamManagement />}
-              taskNotifications={3}
-              teamNotifications={1}
+              taskNotifications={0}
+              teamNotifications={0}
             />
           </div>
 
@@ -388,11 +357,11 @@ export default function Index() {
               description: p.description,
               status: p.status,
               priority: p.priority,
-              tasksCompleted: Math.floor(Math.random() * 20),
-              tasksTotal: Math.floor(Math.random() * 30) + 10,
-              teamMembers: Math.floor(Math.random() * 5) + 1,
-              daysUntilDeadline: Math.floor(Math.random() * 30) + 5,
-              weeklyProgress: Math.floor(Math.random() * 100)
+              tasksCompleted: 0,
+              tasksTotal: 0,
+              teamMembers: 0,
+              daysUntilDeadline: 0,
+              weeklyProgress: 0
             }))}
             teamMembers={teamMembers}
           />

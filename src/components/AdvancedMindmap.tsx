@@ -976,7 +976,7 @@ export default function AdvancedMindmap({
               background: "linear-gradient(135deg, hsl(120 60% 50%), hsl(100 70% 40%))",
               border: "none"
             }}
-            title="Add New Brand"
+            title="Add New Business"
           >
             <Sparkles className="w-5 h-5" />
           </Button>
@@ -998,21 +998,21 @@ export default function AdvancedMindmap({
         </div>
       </div>
 
-      {/* Add New Brand Modal */}
+      {/* Add New Business Modal */}
       {isAddingNewBrand && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Card className="w-full max-w-md mx-4">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
-                Add New Brand
+                Add New Business
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Brand Name</label>
+                <label className="text-sm font-medium mb-2 block">Business Name</label>
                 <Input
-                  placeholder="Enter brand name..."
+                  placeholder="Enter business name..."
                   value={newBrand.title}
                   onChange={(e) => setNewBrand(prev => ({ ...prev, title: e.target.value }))}
                 />
@@ -1033,7 +1033,7 @@ export default function AdvancedMindmap({
                   className="flex-1"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Create Brand
+                  Create Business
                 </Button>
                 <Button 
                   variant="outline" 

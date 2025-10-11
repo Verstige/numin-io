@@ -62,155 +62,17 @@ export interface InvitationFormData {
 }
 
 // Mock team members data
-export const mockTeamMembers: TeamMember[] = [
-  {
-    id: "u1",
-    name: "Sarah Chen",
-    email: "sarah@company.com",
-    role: "owner",
-    status: "online",
-    lastActive: new Date(),
-    projects: ["p1", "p2", "p3"]
-  },
-  {
-    id: "u2", 
-    name: "Marcus Johnson",
-    email: "marcus@company.com",
-    role: "admin",
-    status: "away",
-    lastActive: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-    projects: ["p1", "p2"]
-  },
-  {
-    id: "u3",
-    name: "Elena Rodriguez",
-    email: "elena@company.com", 
-    role: "member",
-    status: "online",
-    lastActive: new Date(),
-    projects: ["p2", "p3"]
-  },
-  {
-    id: "u4",
-    name: "David Kim",
-    email: "david@company.com",
-    role: "member", 
-    status: "offline",
-    lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    projects: ["p1"]
-  }
-];
+// Mock team members data - empty for new users
+export const mockTeamMembers: TeamMember[] = [];
 
-// Mock activity feed data
-export const mockActivityFeed: ActivityItem[] = [
-  {
-    id: "a1",
-    type: "task_completed",
-    userId: "u1",
-    userName: "Sarah Chen",
-    projectId: "p1",
-    projectName: "VitaTech",
-    description: "completed task 'Design user interface mockups'",
-    timestamp: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
-    metadata: { taskName: "Design user interface mockups" }
-  },
-  {
-    id: "a2",
-    type: "status_changed",
-    userId: "u2",
-    userName: "Marcus Johnson", 
-    projectId: "p2",
-    projectName: "Velocity",
-    description: "changed project status from Planning to Active",
-    timestamp: new Date(Date.now() - 45 * 60 * 1000), // 45 minutes ago
-    metadata: { oldStatus: "Planning", newStatus: "Active" }
-  },
-  {
-    id: "a3",
-    type: "member_added",
-    userId: "u1",
-    userName: "Sarah Chen",
-    projectId: "p3",
-    projectName: "Verstige",
-    description: "added Elena Rodriguez to the project",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    metadata: { addedMember: "Elena Rodriguez" }
-  },
-  {
-    id: "a4",
-    type: "deadline_approaching",
-    userId: "system",
-    userName: "Nexus",
-    projectId: "p1", 
-    projectName: "VitaTech",
-    description: "deadline approaching in 3 days",
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
-    metadata: { daysRemaining: 3 }
-  },
-  {
-    id: "a5",
-    type: "milestone_reached",
-    userId: "u3",
-    userName: "Elena Rodriguez",
-    projectId: "p2",
-    projectName: "Velocity", 
-    description: "reached milestone 'MVP Development Complete'",
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-    metadata: { milestoneName: "MVP Development Complete" }
-  }
-];
+// Mock activity feed data - empty for new users
+export const mockActivityFeed: ActivityItem[] = [];
 
-// Mock mentions data
-export const mockMentions: Mention[] = [
-  {
-    id: "m1",
-    userId: "u1",
-    userName: "Sarah Chen",
-    timestamp: new Date(Date.now() - 30 * 60 * 1000),
-    read: false,
-    context: "Hey @Sarah, can you review the VitaTech mockups by tomorrow?"
-  },
-  {
-    id: "m2", 
-    userId: "u2",
-    userName: "Marcus Johnson",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    read: true,
-    context: "@Marcus, the Velocity project is ready for your approval"
-  }
-];
+// Mock mentions data - empty for new users
+export const mockMentions: Mention[] = [];
 
-// Mock invitations data
-export const mockInvitations: TeamInvitation[] = [
-  {
-    id: "inv1",
-    email: "alex@company.com",
-    name: "Alex Thompson",
-    role: "member",
-    invitedBy: "u1",
-    invitedByName: "Sarah Chen",
-    status: "pending",
-    token: "inv_abc123xyz",
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-    expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
-    phone: "+1 (555) 789-0123",
-    department: "Engineering"
-  },
-  {
-    id: "inv2",
-    email: "maria@company.com",
-    name: "Maria Garcia",
-    role: "viewer",
-    projectId: "p1",
-    invitedBy: "u2",
-    invitedByName: "Marcus Johnson",
-    status: "pending",
-    token: "inv_def456uvw",
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-    expiresAt: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000), // 6 days from now
-    department: "Design"
-  }
-];
+// Mock invitations data - empty for new users
+export const mockInvitations: TeamInvitation[] = [];
 
 // Utility functions
 export function getTeamMembersForProject(projectId: string, allMembers: TeamMember[]): TeamMember[] {

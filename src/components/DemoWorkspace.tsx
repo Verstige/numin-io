@@ -202,8 +202,8 @@ export default function DemoWorkspace() {
             notesContent={<BuiltInNotes projectId={activeProject?.id} />}
             tasksContent={<ViewableTasks projectId={activeProject?.id} currentUser="Demo User" />}
             teamContent={<TeamManagement />}
-            taskNotifications={3}
-            teamNotifications={1}
+            taskNotifications={0}
+            teamNotifications={0}
           />
 
           {/* Content based on current tab */}

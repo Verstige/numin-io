@@ -32,35 +32,8 @@ interface PersonalNotesProps {
   projectId?: string;
 }
 
-const mockNotes: PersonalNote[] = [
-  {
-    id: "n1",
-    title: "Meeting Notes - Q4 Planning",
-    content: "Key discussion points:\n• Budget allocation for new features\n• Timeline for MVP launch\n• Team expansion plans\n\nAction items:\n- [ ] Review competitor analysis\n- [ ] Prepare investor deck\n- [ ] Schedule follow-up meeting",
-    tags: ["meeting", "planning", "q4"],
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    projectId: "p1"
-  },
-  {
-    id: "n2",
-    title: "Ideas for Feature Enhancement",
-    content: "Random thoughts on improving user experience:\n\n1. Add dark mode toggle\n2. Implement keyboard shortcuts\n3. Better mobile responsiveness\n4. Real-time collaboration features",
-    tags: ["ideas", "ux", "features"],
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    projectId: "p2"
-  },
-  {
-    id: "n3",
-    title: "Research - Market Analysis",
-    content: "Market research findings:\n\nTarget audience: 25-45 years old professionals\nKey competitors: Asana, Monday.com, Notion\nPricing strategy: Freemium model\n\nNext steps:\n- Validate assumptions with user interviews\n- Create competitive analysis document",
-    tags: ["research", "market", "analysis"],
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-    projectId: "p3"
-  }
-];
+// Mock notes data removed - users start with empty notes
+const mockNotes: PersonalNote[] = [];
 
 export default function PersonalNotes({ projectId }: PersonalNotesProps) {
   const [notes, setNotes] = useState<PersonalNote[]>([]);

@@ -65,108 +65,23 @@ interface TeamStats {
   completedTasks: number;
 }
 
-const mockTeamMembers: ExtendedTeamMember[] = [
-  {
-    id: "tm1",
-    name: "Sarah Chen",
-    email: "sarah@company.com",
-    role: "owner",
-    status: "active",
-    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=64&h=64&fit=crop&crop=face",
-    phone: "+1 (555) 123-4567",
-    department: "Product Management",
-    joinedAt: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
-    lastActive: new Date(Date.now() - 30 * 60 * 1000),
-    projects: 5,
-    tasksCompleted: 127,
-    tasksAssigned: 15,
-    performance: 95,
-    timezone: "PST"
-  },
-  {
-    id: "tm2",
-    name: "Mike Rodriguez",
-    email: "mike@company.com",
-    role: "admin",
-    status: "active",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face",
-    phone: "+1 (555) 234-5678",
-    department: "Engineering",
-    joinedAt: new Date(Date.now() - 300 * 24 * 60 * 60 * 1000),
-    lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    projects: 3,
-    tasksCompleted: 89,
-    tasksAssigned: 8,
-    performance: 88,
-    timezone: "EST"
-  },
-  {
-    id: "tm3",
-    name: "Emily Johnson",
-    email: "emily@company.com",
-    role: "member",
-    status: "active",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=64&h=64&fit=crop&crop=face",
-    phone: "+1 (555) 345-6789",
-    department: "Design",
-    joinedAt: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000),
-    lastActive: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    projects: 2,
-    tasksCompleted: 45,
-    tasksAssigned: 6,
-    performance: 92,
-    timezone: "PST"
-  },
-  {
-    id: "tm4",
-    name: "David Park",
-    email: "david@company.com",
-    role: "member",
-    status: "pending",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face",
-    phone: "+1 (555) 456-7890",
-    department: "Marketing",
-    joinedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    lastActive: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    projects: 0,
-    tasksCompleted: 0,
-    tasksAssigned: 0,
-    performance: 0,
-    timezone: "CST"
-  },
-  {
-    id: "tm5",
-    name: "Lisa Wang",
-    email: "lisa@company.com",
-    role: "viewer",
-    status: "active",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop&crop=face",
-    phone: "+1 (555) 567-8901",
-    department: "Sales",
-    joinedAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-    lastActive: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    projects: 1,
-    tasksCompleted: 12,
-    tasksAssigned: 2,
-    performance: 75,
-    timezone: "EST"
-  }
-];
+// Mock team data removed - users start with empty team
 
-const mockStats: TeamStats = {
-  totalMembers: 5,
-  activeMembers: 4,
-  pendingInvites: 1,
-  averagePerformance: 85,
-  totalProjects: 11,
-  completedTasks: 273
+// Mock stats removed - users start with empty stats
+const emptyStats: TeamStats = {
+  totalMembers: 0,
+  activeMembers: 0,
+  pendingInvites: 0,
+  averagePerformance: 0,
+  totalProjects: 0,
+  completedTasks: 0
 };
 
 export default function TeamManagement() {
   const [members, setMembers] = useState<ExtendedTeamMember[]>([]);
   const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<ExtendedTeamMember[]>([]);
-  const [stats, setStats] = useState<TeamStats>(mockStats);
+  const [stats, setStats] = useState<TeamStats>(emptyStats);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | TeamMember["role"]>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | ExtendedTeamMember["status"]>("all");
@@ -196,7 +111,7 @@ export default function TeamManagement() {
       }));
       setMembers(parsedMembers);
     } else {
-      setMembers(mockTeamMembers);
+      setMembers([]); // Start with empty team for new users
     }
     
     if (savedInvitations) {
@@ -234,6 +149,27 @@ export default function TeamManagement() {
 
     setFilteredMembers(filtered);
   }, [members, searchQuery, roleFilter, statusFilter]);
+
+  // Calculate stats based on actual members and invitations
+  useEffect(() => {
+    const totalMembers = members.length;
+    const activeMembers = members.filter(member => member.status === "active").length;
+    const pendingInvites = invitations.filter(inv => inv.status === "pending").length;
+    const averagePerformance = totalMembers > 0 
+      ? Math.round(members.reduce((sum, member) => sum + member.performance, 0) / totalMembers)
+      : 0;
+    const totalProjects = members.reduce((sum, member) => sum + member.projects, 0);
+    const completedTasks = members.reduce((sum, member) => sum + member.tasksCompleted, 0);
+
+    setStats({
+      totalMembers,
+      activeMembers,
+      pendingInvites,
+      averagePerformance,
+      totalProjects,
+      completedTasks
+    });
+  }, [members, invitations]);
 
   const getRoleIcon = (role: TeamMember["role"]) => {
     switch (role) {
@@ -353,11 +289,7 @@ export default function TeamManagement() {
       setInvitationSuccess(true);
       setIsAddingMember(false);
       
-      // Update stats
-      setStats(prev => ({
-        ...prev,
-        pendingInvites: getPendingInvitations(updatedInvitations).length
-      }));
+      // Stats will be automatically updated by useEffect
       
     } catch (error) {
       setFormErrors(["Failed to send invitation. Please try again."]);
@@ -381,11 +313,7 @@ export default function TeamManagement() {
     setInvitations(updatedInvitations);
     localStorage.setItem('teamInvitations', JSON.stringify(updatedInvitations));
     
-    // Update stats
-    setStats(prev => ({
-      ...prev,
-      pendingInvites: getPendingInvitations(updatedInvitations).length
-    }));
+    // Stats will be automatically updated by useEffect
   };
 
   return (

@@ -49,16 +49,16 @@ export default function ProjectContextPanel({
   const [isSendingInvitation, setIsSendingInvitation] = useState(false);
   const [invitationSuccess, setInvitationSuccess] = useState(false);
 
-  // Mock data - in real app this would come from props or API
+  // Start with empty stats for new users - data will be populated as users create content
   const mockStats = {
-    tasksCompleted: 12,
-    tasksTotal: 18,
-    teamMembers: 3,
-    daysUntilDeadline: 15,
-    weeklyProgress: 75
+    tasksCompleted: 0,
+    tasksTotal: 0,
+    teamMembers: 0,
+    daysUntilDeadline: 0,
+    weeklyProgress: 0
   };
 
-  const progressPercentage = (mockStats.tasksCompleted / mockStats.tasksTotal) * 100;
+  const progressPercentage = mockStats.tasksTotal > 0 ? (mockStats.tasksCompleted / mockStats.tasksTotal) * 100 : 0;
 
   const priorityColors = {
     low: "bg-muted text-muted-foreground",
@@ -174,7 +174,7 @@ export default function ProjectContextPanel({
           <div className="space-y-1">
             <Progress value={progressPercentage} className="h-2" />
             <p className="text-sm font-semibold text-card-foreground">
-              {mockStats.tasksCompleted}/{mockStats.tasksTotal} tasks
+              {mockStats.tasksTotal > 0 ? `${mockStats.tasksCompleted}/${mockStats.tasksTotal} tasks` : 'No tasks yet'}
             </p>
           </div>
         </Card>
@@ -211,7 +211,7 @@ export default function ProjectContextPanel({
             <span className="text-xs font-medium text-muted-foreground">Deadline</span>
           </div>
           <p className="text-sm font-semibold text-card-foreground">
-            {mockStats.daysUntilDeadline} days
+            {mockStats.daysUntilDeadline > 0 ? `${mockStats.daysUntilDeadline} days` : 'No deadline set'}
           </p>
         </Card>
 
@@ -221,7 +221,7 @@ export default function ProjectContextPanel({
             <span className="text-xs font-medium text-muted-foreground">Velocity</span>
           </div>
           <p className="text-sm font-semibold text-card-foreground">
-            {mockStats.weeklyProgress}%
+            {mockStats.weeklyProgress > 0 ? `${mockStats.weeklyProgress}%` : 'No activity yet'}
           </p>
         </Card>
       </div>

@@ -53,86 +53,21 @@ interface SystemLog {
   action?: string;
 }
 
+// Mock admin stats removed - users start with empty stats
 const mockStats: AdminStats = {
-  totalUsers: 24,
-  activeUsers: 18,
-  totalProjects: 12,
-  completedProjects: 8,
-  storageUsed: 2.3,
+  totalUsers: 0,
+  activeUsers: 0,
+  totalProjects: 0,
+  completedProjects: 0,
+  storageUsed: 0,
   storageLimit: 10
 };
 
-const mockUsers: User[] = [
-  {
-    id: "u1",
-    name: "Sarah Chen",
-    email: "sarah@company.com",
-    role: "owner",
-    status: "active",
-    lastActive: new Date(Date.now() - 30 * 60 * 1000),
-    projects: 5
-  },
-  {
-    id: "u2",
-    name: "Mike Rodriguez",
-    email: "mike@company.com",
-    role: "admin",
-    status: "active",
-    lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    projects: 3
-  },
-  {
-    id: "u3",
-    name: "Emily Johnson",
-    email: "emily@company.com",
-    role: "member",
-    status: "active",
-    lastActive: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    projects: 2
-  },
-  {
-    id: "u4",
-    name: "David Park",
-    email: "david@company.com",
-    role: "member",
-    status: "pending",
-    lastActive: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    projects: 0
-  }
-];
+// Mock users data removed - users start with empty user list
+const mockUsers: User[] = [];
 
-const mockLogs: SystemLog[] = [
-  {
-    id: "l1",
-    timestamp: new Date(Date.now() - 5 * 60 * 1000),
-    level: "info",
-    message: "User Sarah Chen created new project 'VitaTech'",
-    user: "Sarah Chen",
-    action: "project_created"
-  },
-  {
-    id: "l2",
-    timestamp: new Date(Date.now() - 15 * 60 * 1000),
-    level: "warning",
-    message: "High storage usage detected for project 'Velocity'",
-    action: "storage_warning"
-  },
-  {
-    id: "l3",
-    timestamp: new Date(Date.now() - 30 * 60 * 1000),
-    level: "info",
-    message: "User Mike Rodriguez updated project settings",
-    user: "Mike Rodriguez",
-    action: "settings_updated"
-  },
-  {
-    id: "l4",
-    timestamp: new Date(Date.now() - 45 * 60 * 1000),
-    level: "error",
-    message: "Failed to backup project data",
-    action: "backup_failed"
-  }
-];
+// Mock logs data removed - users start with empty logs
+const mockLogs: SystemLog[] = [];
 
 export default function AdminPanel() {
   const [stats, setStats] = useState<AdminStats>(mockStats);

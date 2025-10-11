@@ -251,9 +251,9 @@ const BatteryStatus: React.FC<BatteryStatusProps> = ({
         lastActivity: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
         teamMembers: project.teamMembers?.length || 1,
         tasks: {
-          total: Math.floor(Math.random() * 20) + 10,
-          completed: Math.floor(Math.random() * 15) + 5,
-          overdue: Math.floor(Math.random() * 3)
+          total: 0,
+          completed: 0,
+          overdue: 0
         },
         timeLogged: Math.floor(Math.random() * 200) + 50 // hours
       };
@@ -487,7 +487,7 @@ const BatteryStatus: React.FC<BatteryStatusProps> = ({
                             </span>
                             <span className="flex items-center gap-1">
                               <CheckSquare className="w-3 h-3" />
-                              {project.tasks.completed}/{project.tasks.total} tasks
+                              {project.tasks.total > 0 ? `${project.tasks.completed}/${project.tasks.total} tasks` : 'No tasks yet'}
                             </span>
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />

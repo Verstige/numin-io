@@ -15,7 +15,7 @@ import TeamManagement from "@/components/TeamManagement";
 import TimeTracker from "@/components/TimeTracker";
 import NovaChatInterface from "@/components/NovaChatInterface";
 import ResourcesSection from "@/components/ResourcesSection";
-import { mockTeamMembers, mockActivityFeed, type TeamMember, type ActivityItem } from "@/lib/collaboration";
+import { type TeamMember, type ActivityItem } from "@/lib/collaboration";
 import { useAuth } from "@/contexts/AuthContext";
 import NewUserWelcome from "@/components/NewUserWelcome";
 import { getUserDisplayName, getUserFirstName } from "@/lib/user-utils";
@@ -36,29 +36,7 @@ interface Project {
   priority: "low" | "medium" | "high";
 }
 
-const initialProjects: Project[] = [
-  {
-    id: "p1",
-    name: "VitaTech",
-    description: "Early stage wellness wearable focused on contactless biometrics. Priority: investor one-pager due Oct 20.",
-    status: "Active",
-    priority: "high"
-  },
-  {
-    id: "p2",
-    name: "Velocity",
-    description: "SaaS platform for startup collaboration. Building MVP, seeking product-market fit.",
-    status: "Planning",
-    priority: "medium"
-  },
-  {
-    id: "p3",
-    name: "Verstige",
-    description: "Web3 identity verification for enterprise. Pilot program with 3 companies.",
-    status: "Active",
-    priority: "high"
-  }
-];
+// Mock data removed - users start with empty workspace
 
 const mindmapNodes = [
   { 
@@ -387,10 +365,10 @@ export default function Index() {
     };
 
     // Get the rightmost node from current dynamic nodes
-    const currentNodes = dynamicMindmapNodes.length > 0 ? dynamicMindmapNodes : mindmapNodes;
-    const rightmostNode = currentNodes.reduce((prev, current) => 
+    const currentNodes = dynamicMindmapNodes.length > 0 ? dynamicMindmapNodes : [];
+    const rightmostNode = currentNodes.length > 0 ? currentNodes.reduce((prev, current) => 
       (prev.x > current.x) ? prev : current
-    );
+    ) : { x: 100, y: 100 }; // Default position for first node
     
     const newNode = {
       id: `n${Date.now()}`,
@@ -502,7 +480,7 @@ export default function Index() {
             setDynamicMindmapNodes(parsedNodes);
           }
         } else {
-          // All users start with empty workspace
+          // All users start with empty workspace (no mock data)
           if (mounted) {
             setProjects([]);
             setFilteredProjects([]);
@@ -861,8 +839,8 @@ export default function Index() {
                 }))}
               />
             }
-            taskNotifications={3}
-            teamNotifications={1}
+            taskNotifications={0}
+            teamNotifications={0}
             timerNotifications={0}
           />
 
@@ -873,7 +851,7 @@ export default function Index() {
                 <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl p-6 border border-primary/20 shadow-glass">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-3 h-3 bg-primary rounded-full animate-pulse" />
-                    <h2 className="text-xl font-bold text-primary">Project Overview</h2>
+                    <h2 className="text-xl font-bold text-primary">Business Ecosystem Overview</h2>
                     <Badge variant="outline" className="ml-auto">
                       {activeProject.name}
                     </Badge>

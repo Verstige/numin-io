@@ -37,41 +37,8 @@ interface BuiltInNotesProps {
   currentUser?: string;
 }
 
-const mockBuiltInNotes: BuiltInNote[] = [
-  {
-    id: "bn1",
-    title: "Project Kickoff Meeting",
-    content: "# Project Kickoff Notes\n\n## Attendees\n- Sarah Chen (PM)\n- Mike Rodriguez (Dev Lead)\n- Emily Johnson (Designer)\n\n## Key Decisions\n1. Use React + TypeScript for frontend\n2. Implement agile methodology\n3. Weekly standups on Mondays\n\n## Action Items\n- [ ] Set up development environment\n- [ ] Create project timeline\n- [ ] Schedule design review",
-    tags: ["meeting", "kickoff", "planning"],
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    visibility: "team",
-    author: "Sarah Chen",
-    projectId: "p1"
-  },
-  {
-    id: "bn2",
-    title: "Technical Architecture Overview",
-    content: "## System Architecture\n\n### Frontend\n- React 18 with TypeScript\n- Tailwind CSS for styling\n- Vite for build tooling\n\n### Backend\n- Node.js with Express\n- PostgreSQL database\n- Redis for caching\n\n### Deployment\n- Docker containers\n- AWS ECS for orchestration\n- CloudFront for CDN",
-    tags: ["architecture", "technical", "documentation"],
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    visibility: "team",
-    author: "Mike Rodriguez",
-    projectId: "p1"
-  },
-  {
-    id: "bn3",
-    title: "Design System Guidelines",
-    content: "## Design Principles\n\n### Colors\n- Primary: #3B82F6 (Blue)\n- Secondary: #10B981 (Green)\n- Accent: #F59E0B (Amber)\n\n### Typography\n- Headings: Inter Bold\n- Body: Inter Regular\n- Code: JetBrains Mono\n\n### Spacing\n- Base unit: 4px\n- Consistent 8px grid system",
-    tags: ["design", "guidelines", "system"],
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-    visibility: "public",
-    author: "Emily Johnson",
-    projectId: "p1"
-  }
-];
+// Mock notes data removed - users start with empty notes
+const mockBuiltInNotes: BuiltInNote[] = [];
 
 export default function BuiltInNotes({ projectId, currentUser = "Current User" }: BuiltInNotesProps) {
   const [notes, setNotes] = useState<BuiltInNote[]>([]);

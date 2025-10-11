@@ -16,7 +16,7 @@ export default function EmptyState({ type, onAction, actionText }: EmptyStatePro
           title: "Welcome to Nexus",
           subtitle: "Your AI-powered brand workspace is ready",
           description: "Create your first brand to get started with intelligent brand management, insights, and AI assistance.",
-          actionText: actionText || "Create Your First Brand",
+          actionText: actionText || "Get Started",
           showAction: true
         };
       
