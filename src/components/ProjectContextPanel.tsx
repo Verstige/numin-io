@@ -1,9 +1,21 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, Users, Target, Clock, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Calendar, Users, Target, Clock, TrendingUp, UserPlus, X, Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { TeamMemberList } from "./TeamMemberAvatar";
-import { type TeamMember } from "@/lib/collaboration";
+import { 
+  type TeamMember, 
+  type InvitationFormData,
+  validateInvitationForm,
+  createInvitation,
+  simulateEmailInvitation,
+  isEmailAlreadyInvited,
+  isEmailAlreadyMember
+} from "@/lib/collaboration";
 
 interface ProjectContextPanelProps {
   project: {
@@ -14,9 +26,29 @@ interface ProjectContextPanelProps {
     priority: "low" | "medium" | "high";
   };
   teamMembers?: TeamMember[];
+  allTeamMembers?: TeamMember[];
+  invitations?: any[];
+  onInviteMember?: (invitation: any) => void;
 }
 
-export default function ProjectContextPanel({ project, teamMembers = [] }: ProjectContextPanelProps) {
+export default function ProjectContextPanel({ 
+  project, 
+  teamMembers = [], 
+  allTeamMembers = [], 
+  invitations = [], 
+  onInviteMember 
+}: ProjectContextPanelProps) {
+  const [isInviting, setIsInviting] = useState(false);
+  const [invitationForm, setInvitationForm] = useState<InvitationFormData>({
+    name: "",
+    email: "",
+    role: "member",
+    projectId: project.id
+  });
+  const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [isSendingInvitation, setIsSendingInvitation] = useState(false);
+  const [invitationSuccess, setInvitationSuccess] = useState(false);
+
   // Mock data - in real app this would come from props or API
   const mockStats = {
     tasksCompleted: 12,
@@ -39,6 +71,77 @@ export default function ProjectContextPanel({ project, teamMembers = [] }: Proje
     "Active": "text-green-400",
     "Completed": "text-gray-400",
     "On Hold": "text-yellow-400"
+  };
+
+  const handleInviteToProject = () => {
+    setIsInviting(true);
+    setFormErrors([]);
+    setInvitationSuccess(false);
+    setInvitationForm({
+      name: "",
+      email: "",
+      role: "member",
+      projectId: project.id
+    });
+  };
+
+  const handleFormChange = (field: keyof InvitationFormData, value: string) => {
+    setInvitationForm(prev => ({ ...prev, [field]: value }));
+    setFormErrors([]);
+    setInvitationSuccess(false);
+  };
+
+  const handleSendProjectInvitation = async () => {
+    setFormErrors([]);
+    setIsSendingInvitation(true);
+    
+    // Validate form
+    const validation = validateInvitationForm(invitationForm);
+    if (!validation.isValid) {
+      setFormErrors(validation.errors);
+      setIsSendingInvitation(false);
+      return;
+    }
+    
+    // Check if email is already a member
+    if (isEmailAlreadyMember(invitationForm.email, allTeamMembers)) {
+      setFormErrors(["This email is already a team member"]);
+      setIsSendingInvitation(false);
+      return;
+    }
+    
+    // Check if email is already invited
+    if (isEmailAlreadyInvited(invitationForm.email, invitations)) {
+      setFormErrors(["This email has already been invited"]);
+      setIsSendingInvitation(false);
+      return;
+    }
+    
+    try {
+      // Create invitation
+      const newInvitation = createInvitation(
+        invitationForm,
+        "current-user-id", // In real app, get from auth context
+        "Current User" // In real app, get from auth context
+      );
+      
+      // Call parent handler if provided
+      if (onInviteMember) {
+        onInviteMember(newInvitation);
+      }
+      
+      // Simulate sending email
+      await simulateEmailInvitation(newInvitation);
+      
+      // Show success
+      setInvitationSuccess(true);
+      setIsInviting(false);
+      
+    } catch (error) {
+      setFormErrors(["Failed to send invitation. Please try again."]);
+    } finally {
+      setIsSendingInvitation(false);
+    }
   };
 
   return (
@@ -86,15 +189,17 @@ export default function ProjectContextPanel({ project, teamMembers = [] }: Proje
               members={teamMembers} 
               maxVisible={3}
               size="sm"
-              onAddMember={() => {
-                console.log('Add member to project:', project.name);
-              }}
+              showAddButton={true}
+              onAddMember={handleInviteToProject}
             />
           ) : (
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-muted border border-border flex items-center justify-center">
-                <span className="text-xs text-muted-foreground">+</span>
-              </div>
+              <button
+                onClick={handleInviteToProject}
+                className="w-6 h-6 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors cursor-pointer flex items-center justify-center"
+              >
+                <span className="text-xs font-medium">+</span>
+              </button>
               <span className="text-xs text-muted-foreground">No members</span>
             </div>
           )}
@@ -139,6 +244,105 @@ export default function ProjectContextPanel({ project, teamMembers = [] }: Proje
           </div>
         </div>
       </Card>
+
+      {/* Project Invitation Modal */}
+      {isInviting && (
+        <Card className="fixed inset-4 z-50 max-w-md mx-auto max-h-[90vh] overflow-auto border-primary scrollbar-none">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5" />
+                Invite to {project.name}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsInviting(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {formErrors.length > 0 && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <ul className="list-disc list-inside space-y-1">
+                    {formErrors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Full Name *</label>
+              <Input 
+                placeholder="Enter full name"
+                value={invitationForm.name}
+                onChange={(e) => handleFormChange("name", e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Email Address *</label>
+              <Input 
+                placeholder="Enter email address"
+                type="email"
+                value={invitationForm.email}
+                onChange={(e) => handleFormChange("email", e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Role *</label>
+              <select 
+                className="w-full px-3 py-2 border rounded-md"
+                value={invitationForm.role}
+                onChange={(e) => handleFormChange("role", e.target.value as "admin" | "member" | "viewer")}
+              >
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+                <option value="viewer">Viewer</option>
+              </select>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                className="flex-1"
+                onClick={handleSendProjectInvitation}
+                disabled={isSendingInvitation}
+              >
+                {isSendingInvitation ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <UserPlus className="w-4 h-4 mr-2" />
+                )}
+                {isSendingInvitation ? "Sending..." : "Send Invite"}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsInviting(false)}
+                disabled={isSendingInvitation}
+              >
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Success Message */}
+      {invitationSuccess && (
+        <Alert className="fixed top-4 right-4 z-50 max-w-md">
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>
+            Invitation sent successfully! The recipient will be added to {project.name} upon acceptance.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }

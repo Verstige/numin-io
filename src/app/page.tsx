@@ -12,7 +12,7 @@ import WorkspaceTabs, { type WorkspaceTab } from "@/components/WorkspaceTabs";
 import BuiltInNotes from "@/components/BuiltInNotes";
 import ViewableTasks from "@/components/ViewableTasks";
 import TeamManagement from "@/components/TeamManagement";
-import { mockTeamMembers, mockActivityFeed, type TeamMember, type ActivityItem } from "@/lib/collaboration";
+import { mockTeamMembers, mockActivityFeed, mockInvitations, type TeamMember, type ActivityItem, type TeamInvitation } from "@/lib/collaboration";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +73,7 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
   const [teamMembers] = useState<TeamMember[]>(mockTeamMembers);
   const [activityFeed] = useState<ActivityItem[]>(mockActivityFeed);
+  const [invitations] = useState<TeamInvitation[]>(mockInvitations);
   const [currentTab, setCurrentTab] = useState<WorkspaceTab>("mindmap");
   const [currentUserRole] = useState<"owner" | "admin" | "member" | "viewer">("admin"); // Mock current user role
 
@@ -152,6 +153,11 @@ export default function Index() {
 
   const handleCloseProject = () => {
     setActiveProject(null);
+  };
+
+  const handleProjectInvitation = (invitation: TeamInvitation) => {
+    // In a real app, this would make an API call to save the invitation
+    console.log('Project invitation created:', invitation);
   };
 
   const handleSearch = (query: string) => {
@@ -319,6 +325,9 @@ export default function Index() {
             <ProjectContextPanel 
               project={activeProject} 
               teamMembers={teamMembers.filter(member => member.projects.includes(activeProject.id))}
+              allTeamMembers={teamMembers}
+              invitations={invitations}
+              onInviteMember={handleProjectInvitation}
             />
           </div>
         )}

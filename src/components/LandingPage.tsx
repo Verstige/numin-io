@@ -201,7 +201,7 @@ const LandingPage = () => {
             onClick={() => window.location.href = '/workspace'}
             className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0"
           >
-            Launch Workspace
+            Sign In
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>

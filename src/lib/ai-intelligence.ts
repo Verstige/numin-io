@@ -363,3 +363,4 @@ export function generateProactiveSuggestions(projects: ProjectContext[]): Action
   return suggestions;
 }
 
+

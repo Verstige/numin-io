@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Plus, 
   Edit3, 
@@ -24,17 +25,26 @@ import {
   AlertCircle,
   Activity,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  X,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { 
+  type TeamInvitation, 
+  type InvitationFormData,
+  type TeamMember,
+  mockInvitations,
+  validateInvitationForm,
+  createInvitation,
+  simulateEmailInvitation,
+  isEmailAlreadyInvited,
+  isEmailAlreadyMember,
+  getPendingInvitations
+} from "@/lib/collaboration";
 
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: "owner" | "admin" | "member" | "viewer";
+interface ExtendedTeamMember extends TeamMember {
   status: "active" | "inactive" | "pending" | "invited";
-  avatar?: string;
   phone?: string;
   department?: string;
   joinedAt: Date;
@@ -55,7 +65,7 @@ interface TeamStats {
   completedTasks: number;
 }
 
-const mockTeamMembers: TeamMember[] = [
+const mockTeamMembers: ExtendedTeamMember[] = [
   {
     id: "tm1",
     name: "Sarah Chen",
@@ -153,20 +163,33 @@ const mockStats: TeamStats = {
 };
 
 export default function TeamManagement() {
-  const [members, setMembers] = useState<TeamMember[]>([]);
-  const [filteredMembers, setFilteredMembers] = useState<TeamMember[]>([]);
+  const [members, setMembers] = useState<ExtendedTeamMember[]>([]);
+  const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
+  const [filteredMembers, setFilteredMembers] = useState<ExtendedTeamMember[]>([]);
   const [stats, setStats] = useState<TeamStats>(mockStats);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | TeamMember["role"]>("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | TeamMember["status"]>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | ExtendedTeamMember["status"]>("all");
   const [isAddingMember, setIsAddingMember] = useState(false);
-  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  const [editingMember, setEditingMember] = useState<ExtendedTeamMember | null>(null);
+  const [invitationForm, setInvitationForm] = useState<InvitationFormData>({
+    name: "",
+    email: "",
+    role: "member",
+    phone: "",
+    department: ""
+  });
+  const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [isSendingInvitation, setIsSendingInvitation] = useState(false);
+  const [invitationSuccess, setInvitationSuccess] = useState(false);
 
   // Load team data from localStorage or use mock data
   useEffect(() => {
     const savedMembers = localStorage.getItem('teamMembers');
+    const savedInvitations = localStorage.getItem('teamInvitations');
+    
     if (savedMembers) {
-      const parsedMembers = JSON.parse(savedMembers).map((member: TeamMember & { joinedAt: string; lastActive: string }) => ({
+      const parsedMembers = JSON.parse(savedMembers).map((member: ExtendedTeamMember & { joinedAt: string; lastActive: string }) => ({
         ...member,
         joinedAt: new Date(member.joinedAt),
         lastActive: new Date(member.lastActive)
@@ -174,6 +197,18 @@ export default function TeamManagement() {
       setMembers(parsedMembers);
     } else {
       setMembers(mockTeamMembers);
+    }
+    
+    if (savedInvitations) {
+      const parsedInvitations = JSON.parse(savedInvitations).map((inv: TeamInvitation & { createdAt: string; expiresAt: string; acceptedAt?: string }) => ({
+        ...inv,
+        createdAt: new Date(inv.createdAt),
+        expiresAt: new Date(inv.expiresAt),
+        acceptedAt: inv.acceptedAt ? new Date(inv.acceptedAt) : undefined
+      }));
+      setInvitations(parsedInvitations);
+    } else {
+      setInvitations(mockInvitations);
     }
   }, []);
 
@@ -255,9 +290,83 @@ export default function TeamManagement() {
 
   const handleInviteMember = () => {
     setIsAddingMember(true);
+    setFormErrors([]);
+    setInvitationSuccess(false);
+    setInvitationForm({
+      name: "",
+      email: "",
+      role: "member",
+      phone: "",
+      department: ""
+    });
   };
 
-  const handleEditMember = (member: TeamMember) => {
+  const handleFormChange = (field: keyof InvitationFormData, value: string) => {
+    setInvitationForm(prev => ({ ...prev, [field]: value }));
+    setFormErrors([]);
+    setInvitationSuccess(false);
+  };
+
+  const handleSendInvitation = async () => {
+    setFormErrors([]);
+    setIsSendingInvitation(true);
+    
+    // Validate form
+    const validation = validateInvitationForm(invitationForm);
+    if (!validation.isValid) {
+      setFormErrors(validation.errors);
+      setIsSendingInvitation(false);
+      return;
+    }
+    
+    // Check if email is already a member
+    if (isEmailAlreadyMember(invitationForm.email, members)) {
+      setFormErrors(["This email is already a team member"]);
+      setIsSendingInvitation(false);
+      return;
+    }
+    
+    // Check if email is already invited
+    if (isEmailAlreadyInvited(invitationForm.email, invitations)) {
+      setFormErrors(["This email has already been invited"]);
+      setIsSendingInvitation(false);
+      return;
+    }
+    
+    try {
+      // Create invitation
+      const newInvitation = createInvitation(
+        invitationForm,
+        "current-user-id", // In real app, get from auth context
+        "Current User" // In real app, get from auth context
+      );
+      
+      // Add to invitations
+      const updatedInvitations = [...invitations, newInvitation];
+      setInvitations(updatedInvitations);
+      localStorage.setItem('teamInvitations', JSON.stringify(updatedInvitations));
+      
+      // Simulate sending email
+      await simulateEmailInvitation(newInvitation);
+      
+      // Show success
+      setInvitationSuccess(true);
+      setIsAddingMember(false);
+      
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        pendingInvites: getPendingInvitations(updatedInvitations).length
+      }));
+      
+    } catch (error) {
+      setFormErrors(["Failed to send invitation. Please try again."]);
+    } finally {
+      setIsSendingInvitation(false);
+    }
+  };
+
+  const handleEditMember = (member: ExtendedTeamMember) => {
     setEditingMember(member);
   };
 
@@ -265,6 +374,18 @@ export default function TeamManagement() {
     const updatedMembers = members.filter(member => member.id !== memberId);
     setMembers(updatedMembers);
     localStorage.setItem('teamMembers', JSON.stringify(updatedMembers));
+  };
+
+  const handleRemoveInvitation = (invitationId: string) => {
+    const updatedInvitations = invitations.filter(inv => inv.id !== invitationId);
+    setInvitations(updatedInvitations);
+    localStorage.setItem('teamInvitations', JSON.stringify(updatedInvitations));
+    
+    // Update stats
+    setStats(prev => ({
+      ...prev,
+      pendingInvites: getPendingInvitations(updatedInvitations).length
+    }));
   };
 
   return (
@@ -512,36 +633,188 @@ export default function TeamManagement() {
         </div>
       )}
 
+      {/* Pending Invitations Section */}
+      {getPendingInvitations(invitations).length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5 text-yellow-500" />
+            <h3 className="text-lg font-semibold">Pending Invitations</h3>
+            <Badge variant="secondary" className="ml-2">
+              {getPendingInvitations(invitations).length}
+            </Badge>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {getPendingInvitations(invitations).map(invitation => (
+              <Card key={invitation.id} className="border-yellow-200 bg-yellow-50/50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-lg">{invitation.name || invitation.email}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{invitation.email}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleRemoveInvitation(invitation.id)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="pt-0">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge className={cn("text-xs", getRoleColor(invitation.role))}>
+                        {getRoleIcon(invitation.role)}
+                        <span className="ml-1">{invitation.role}</span>
+                      </Badge>
+                      <Badge className="text-xs bg-yellow-100 text-yellow-800">
+                        Pending
+                      </Badge>
+                    </div>
+
+                    {invitation.department && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Settings className="w-4 h-4" />
+                        {invitation.department}
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="w-4 h-4" />
+                      <span>Invited by {invitation.invitedByName}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="w-4 h-4" />
+                      <span>Expires {formatDate(invitation.expiresAt)}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Add Member Modal */}
       {isAddingMember && (
         <Card className="fixed inset-4 z-50 max-w-md mx-auto max-h-[90vh] overflow-auto border-primary scrollbar-none">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="w-5 h-5" />
-              Invite Team Member
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-5 h-5" />
+                Invite Team Member
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsAddingMember(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Input placeholder="Full Name" />
-            <Input placeholder="Email Address" type="email" />
-            <Input placeholder="Phone (Optional)" />
-            <select className="w-full px-3 py-2 border rounded-md">
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
-              <option value="viewer">Viewer</option>
-            </select>
-            <Input placeholder="Department (Optional)" />
+            {formErrors.length > 0 && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <ul className="list-disc list-inside space-y-1">
+                    {formErrors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Full Name *</label>
+              <Input 
+                placeholder="Enter full name"
+                value={invitationForm.name}
+                onChange={(e) => handleFormChange("name", e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Email Address *</label>
+              <Input 
+                placeholder="Enter email address"
+                type="email"
+                value={invitationForm.email}
+                onChange={(e) => handleFormChange("email", e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Phone (Optional)</label>
+              <Input 
+                placeholder="Enter phone number"
+                value={invitationForm.phone || ""}
+                onChange={(e) => handleFormChange("phone", e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Role *</label>
+              <select 
+                className="w-full px-3 py-2 border rounded-md"
+                value={invitationForm.role}
+                onChange={(e) => handleFormChange("role", e.target.value as "admin" | "member" | "viewer")}
+              >
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+                <option value="viewer">Viewer</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Department (Optional)</label>
+              <Input 
+                placeholder="Enter department"
+                value={invitationForm.department || ""}
+                onChange={(e) => handleFormChange("department", e.target.value)}
+              />
+            </div>
+            
             <div className="flex gap-2">
-              <Button className="flex-1">
-                <Mail className="w-4 h-4 mr-2" />
-                Send Invite
+              <Button 
+                className="flex-1"
+                onClick={handleSendInvitation}
+                disabled={isSendingInvitation}
+              >
+                {isSendingInvitation ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Mail className="w-4 h-4 mr-2" />
+                )}
+                {isSendingInvitation ? "Sending..." : "Send Invite"}
               </Button>
-              <Button variant="outline" onClick={() => setIsAddingMember(false)}>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsAddingMember(false)}
+                disabled={isSendingInvitation}
+              >
                 Cancel
               </Button>
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Success Message */}
+      {invitationSuccess && (
+        <Alert className="fixed top-4 right-4 z-50 max-w-md">
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>
+            Invitation sent successfully! The recipient will receive an email with instructions to join the team.
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Edit Member Modal */}
