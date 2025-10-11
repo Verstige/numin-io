@@ -399,23 +399,23 @@ export default function Index() {
         </div>
       </div>
 
-      {/* New Project Dialog */}
+      {/* New Brand Dialog */}
       <Dialog open={isNewProjectOpen} onOpenChange={setIsNewProjectOpen}>
         <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
+            <DialogTitle>Create Your First Brand</DialogTitle>
             <DialogDescription>
-              Start organizing your next big idea
+              Start building your next big brand
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div>
-              <Label htmlFor="name">Project Name</Label>
+              <Label htmlFor="name">Brand Name</Label>
               <Input
                 id="name"
                 value={newProject.name}
                 onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                placeholder="e.g., My Startup"
+                placeholder="e.g., My Brand"
                 className="bg-secondary border-border mt-1"
               />
             </div>
@@ -425,7 +425,7 @@ export default function Index() {
                 id="description"
                 value={newProject.description}
                 onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                placeholder="Brief overview of your project..."
+                placeholder="Brief overview of your brand..."
                 className="bg-secondary border-border mt-1"
               />
             </div>
@@ -449,7 +449,7 @@ export default function Index() {
               onClick={handleCreateProject} 
               className="w-full gradient-primary text-white shadow-primary"
             >
-              Create Project
+              Create Brand
             </Button>
           </div>
         </DialogContent>

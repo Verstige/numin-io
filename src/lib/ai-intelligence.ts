@@ -273,8 +273,8 @@ You have ${allProjects.length} project${allProjects.length !== 1 ? 's' : ''} in 
     suggestions.push({
       id: "create-project",
       type: "create_task",
-      title: "Create New Project",
-      description: "Start a new project in your workspace",
+      title: "Create New Brand",
+      description: "Start a new brand in your workspace",
       priority: "medium"
     });
 

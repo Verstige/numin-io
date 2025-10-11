@@ -22,12 +22,12 @@ export default function NewUserWelcome({ onCreateProject, onViewDemo }: NewUserW
     {
       icon: <Brain className="w-6 h-6 text-blue-500" />,
       title: "AI-Powered Insights",
-      description: "Get intelligent project recommendations and automated insights"
+      description: "Get intelligent brand recommendations and automated insights"
     },
     {
       icon: <Target className="w-6 h-6 text-green-500" />,
-      title: "Project Mapping",
-      description: "Visualize your project ecosystem with interactive mind maps"
+      title: "Brand Mapping",
+      description: "Visualize your brand ecosystem with interactive mind maps"
     },
     {
       icon: <Users className="w-6 h-6 text-purple-500" />,
@@ -44,13 +44,13 @@ export default function NewUserWelcome({ onCreateProject, onViewDemo }: NewUserW
   const steps = [
     {
       step: "1",
-      title: "Create Your First Project",
-      description: "Start by adding a project to your workspace"
+      title: "Create Your First Brand",
+      description: "Start by adding a brand to your workspace"
     },
     {
       step: "2", 
       title: "Invite Your Team",
-      description: "Add team members to collaborate on projects"
+      description: "Add team members to collaborate on brands"
     },
     {
       step: "3",
@@ -75,7 +75,7 @@ export default function NewUserWelcome({ onCreateProject, onViewDemo }: NewUserW
         </h1>
         
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Transform your ideas into organized, intelligent project workflows with AI-powered insights and seamless team collaboration.
+          Transform your ideas into organized, intelligent brand workflows with AI-powered insights and seamless team collaboration.
         </p>
       </div>
 
@@ -87,7 +87,7 @@ export default function NewUserWelcome({ onCreateProject, onViewDemo }: NewUserW
           className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
         >
           <FolderPlus className="w-5 h-5 mr-2" />
-          Create Your First Project
+          Create Your First Brand
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
         
@@ -160,15 +160,15 @@ export default function NewUserWelcome({ onCreateProject, onViewDemo }: NewUserW
           <div className="flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium">Use Nova AI for project insights</p>
-              <p className="text-sm text-muted-foreground">Ask Nova AI questions about your projects and get intelligent recommendations</p>
+              <p className="font-medium">Use Nova AI for brand insights</p>
+              <p className="text-sm text-muted-foreground">Ask Nova AI questions about your brands and get intelligent recommendations</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium">Organize with project mapping</p>
-              <p className="text-sm text-muted-foreground">Create visual project maps to see how everything connects</p>
+              <p className="font-medium">Organize with brand mapping</p>
+              <p className="text-sm text-muted-foreground">Create visual brand maps to see how everything connects</p>
             </div>
           </div>
           <div className="flex items-start gap-3">

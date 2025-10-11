@@ -32,8 +32,8 @@ const exampleConversations = [
     ai: "Good morning! ☀️ You've got 5 high-priority tasks waiting for you. The most urgent is the API integration for Velocity - it's due in 2 days. I noticed you're usually most productive in the mornings, so maybe tackle that one first? Want me to help you plan your day?"
   },
   {
-    user: "I need to plan a new project timeline",
-    ai: "Absolutely! I'd love to help you create a timeline. Based on your previous projects, I'm thinking we break this into 4 phases: Planning (1 week), Development (3 weeks), Testing (1 week), and Launch (3 days). Sound good? I can set this all up in your ProjectMap right now."
+    user: "I need to plan a new brand timeline",
+    ai: "Absolutely! I'd love to help you create a timeline. Based on your previous brands, I'm thinking we break this into 4 phases: Planning (1 week), Development (3 weeks), Testing (1 week), and Launch (3 days). Sound good? I can set this all up in your BrandMap right now."
   },
   {
     user: "How am I doing with my time?",

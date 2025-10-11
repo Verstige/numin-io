@@ -165,7 +165,7 @@ export default function Sidebar({ onNewProject, projects = [], onSearch, onFilte
           onClick={onNewProject}
         >
           <Plus className="w-5 h-5" />
-          New Project
+          New Brand
         </Button>
       </nav>
 

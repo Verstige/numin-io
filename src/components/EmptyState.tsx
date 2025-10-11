@@ -14,9 +14,9 @@ export default function EmptyState({ type, onAction, actionText }: EmptyStatePro
         return {
           icon: <Sparkles className="w-16 h-16 text-primary" />,
           title: "Welcome to Nexus",
-          subtitle: "Your AI-powered project workspace is ready",
-          description: "Create your first project to get started with intelligent project management, insights, and AI assistance.",
-          actionText: actionText || "Create Your First Project",
+          subtitle: "Your AI-powered brand workspace is ready",
+          description: "Create your first brand to get started with intelligent brand management, insights, and AI assistance.",
+          actionText: actionText || "Create Your First Brand",
           showAction: true
         };
       

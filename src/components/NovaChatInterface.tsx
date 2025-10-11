@@ -279,10 +279,10 @@ const NovaChatInterface: React.FC<NovaChatInterfaceProps> = ({
               variant="ghost"
               size="sm"
               className="text-gray-400 hover:text-white transition-colors px-2 sm:px-3 py-1 text-xs"
-              onClick={() => handleQuickAction("Create a new project")}
+              onClick={() => handleQuickAction("Create a new brand")}
               disabled={isTyping}
             >
-              New Project
+              New Brand
             </Button>
           </div>
         </div>
