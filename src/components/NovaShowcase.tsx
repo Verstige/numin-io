@@ -24,24 +24,24 @@ interface ChatMessage {
 
 const exampleConversations = [
   {
-    user: "Show me my project progress",
-    ai: "I can see you have 3 active projects in your Nexus AI workspace. Velocity is 75% complete with 2 pending tasks, while Verstige is in planning phase. Would you like me to show you detailed progress for any specific project?"
+    user: "Hey Nova, how are my projects looking?",
+    ai: "Hi there! 👋 Your projects are looking great! You've got Velocity at 75% completion with just 2 tasks left, and Verstige is in the planning phase. Your team's been really productive this week. Would you like me to dive deeper into any specific project?"
   },
   {
-    user: "What tasks need attention?",
-    ai: "You have 5 high-priority tasks across your projects. The most urgent is the API integration for Velocity, due in 2 days. I can help you prioritize and assign these tasks to team members. Shall I show you the full task breakdown?"
+    user: "What's on my plate today?",
+    ai: "Good morning! ☀️ You've got 5 high-priority tasks waiting for you. The most urgent is the API integration for Velocity - it's due in 2 days. I noticed you're usually most productive in the mornings, so maybe tackle that one first? Want me to help you plan your day?"
   },
   {
-    user: "Create a new project timeline",
-    ai: "I'll help you create a comprehensive timeline for your new project. Based on your previous projects, I suggest breaking it into 4 phases: Planning (1 week), Development (3 weeks), Testing (1 week), and Launch (3 days). Would you like me to set this up in your ProjectMap?"
+    user: "I need to plan a new project timeline",
+    ai: "Absolutely! I'd love to help you create a timeline. Based on your previous projects, I'm thinking we break this into 4 phases: Planning (1 week), Development (3 weeks), Testing (1 week), and Launch (3 days). Sound good? I can set this all up in your ProjectMap right now."
   },
   {
-    user: "Analyze my time tracking data",
-    ai: "Your productivity patterns show peak performance between 10 AM - 2 PM. You've logged 32 hours this week across 3 projects, with 40% spent on development tasks. I recommend focusing your most complex work during your peak hours. Need detailed insights?"
+    user: "How am I doing with my time?",
+    ai: "You're doing fantastic! 🎯 You've logged 32 hours this week across 3 projects, with 40% spent on development - that's right in your sweet spot. Your peak productivity is between 10 AM - 2 PM, so you're already optimizing your schedule perfectly. Want to see some detailed insights?"
   },
   {
-    user: "Help me organize team resources",
-    ai: "I can see your team has 4 active members across 3 projects. Sarah and Mike are at 85% capacity, while Alex and Jordan have availability. I suggest redistributing the marketing tasks from Velocity to balance the workload. Should I create a resource allocation plan?"
+    user: "My team seems overwhelmed, can you help?",
+    ai: "I can definitely help with that! I've been watching your team's workload and noticed Sarah and Mike are at 85% capacity, while Alex and Jordan have some bandwidth. I think we could redistribute some of the marketing tasks from Velocity to balance things out. Should I create a resource plan for you?"
   }
 ];
 
@@ -50,7 +50,7 @@ const NovaShowcase: React.FC = () => {
     {
       id: '1',
       type: 'ai',
-      content: "Hello! I'm Nova, your intelligent project companion. I'm here to help you manage projects, track tasks, analyze productivity, and connect everything in your Nexus AI workspace. What would you like to know?",
+      content: "Hey there! 👋 I'm Nova, your intelligent project companion. I'm here to help you manage projects, track tasks, analyze productivity, and connect everything in your Nexus workspace. What would you like to know?",
       timestamp: new Date()
     }
   ]);

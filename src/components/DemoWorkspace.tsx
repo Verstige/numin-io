@@ -148,7 +148,7 @@ export default function DemoWorkspace() {
       <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 text-center">
         <div className="flex items-center justify-center gap-2">
           <Sparkles className="w-4 h-4" />
-          <span className="font-medium">Demo Workspace - This is how Rena AI looks with sample data</span>
+          <span className="font-medium">Demo Workspace - This is how Nexus looks with sample data</span>
           <Button 
             variant="outline" 
             size="sm"
@@ -181,7 +181,7 @@ export default function DemoWorkspace() {
               Demo Workspace
             </h1>
             <p className="text-base md:text-lg text-muted-foreground">
-              Experience Rena AI with sample projects and data
+              Experience Nexus with sample projects and data
             </p>
           </div>
 

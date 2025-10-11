@@ -1,4 +1,4 @@
-// User utility functions for Rena AI
+// User utility functions for Nexus
 
 /**
  * Get the display name for a user profile

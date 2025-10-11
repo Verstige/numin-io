@@ -1,4 +1,4 @@
-// AI Intelligence Engine for Rena
+// AI Intelligence Engine for Nexus
 // This simulates a more sophisticated AI system with project context awareness
 
 export interface ProjectContext {
@@ -239,7 +239,7 @@ function generateGeneralResponse(
   const suggestions: ActionSuggestion[] = [];
   
   if (message.includes("help") || message.includes("what can you do")) {
-    const response = `## Welcome to Rena! 🤖
+    const response = `## Welcome to Nexus! 🤖
 
 I'm your AI-powered project management assistant. Here's what I can help you with:
 
@@ -282,7 +282,7 @@ You have ${allProjects.length} project${allProjects.length !== 1 ? 's' : ''} in 
   }
   
   if (message.includes("hello") || message.includes("hi") || message.includes("hey")) {
-    const response = `Hello! 👋 I'm Rena, your AI project management assistant.
+    const response = `Hello! 👋 I'm Nova, your AI project management assistant.
 
 I'm here to help you manage your ${allProjects.length} project${allProjects.length !== 1 ? 's' : ''} more effectively. 
 

@@ -362,19 +362,19 @@ const mindmapEdges = [
 ];
 
 export default function Index() {
-  const { isDemoUser, profile } = useAuth();
+  const { profile } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
   const [isQuickSwitcherOpen, setIsQuickSwitcherOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [teamMembers] = useState<TeamMember[]>(isDemoUser ? mockTeamMembers : []);
-  const [activityFeed] = useState<ActivityItem[]>(isDemoUser ? mockActivityFeed : []);
+  const [teamMembers] = useState<TeamMember[]>([]);
+  const [activityFeed] = useState<ActivityItem[]>([]);
   const [currentTab, setCurrentTab] = useState<WorkspaceTab>("mindmap");
   const [currentUserRole] = useState<"owner" | "admin" | "member" | "viewer">("admin");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [dynamicMindmapNodes, setDynamicMindmapNodes] = useState(isDemoUser ? mindmapNodes : []);
+  const [dynamicMindmapNodes, setDynamicMindmapNodes] = useState([]);
 
   // Handle new project creation
   const handleAddNewProject = (projectData: { title: string; description: string }) => {
@@ -383,18 +383,12 @@ export default function Index() {
       name: projectData.title,
       description: projectData.description,
       status: "Active",
-      priority: "medium",
-      teamSize: 1,
-      budget: 50000,
-      startDate: new Date(),
-      endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
-      progress: 0,
-      tags: ["New"],
-      teamMembers: ["Current User"]
+      priority: "medium"
     };
 
-    const newNodes = [...mindmapNodes];
-    const rightmostNode = newNodes.reduce((prev, current) => 
+    // Get the rightmost node from current dynamic nodes
+    const currentNodes = dynamicMindmapNodes.length > 0 ? dynamicMindmapNodes : mindmapNodes;
+    const rightmostNode = currentNodes.reduce((prev, current) => 
       (prev.x > current.x) ? prev : current
     );
     
@@ -408,10 +402,16 @@ export default function Index() {
       subProjects: []
     };
 
-    setProjects(prev => [...prev, newProject]);
+    // Update both projects and mindmap nodes
+    const updatedProjects = [...projects, newProject];
+    const updatedNodes = [...dynamicMindmapNodes, newNode];
     
-    // Add the new node to the mindmap
-    setDynamicMindmapNodes(prevNodes => [...prevNodes, newNode]);
+    setProjects(updatedProjects);
+    setDynamicMindmapNodes(updatedNodes);
+    
+    // Save to localStorage
+    localStorage.setItem('userProjects', JSON.stringify(updatedProjects));
+    localStorage.setItem('userMindmapNodes', JSON.stringify(updatedNodes));
     
     console.log("New project added:", newProject);
     console.log("New node created:", newNode);
@@ -430,17 +430,20 @@ export default function Index() {
     };
 
     // Update the mindmap nodes to include the new sub-project
-    setDynamicMindmapNodes(prevNodes => 
-      prevNodes.map(node => {
-        if (node.projectId === parentProjectId) {
-          return {
-            ...node,
-            subProjects: [...(node.subProjects || []), newSubProject]
-          };
-        }
-        return node;
-      })
-    );
+    const updatedNodes = dynamicMindmapNodes.map(node => {
+      if (node.projectId === parentProjectId) {
+        return {
+          ...node,
+          subProjects: [...(node.subProjects || []), newSubProject]
+        };
+      }
+      return node;
+    });
+    
+    setDynamicMindmapNodes(updatedNodes);
+    
+    // Save to localStorage
+    localStorage.setItem('userMindmapNodes', JSON.stringify(updatedNodes));
 
     console.log("New sub-project added to", parentProjectId, ":", newSubProject);
   };
@@ -457,45 +460,85 @@ export default function Index() {
     };
 
     // Update the mindmap nodes to include the new leg
-    setDynamicMindmapNodes(prevNodes => 
-      prevNodes.map(node => ({
-        ...node,
-        subProjects: node.subProjects?.map(subProject => 
-          subProject.id === parentSubProjectId 
-            ? {
-                ...subProject,
-                legs: [...(subProject.legs || []), newLeg]
-              }
-            : subProject
-        )
-      }))
-    );
+    const updatedNodes = dynamicMindmapNodes.map(node => ({
+      ...node,
+      subProjects: node.subProjects?.map(subProject => 
+        subProject.id === parentSubProjectId 
+          ? {
+              ...subProject,
+              legs: [...(subProject.legs || []), newLeg]
+            }
+          : subProject
+      )
+    }));
+    
+    setDynamicMindmapNodes(updatedNodes);
+    
+    // Save to localStorage
+    localStorage.setItem('userMindmapNodes', JSON.stringify(updatedNodes));
 
     console.log("New leg added to", parentSubProjectId, ":", newLeg);
   };
 
-  // Simulate loading initial data
+  // Load initial data
   useEffect(() => {
+    let mounted = true;
+
     const loadInitialData = async () => {
       setIsLoading(true);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Only load mock data for demo users
-      if (isDemoUser) {
-        setProjects(initialProjects);
-        setFilteredProjects(initialProjects);
-      } else {
-        // New users start with empty workspace
-        setProjects([]);
-        setFilteredProjects([]);
+      try {
+        // Load saved projects from localStorage first (no artificial delay)
+        const savedProjects = localStorage.getItem('userProjects');
+        const savedMindmapNodes = localStorage.getItem('userMindmapNodes');
+        
+        if (savedProjects && savedMindmapNodes) {
+          // Load user's saved projects
+          const parsedProjects = JSON.parse(savedProjects);
+          const parsedNodes = JSON.parse(savedMindmapNodes);
+          if (mounted) {
+            setProjects(parsedProjects);
+            setFilteredProjects(parsedProjects);
+            setDynamicMindmapNodes(parsedNodes);
+          }
+        } else {
+          // All users start with empty workspace
+          if (mounted) {
+            setProjects([]);
+            setFilteredProjects([]);
+            setDynamicMindmapNodes([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        // Fallback to empty state
+        if (mounted) {
+          setProjects([]);
+          setFilteredProjects([]);
+          setDynamicMindmapNodes([]);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
-      setIsLoading(false);
     };
 
     loadInitialData();
-  }, [isDemoUser]);
+
+    // Add timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (mounted) {
+        console.log('Index loading timeout - setting loading to false');
+        setIsLoading(false);
+      }
+    }, 3000); // 3 second timeout
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+    };
+  }, []);
 
   // Load active project from localStorage on mount
   useEffect(() => {
@@ -610,6 +653,34 @@ export default function Index() {
     setIsQuickSwitcherOpen(false);
   };
 
+  // Debug function to clear localStorage (can be called from console)
+  const clearUserData = () => {
+    localStorage.removeItem('userProjects');
+    localStorage.removeItem('userMindmapNodes');
+    localStorage.removeItem('activeProjectId');
+    setProjects([]);
+    setFilteredProjects([]);
+    setDynamicMindmapNodes([]);
+    setActiveProject(null);
+    console.log('User data cleared');
+  };
+
+  const debugLoadingState = () => {
+    console.log('=== Loading State Debug ===');
+    console.log('isLoading:', isLoading);
+    console.log('projects.length:', projects.length);
+    console.log('filteredProjects.length:', filteredProjects.length);
+    console.log('dynamicMindmapNodes.length:', dynamicMindmapNodes.length);
+    console.log('activeProject:', activeProject);
+    console.log('localStorage userProjects:', localStorage.getItem('userProjects') ? 'exists' : 'missing');
+    console.log('localStorage userMindmapNodes:', localStorage.getItem('userMindmapNodes') ? 'exists' : 'missing');
+    console.log('localStorage activeProjectId:', localStorage.getItem('activeProjectId'));
+  };
+
+  // Make debug functions available globally for troubleshooting
+  (window as any).clearUserData = clearUserData;
+  (window as any).debugLoadingState = debugLoadingState;
+
   return (
     <div className="flex h-screen bg-gradient-subtle overflow-hidden">
       {/* Sidebar */}
@@ -632,7 +703,7 @@ export default function Index() {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <Target className="w-4 h-4 text-white" />
               </div>
-              <span className="font-semibold text-foreground">Nexus AI</span>
+              <span className="font-semibold text-foreground">Nexus</span>
             </div>
             <Button
               variant="ghost"
@@ -718,7 +789,7 @@ export default function Index() {
         
         <div className="p-3 sm:p-4 md:p-6 lg:p-8">
           {/* Show welcome screen for new users */}
-          {!isDemoUser && projects.length === 0 && !isLoading ? (
+          {projects.length === 0 && !isLoading ? (
             <NewUserWelcome 
               onCreateProject={() => setIsNewProjectOpen(true)}
               onViewDemo={() => window.location.href = '/demo'}
@@ -728,10 +799,10 @@ export default function Index() {
               {/* Header */}
               <div className="mb-4 sm:mb-6 md:mb-8 animate-fade-in">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-foreground">
-                  {isDemoUser ? `Welcome back, ${getUserFirstName(profile)}` : "Your Workspace"}
+                  Welcome back, {getUserFirstName(profile)}
                 </h1>
                 <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
-                  {isDemoUser ? "Your project ecosystem at a glance" : "Manage your projects with AI-powered insights"}
+                  Your project ecosystem at a glance
                 </p>
               </div>
 

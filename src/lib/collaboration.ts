@@ -1,4 +1,4 @@
-// Collaboration system for Rena
+// Collaboration system for Nexus
 // Handles team members, activity feeds, and collaboration features
 
 export interface TeamMember {
@@ -140,7 +140,7 @@ export const mockActivityFeed: ActivityItem[] = [
     id: "a4",
     type: "deadline_approaching",
     userId: "system",
-    userName: "Rena AI",
+    userName: "Nexus",
     projectId: "p1", 
     projectName: "VitaTech",
     description: "deadline approaching in 3 days",

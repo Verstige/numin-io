@@ -50,7 +50,7 @@ export default function ChatInterface({
     if (messages.length === 0) {
       const welcomeMessage: Message = {
         role: "assistant",
-        content: `Hello! I'm Rena, your AI project management assistant. ${projectName ? `I see you've opened **${projectName}**.` : "Select a project to get started, and I'll help you with actionable insights and next steps."}`,
+        content: `Hello! I'm Nova, your AI project management assistant. ${projectName ? `I see you've opened **${projectName}**.` : "Select a project to get started, and I'll help you with actionable insights and next steps."}`,
         timestamp: new Date()
       };
       
@@ -179,7 +179,7 @@ export default function ChatInterface({
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-card-foreground">Ask Rena</h2>
+              <h2 className="text-lg font-semibold text-card-foreground">Ask Nova</h2>
               <p className="text-sm text-muted-foreground">
                 {projectName || "Select a project to begin"}
               </p>
@@ -270,7 +270,7 @@ export default function ChatInterface({
           value={input}
           onChange={setInput}
           onSend={handleSend}
-          placeholder={projectName ? `Ask Rena about ${projectName} or mention @team members...` : "Select a project to start chatting with Rena..."}
+          placeholder={projectName ? `Ask Nova about ${projectName} or mention @team members...` : "Select a project to start chatting with Nova..."}
           teamMembers={teamMembers}
           disabled={isLoading}
         />

@@ -192,7 +192,7 @@ export default function ActivityFeed({
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-foreground">
                           <span className="font-medium">
-                            {member?.name || "Rena AI"}
+                            {member?.name || "Nexus"}
                           </span>
                           {" "}
                           <span className="text-muted-foreground">
@@ -290,7 +290,7 @@ export function ActivityItem({ activity, teamMember, showProject = true, onClick
       <div className="flex-1 min-w-0">
         <p className="text-xs text-muted-foreground truncate">
           <span className="font-medium text-foreground">
-            {teamMember?.name || "Rena AI"}
+            {teamMember?.name || "Nexus"}
           </span>
           {" "}{activity.description}
         </p>

@@ -9,7 +9,6 @@ interface AuthContextType {
   profile: Profile | null
   session: Session | null
   loading: boolean
-  isDemoUser: boolean
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: AuthError | null }>
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<{ error: AuthError | null }>
@@ -23,16 +22,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isDemoUser, setIsDemoUser] = useState(false)
 
   useEffect(() => {
+    let mounted = true
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return
+      
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id)
-        checkIfDemoUser(session.user.email)
       } else {
         setLoading(false)
       }
@@ -42,50 +43,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return
+      
       setSession(session)
       setUser(session?.user ?? null)
       
       if (session?.user) {
         await fetchProfile(session.user.id)
-        checkIfDemoUser(session.user.email)
       } else {
         setProfile(null)
-        setIsDemoUser(false)
         setLoading(false)
       }
     })
 
-    return () => subscription.unsubscribe()
+    // Add timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (mounted) {
+        console.log('Auth loading timeout - setting loading to false')
+        setLoading(false)
+      }
+    }, 5000) // 5 second timeout
+
+    return () => {
+      mounted = false
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
-  // Check if user is a demo user
-  const checkIfDemoUser = (email: string | undefined) => {
-    if (!email) {
-      setIsDemoUser(false)
-      return
-    }
-    
-    // Demo accounts that should see mock data
-    const demoEmails = [
-      'demo@rena.ai',
-      'demo@nexus.ai',
-      'demo@example.com',
-      'sarah@company.com',
-      'marcus@company.com',
-      'elena@company.com',
-      'david@company.com'
-    ]
-    
-    setIsDemoUser(demoEmails.includes(email.toLowerCase()))
-  }
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // Add timeout to profile fetch
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
+      )
+
+      const { data, error } = await Promise.race([profilePromise, timeoutPromise]) as any
 
       if (error) {
         console.error('Error fetching profile:', error)
@@ -104,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Error in fetchProfile:', error)
+      // If there's any error, still set loading to false to prevent stuck state
     } finally {
       setLoading(false)
     }
@@ -205,7 +206,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profile,
     session,
     loading,
-    isDemoUser,
     signUp,
     signIn,
     signOut,

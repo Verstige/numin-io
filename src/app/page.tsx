@@ -68,16 +68,16 @@ const mindmapEdges = [
 ];
 
 export default function Index() {
-  const { isDemoUser, profile } = useAuth();
+  const { profile } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
   const [isQuickSwitcherOpen, setIsQuickSwitcherOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [teamMembers] = useState<TeamMember[]>(isDemoUser ? mockTeamMembers : []);
-  const [activityFeed] = useState<ActivityItem[]>(isDemoUser ? mockActivityFeed : []);
-  const [invitations] = useState<TeamInvitation[]>(isDemoUser ? mockInvitations : []);
+  const [teamMembers] = useState<TeamMember[]>([]);
+  const [activityFeed] = useState<ActivityItem[]>([]);
+  const [invitations] = useState<TeamInvitation[]>([]);
   const [currentTab, setCurrentTab] = useState<WorkspaceTab>("mindmap");
   const [currentUserRole] = useState<"owner" | "admin" | "member" | "viewer">("admin"); // Mock current user role
 
@@ -89,20 +89,14 @@ export default function Index() {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Only load mock data for demo users
-      if (isDemoUser) {
-        setProjects(initialProjects);
-        setFilteredProjects(initialProjects);
-      } else {
-        // New users start with empty workspace
-        setProjects([]);
-        setFilteredProjects([]);
-      }
+      // All users start with empty workspace
+      setProjects([]);
+      setFilteredProjects([]);
       setIsLoading(false);
     };
 
     loadInitialData();
-  }, [isDemoUser]);
+  }, []);
 
   // Load active project from localStorage on mount
   useEffect(() => {
@@ -248,7 +242,7 @@ export default function Index() {
               {/* Header */}
           <div className="mb-6 md:mb-8 animate-fade-in text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-2 text-foreground">
-              {isDemoUser ? `Welcome back, ${getUserFirstName(profile)}` : "Your Workspace"}
+              Welcome back, {getUserFirstName(profile)}
             </h1>
             <p className="text-base md:text-lg text-muted-foreground mb-4">
               Your project ecosystem at a glance

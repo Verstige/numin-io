@@ -97,7 +97,7 @@ const LandingPage = () => {
       name: "Sarah Chen",
       role: "Project Manager",
       company: "TechCorp",
-      content: "Rena AI transformed how we manage complex projects. The ProjectMap visualization is incredible!",
+      content: "Nexus transformed how we manage complex projects. The ProjectMap visualization is incredible!",
       avatar: "👩‍💼"
     },
     {

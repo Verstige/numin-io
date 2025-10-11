@@ -13,7 +13,7 @@ export default function EmptyState({ type, onAction, actionText }: EmptyStatePro
       case "no-projects":
         return {
           icon: <Sparkles className="w-16 h-16 text-primary" />,
-          title: "Welcome to Rena",
+          title: "Welcome to Nexus",
           subtitle: "Your AI-powered project workspace is ready",
           description: "Create your first project to get started with intelligent project management, insights, and AI assistance.",
           actionText: actionText || "Create Your First Project",
@@ -34,7 +34,7 @@ export default function EmptyState({ type, onAction, actionText }: EmptyStatePro
         return {
           icon: <Target className="w-12 h-12 text-muted-foreground" />,
           title: "Select a project to begin",
-          subtitle: "Choose a project to start working with Rena",
+          subtitle: "Choose a project to start working with Nova",
           description: "Click on any project card or use the quick switcher (⌘K) to select a project and get AI-powered insights.",
           actionText: actionText || "View All Projects",
           showAction: true
@@ -44,7 +44,7 @@ export default function EmptyState({ type, onAction, actionText }: EmptyStatePro
         return {
           icon: <Zap className="w-12 h-12 text-primary animate-pulse" />,
           title: "Loading...",
-          subtitle: "Rena is preparing your workspace",
+          subtitle: "Nova is preparing your workspace",
           description: "Just a moment while we load your projects and set up your AI assistant.",
           actionText: "",
           showAction: false

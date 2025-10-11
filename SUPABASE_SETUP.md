@@ -1,6 +1,6 @@
-# Supabase Setup Guide for Rena AI
+# Supabase Setup Guide for Nexus
 
-This guide will help you set up Supabase authentication and database for the Rena AI application.
+This guide will help you set up Supabase authentication and database for the Nexus application.
 
 ## 1. Create a Supabase Project
 
@@ -8,7 +8,7 @@ This guide will help you set up Supabase authentication and database for the Ren
 2. Click "New Project"
 3. Choose your organization
 4. Enter project details:
-   - **Name**: `rena-ai` (or your preferred name)
+   - **Name**: `nexus-ai` (or your preferred name)
    - **Database Password**: Generate a strong password
    - **Region**: Choose the closest region to your users
 5. Click "Create new project"

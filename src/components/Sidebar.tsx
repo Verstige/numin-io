@@ -58,7 +58,7 @@ export default function Sidebar({ onNewProject, projects = [], onSearch, onFilte
           <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-primary">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-sidebar-foreground">Rena</h1>
+          <h1 className="text-2xl font-bold text-sidebar-foreground">Nexus</h1>
         </div>
         <p className="text-sm text-sidebar-foreground/70 mt-2">
           AI workspace for entrepreneurs

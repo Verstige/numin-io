@@ -3,7 +3,7 @@
 # Exit on any error
 set -e
 
-echo "🚀 Starting Rena AI build process..."
+echo "🚀 Starting Nexus build process..."
 
 # Install dependencies
 echo "📦 Installing dependencies..."

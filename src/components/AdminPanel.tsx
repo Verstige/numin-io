@@ -408,7 +408,7 @@ export default function AdminPanel() {
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Workspace Name</label>
-                  <Input defaultValue="Rena Workspace" />
+                  <Input defaultValue="Nexus Workspace" />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">Default User Role</label>

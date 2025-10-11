@@ -136,7 +136,7 @@ export default function SignUpForm({ onSuccess, onSwitchToSignIn }: SignUpFormPr
       <CardHeader>
         <CardTitle className="text-2xl text-center">Create Account</CardTitle>
         <p className="text-center text-muted-foreground">
-          Join Rena AI and start collaborating with your team
+          Join Nexus and start collaborating with your team
         </p>
       </CardHeader>
       <CardContent>

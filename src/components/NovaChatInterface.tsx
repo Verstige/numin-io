@@ -264,8 +264,7 @@ const NovaChatInterface: React.FC<NovaChatInterfaceProps> = ({
               onClick={() => handleQuickAction("Show me my project progress")}
               disabled={isTyping}
             >
-              <span className="hidden sm:inline">Project Progress</span>
-              <span className="sm:hidden">Progress</span>
+              Project Progress
             </Button>
             <Button
               variant="ghost"
@@ -274,8 +273,7 @@ const NovaChatInterface: React.FC<NovaChatInterfaceProps> = ({
               onClick={() => handleQuickAction("What tasks need attention?")}
               disabled={isTyping}
             >
-              <span className="hidden sm:inline">Pending Tasks</span>
-              <span className="sm:hidden">Tasks</span>
+              Pending Tasks
             </Button>
             <Button
               variant="ghost"
@@ -284,8 +282,7 @@ const NovaChatInterface: React.FC<NovaChatInterfaceProps> = ({
               onClick={() => handleQuickAction("Create a new project")}
               disabled={isTyping}
             >
-              <span className="hidden sm:inline">New Project</span>
-              <span className="sm:hidden">New</span>
+              New Project
             </Button>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 
 /**
- * RenaMindmap
+ * RenaMindmap (Project Mindmap Component)
  * Props:
  *  - nodes: [{ id, x, y, r, title, projectId }]
  *  - edges: [{ from, to }]

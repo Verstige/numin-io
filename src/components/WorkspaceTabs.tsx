@@ -119,7 +119,7 @@ export default function WorkspaceTabs({
                   className={cn(
                     "relative flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-3 rounded-lg transition-all duration-300",
                     "hover:bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/20",
-                    "min-w-[80px] sm:min-w-[120px] justify-center group flex-shrink-0",
+                    "min-w-[100px] sm:min-w-[120px] justify-center group flex-shrink-0",
                     isActive 
                       ? "bg-background shadow-md border border-border text-foreground scale-105" 
                       : "text-muted-foreground hover:text-foreground hover:scale-102"
@@ -130,8 +130,7 @@ export default function WorkspaceTabs({
                       "w-3 h-3 sm:w-4 sm:h-4 transition-colors", 
                       isActive ? "text-primary" : "group-hover:text-primary"
                     )} />
-                    <span className="font-medium text-xs sm:text-sm hidden sm:inline">{tab.label}</span>
-                    <span className="font-medium text-xs sm:hidden">{tab.label.slice(0, 3)}</span>
+                    <span className="font-medium text-xs sm:text-sm">{tab.label}</span>
                     {tab.badge && (
                       <Badge 
                         variant={isActive ? "default" : "secondary"} 

@@ -82,7 +82,7 @@ export default function SignInForm({ onSwitchToSignUp, onForgotPassword }: SignI
       <CardHeader>
         <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
         <p className="text-center text-muted-foreground">
-          Sign in to your Rena AI account
+          Sign in to your Nexus account
         </p>
       </CardHeader>
       <CardContent>
