@@ -26,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Target, Menu, X } from "lucide-react";
+import { Search, Target, Menu, X, LogOut } from "lucide-react";
 
 interface Project {
   id: string;
@@ -340,7 +340,7 @@ const mindmapEdges = [
 ];
 
 export default function Index() {
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
@@ -655,6 +655,23 @@ export default function Index() {
     console.log('localStorage activeProjectId:', localStorage.getItem('activeProjectId'));
   };
 
+  const handleLogout = async () => {
+    try {
+      const { error } = await signOut();
+      if (error) {
+        console.error('Logout error:', error);
+      } else {
+        // Clear local storage on logout
+        localStorage.removeItem('userProjects');
+        localStorage.removeItem('userMindmapNodes');
+        localStorage.removeItem('activeProjectId');
+        console.log('Logged out successfully');
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   // Make debug functions available globally for troubleshooting
   (window as any).clearUserData = clearUserData;
   (window as any).debugLoadingState = debugLoadingState;
@@ -683,14 +700,25 @@ export default function Index() {
               </div>
               <span className="font-semibold text-foreground">Nexus</span>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2"
-            >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="p-2 text-muted-foreground hover:text-foreground"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2"
+              >
+                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
+            </div>
           </div>
           
           {/* Mobile Menu */}
@@ -760,6 +788,17 @@ export default function Index() {
                 >
                   New Brand
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
               </div>
             </div>
           )}
@@ -776,12 +815,26 @@ export default function Index() {
             <>
               {/* Header */}
               <div className="mb-4 sm:mb-6 md:mb-8 animate-fade-in">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-foreground">
-                  Welcome back, {getUserFirstName(profile)}
-                </h1>
-                <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
-                  Your project ecosystem at a glance
-                </p>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-foreground">
+                      Welcome back, {getUserFirstName(profile)}
+                    </h1>
+                    <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
+                      Your project ecosystem at a glance
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="text-muted-foreground hover:text-foreground border-muted-foreground/20 hover:border-muted-foreground/40"
+                    title="Logout"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Logout</span>
+                  </Button>
+                </div>
               </div>
 
           {/* Nova AI Chat Interface */}
