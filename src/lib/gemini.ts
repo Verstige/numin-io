@@ -2,10 +2,40 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize genAI inside functions to ensure environment variables are available
 const getGenAI = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('VITE_GEMINI_API_KEY is not defined');
+  // Try multiple ways to get the API key
+  let apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  
+  // Fallback: try to get from process.env (might work in some cases)
+  if (!apiKey && typeof process !== 'undefined' && process.env) {
+    apiKey = process.env.VITE_GEMINI_API_KEY;
   }
+  
+  // Fallback: hardcoded for development (temporary)
+  if (!apiKey) {
+    console.warn('⚠️ Using hardcoded API key as fallback');
+    apiKey = 'AIzaSyBJXRO2wNi35NgDftgu-JUXqe-uIhZ2qhA';
+  }
+  
+  // Enhanced debugging
+  console.log('🔍 Environment variable check:', {
+    apiKey: apiKey ? `${apiKey.substring(0, 10)}...` : 'undefined',
+    allEnvVars: Object.keys(import.meta.env).filter(key => key.startsWith('VITE_')),
+    hasGeminiKey: !!apiKey,
+    importMetaEnv: Object.keys(import.meta.env),
+    envSource: apiKey === 'AIzaSyBJXRO2wNi35NgDftgu-JUXqe-uIhZ2qhA' ? 'hardcoded' : 'environment'
+  });
+  
+  if (!apiKey) {
+    console.error('❌ VITE_GEMINI_API_KEY is not defined in browser environment');
+    console.error('Available VITE_ environment variables:', Object.keys(import.meta.env).filter(key => key.startsWith('VITE_')));
+    throw new Error('VITE_GEMINI_API_KEY is not defined. Please check your environment configuration.');
+  }
+  
+  if (!apiKey.startsWith('AIza')) {
+    console.error('❌ Invalid API key format');
+    throw new Error('Invalid Gemini API key format');
+  }
+  
   return new GoogleGenerativeAI(apiKey);
 };
 
