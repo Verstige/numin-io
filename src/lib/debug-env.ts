@@ -12,8 +12,11 @@ export function debugEnvironment() {
     console.log('API Key format check:', {
       length: apiKey.length,
       startsWith: apiKey.startsWith('AIza'),
-      prefix: apiKey.substring(0, 10) + '...'
+      prefix: apiKey.substring(0, 10) + '...',
+      isValid: apiKey.startsWith('AIza') && apiKey.length > 30
     });
+  } else {
+    console.error('❌ API Key is undefined or null');
   }
   
   return {

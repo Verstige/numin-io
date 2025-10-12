@@ -1,6 +1,13 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+// Initialize genAI inside functions to ensure environment variables are available
+const getGenAI = () => {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('VITE_GEMINI_API_KEY is not defined');
+  }
+  return new GoogleGenerativeAI(apiKey);
+};
 
 export type AssistantMode = 'assistant' | 'chat';
 
@@ -125,6 +132,7 @@ Respond with deep business insights, strategic advice, and actionable recommenda
     console.log('🔑 Gemini API Key exists:', !!import.meta.env.VITE_GEMINI_API_KEY);
     console.log('🤖 Model:', import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash');
     
+    const genAI = getGenAI();
     const model = genAI.getGenerativeModel({ 
       model: import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash' 
     });
@@ -153,8 +161,8 @@ Respond with deep business insights, strategic advice, and actionable recommenda
     console.error('❌ Business Assistant API Error:', error);
     console.error('Error details:', {
       message: error.message,
-      hasApiKey: !!API_KEY,
-      model: MODEL_NAME,
+      hasApiKey: !!import.meta.env.VITE_GEMINI_API_KEY,
+      model: import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash',
       userMessage: userMessage.substring(0, 100),
       workspaceProjects: workspaceContext.projects.length,
       workspaceTeam: workspaceContext.teamMembers.length
@@ -198,6 +206,7 @@ Be friendly, helpful, and engaging. Keep responses conversational and natural.`;
     console.log('🔑 Gemini API Key exists:', !!import.meta.env.VITE_GEMINI_API_KEY);
     console.log('🤖 Model:', import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash');
     
+    const genAI = getGenAI();
     const model = genAI.getGenerativeModel({ 
       model: import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash' 
     });
@@ -226,8 +235,8 @@ Be friendly, helpful, and engaging. Keep responses conversational and natural.`;
     console.error('❌ General Chat API Error:', error);
     console.error('Error details:', {
       message: error.message,
-      hasApiKey: !!API_KEY,
-      model: MODEL_NAME,
+      hasApiKey: !!import.meta.env.VITE_GEMINI_API_KEY,
+      model: import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash',
       userMessage: userMessage.substring(0, 100),
       conversationHistory: conversationHistory.length
     });
@@ -261,6 +270,7 @@ Return general suggestions as JSON array:
 [{"title": "Helpful Option Title", "description": "What this helps with", "action": "specific action or topic"}]`;
 
   try {
+    const genAI = getGenAI();
     const model = genAI.getGenerativeModel({ 
       model: import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash' 
     });
@@ -305,6 +315,7 @@ ${JSON.stringify(workspaceContext, null, 2)}
 Provide a comprehensive analysis with specific insights and actionable recommendations.`;
 
   try {
+    const genAI = getGenAI();
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.0-flash' // Use fast model for analysis
     });
