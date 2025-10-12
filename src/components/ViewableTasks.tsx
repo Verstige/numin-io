@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
@@ -19,7 +20,9 @@ import {
   Tag,
   MoreHorizontal,
   Eye,
-  EyeOff
+  EyeOff,
+  Save,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +60,15 @@ export default function ViewableTasks({ projectId, currentUser = "Current User" 
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
+  const [isCreating, setIsCreating] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    priority: "medium" as Task["priority"],
+    assignee: currentUser,
+    visibility: "team" as Task["visibility"],
+    tags: ""
+  });
 
   // Load tasks from localStorage or use mock data
   useEffect(() => {
@@ -181,6 +193,38 @@ export default function ViewableTasks({ projectId, currentUser = "Current User" 
     return Math.round((completedSubtasks / task.subtasks.length) * 100);
   };
 
+  const handleCreateTask = () => {
+    if (!newTask.title.trim()) return;
+
+    const task: Task = {
+      id: `task_${Date.now()}`,
+      title: newTask.title,
+      description: newTask.description,
+      status: "todo",
+      priority: newTask.priority,
+      assignee: newTask.assignee,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      tags: newTask.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      projectId: projectId || undefined,
+      visibility: newTask.visibility
+    };
+
+    const updatedTasks = [task, ...tasks];
+    setTasks(updatedTasks);
+    localStorage.setItem('viewableTasks', JSON.stringify(updatedTasks));
+    
+    setNewTask({ 
+      title: "", 
+      description: "", 
+      priority: "medium", 
+      assignee: currentUser, 
+      visibility: "team", 
+      tags: "" 
+    });
+    setIsCreating(false);
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
@@ -200,12 +244,16 @@ export default function ViewableTasks({ projectId, currentUser = "Current User" 
               placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full sm:w-64"
+              className="pl-10 w-full sm:w-64 bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
         </div>
 
-        <Button variant="outline" className="w-full sm:w-auto">
+        <Button 
+          variant="outline" 
+          className="w-full sm:w-auto"
+          onClick={() => setIsCreating(true)}
+        >
           <Plus className="w-4 h-4 mr-2" />
           New Task
         </Button>
@@ -218,7 +266,7 @@ export default function ViewableTasks({ projectId, currentUser = "Current User" 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-            className="px-3 py-1 border rounded-md text-sm"
+            className="px-3 py-1 border border-border rounded-md text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="all">All</option>
             <option value="todo">To Do</option>
@@ -233,7 +281,7 @@ export default function ViewableTasks({ projectId, currentUser = "Current User" 
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value as typeof priorityFilter)}
-            className="px-3 py-1 border rounded-md text-sm"
+            className="px-3 py-1 border border-border rounded-md text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="all">All</option>
             <option value="low">Low</option>
@@ -248,7 +296,7 @@ export default function ViewableTasks({ projectId, currentUser = "Current User" 
           <select
             value={assigneeFilter}
             onChange={(e) => setAssigneeFilter(e.target.value)}
-            className="px-3 py-1 border rounded-md text-sm"
+            className="px-3 py-1 border border-border rounded-md text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="all">All</option>
             {allAssignees.map(assignee => (
@@ -273,6 +321,84 @@ export default function ViewableTasks({ projectId, currentUser = "Current User" 
           </div>
         )}
       </div>
+
+      {/* Create Task Form */}
+      {isCreating && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              Create New Task
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input
+              placeholder="Task title..."
+              value={newTask.title}
+              onChange={(e) => setNewTask(prev => ({ ...prev, title: e.target.value }))}
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+            />
+            <Textarea
+              placeholder="Task description..."
+              value={newTask.description}
+              onChange={(e) => setNewTask(prev => ({ ...prev, description: e.target.value }))}
+              rows={3}
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Priority</label>
+                <select
+                  value={newTask.priority}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, priority: e.target.value as Task["priority"] }))}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Assignee</label>
+                <Input
+                  placeholder="Assignee name..."
+                  value={newTask.assignee}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, assignee: e.target.value }))}
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <Input
+                placeholder="Tags (comma separated)..."
+                value={newTask.tags}
+                onChange={(e) => setNewTask(prev => ({ ...prev, tags: e.target.value }))}
+                className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground"
+              />
+              <select
+                value={newTask.visibility}
+                onChange={(e) => setNewTask(prev => ({ ...prev, visibility: e.target.value as Task["visibility"] }))}
+                className="px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="private">Private</option>
+                <option value="team">Team</option>
+                <option value="public">Public</option>
+              </select>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleCreateTask} disabled={!newTask.title.trim()}>
+                <Save className="w-4 h-4 mr-2" />
+                Create Task
+              </Button>
+              <Button variant="outline" onClick={() => setIsCreating(false)}>
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tasks List */}
       <div className="space-y-4">

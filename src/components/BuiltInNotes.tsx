@@ -188,7 +188,7 @@ export default function BuiltInNotes({ projectId, currentUser = "Current User" }
               placeholder="Search notes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full sm:w-64"
+              className="pl-10 w-full sm:w-64 bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
           <Button
@@ -254,24 +254,26 @@ export default function BuiltInNotes({ projectId, currentUser = "Current User" }
               placeholder="Note title..."
               value={newNote.title}
               onChange={(e) => setNewNote(prev => ({ ...prev, title: e.target.value }))}
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
             <Textarea
               placeholder="Write your note here (Markdown supported)..."
               value={newNote.content}
               onChange={(e) => setNewNote(prev => ({ ...prev, content: e.target.value }))}
               rows={6}
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
             <div className="flex gap-4">
               <Input
                 placeholder="Tags (comma separated)..."
                 value={newNote.tags}
                 onChange={(e) => setNewNote(prev => ({ ...prev, tags: e.target.value }))}
-                className="flex-1"
+                className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground"
               />
               <select
                 value={newNote.visibility}
                 onChange={(e) => setNewNote(prev => ({ ...prev, visibility: e.target.value as BuiltInNote["visibility"] }))}
-                className="px-3 py-2 border rounded-md"
+                className="px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="private">Private</option>
                 <option value="team">Team</option>
