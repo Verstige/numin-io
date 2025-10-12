@@ -217,19 +217,7 @@ const NovaChatInterface: React.FC<NovaChatInterfaceProps> = ({
   // Mode switching function
   const switchMode = (newMode: AssistantMode) => {
     setAssistantMode(newMode);
-    
-    // Add mode switch message
-    const modeSwitchMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'ai',
-      content: newMode === 'assistant' 
-        ? `🧠 **Switched to Assistant Mode** - I'm now your Business Intelligence Assistant! I can analyze your projects, team performance, and provide strategic insights. What business aspect would you like to explore?`
-        : `💬 **Switched to Chat Mode** - I'm now your general conversation partner! Feel free to ask me anything - I'm here to help with questions, brainstorming, or just chatting.`,
-      timestamp: new Date(),
-      mode: newMode
-    };
-    
-    setMessages(prev => [...prev, modeSwitchMessage]);
+    // Mode switch now happens silently without adding a message
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
