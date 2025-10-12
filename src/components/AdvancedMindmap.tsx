@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Plus, 
   X, 
@@ -26,7 +28,11 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  Move
+  Move,
+  Search,
+  Filter,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 interface Task {
@@ -163,6 +169,26 @@ export default function AdvancedMindmap({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [showSearchPanel, setShowSearchPanel] = useState(false);
+  const [filteredNodes, setFilteredNodes] = useState<Node[]>([]);
+
+  // Collapsible groups state
+  const [collapsedSubProjects, setCollapsedSubProjects] = useState<Set<string>>(new Set());
+  const [collapsedLegs, setCollapsedLegs] = useState<Set<string>>(new Set());
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+
+  // Auto-layout state
+  const [optimizedNodes, setOptimizedNodes] = useState<Node[]>([]);
+  const [isAutoLayoutEnabled, setIsAutoLayoutEnabled] = useState(false);
+
+  // View mode state
+  type ViewMode = 'mindmap' | 'tree' | 'kanban' | 'timeline';
+  const [viewMode, setViewMode] = useState<ViewMode>('mindmap');
+
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -180,32 +206,114 @@ export default function AdvancedMindmap({
     }
   }, [activeProjectId, nodes]);
 
-  // Calculate sub-project positions around main nodes
+  // Enhanced auto-layout system
+  const calculateOptimalNodePositions = (nodes: Node[]): Node[] => {
+    if (nodes.length === 0) return nodes;
+    
+    // Use force-directed layout for main nodes
+    const updatedNodes = [...nodes];
+    const iterations = 50;
+    const k = 200; // Spring constant
+    const repulsion = 1000; // Repulsion force
+    
+    for (let i = 0; i < iterations; i++) {
+      for (let j = 0; j < updatedNodes.length; j++) {
+        const node = updatedNodes[j];
+        let fx = 0, fy = 0;
+        
+        // Apply repulsion from other nodes
+        for (let k = 0; k < updatedNodes.length; k++) {
+          if (j !== k) {
+            const other = updatedNodes[k];
+            const dx = node.x - other.x;
+            const dy = node.y - other.y;
+            const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+            const force = repulsion / (distance * distance);
+            fx += (dx / distance) * force;
+            fy += (dy / distance) * force;
+          }
+        }
+        
+        // Apply boundary forces (keep nodes within viewport)
+        const boundary = 50;
+        if (node.x < boundary) fx += (boundary - node.x) * 0.1;
+        if (node.x > 1150) fx -= (node.x - 1150) * 0.1;
+        if (node.y < boundary) fy += (boundary - node.y) * 0.1;
+        if (node.y > 650) fy -= (node.y - 650) * 0.1;
+        
+        // Update position with damping
+        const damping = 0.8;
+        node.x += fx * 0.01;
+        node.y += fy * 0.01;
+        
+        // Apply damping
+        node.x *= damping;
+        node.y *= damping;
+      }
+    }
+    
+    return updatedNodes;
+  };
+
+  // Calculate sub-project positions with intelligent spacing
   const calculateSubProjectPositions = (node: Node): SubProject[] => {
     if (!node.subProjects || node.subProjects.length === 0) return [];
     
-    const radius = 120;
-    const angleStep = (2 * Math.PI) / node.subProjects.length;
+    const subProjects = [...node.subProjects];
+    const count = subProjects.length;
     
-    return node.subProjects.map((subProject, index) => ({
-      ...subProject,
-      x: node.x + Math.cos(index * angleStep) * radius,
-      y: node.y + Math.sin(index * angleStep) * radius
-    }));
+    // Dynamic radius based on number of sub-projects
+    const baseRadius = 120;
+    const radius = Math.max(baseRadius, baseRadius + (count - 3) * 20);
+    
+    // Use golden angle for better distribution
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // Golden angle in radians
+    
+    return subProjects.map((subProject, index) => {
+      const angle = index * goldenAngle;
+      const distance = Math.sqrt(index) * (radius / Math.sqrt(count));
+      
+      return {
+        ...subProject,
+        x: node.x + Math.cos(angle) * distance,
+        y: node.y + Math.sin(angle) * distance
+      };
+    });
   };
 
-  // Calculate leg positions around sub-projects
+  // Calculate leg positions with collision avoidance
   const calculateLegPositions = (subProject: SubProject): Leg[] => {
     if (!subProject.legs || subProject.legs.length === 0) return [];
     
-    const radius = 80;
-    const angleStep = (2 * Math.PI) / subProject.legs.length;
+    const legs = [...subProject.legs];
+    const count = legs.length;
     
-    return subProject.legs.map((leg, index) => ({
-      ...leg,
-      x: (subProject.x || 0) + Math.cos(index * angleStep) * radius,
-      y: (subProject.y || 0) + Math.sin(index * angleStep) * radius
-    }));
+    // Dynamic radius based on number of legs
+    const baseRadius = 80;
+    const radius = Math.max(baseRadius, baseRadius + (count - 3) * 15);
+    
+    // Use hexagonal packing for better space utilization
+    if (count <= 6) {
+      // Perfect hexagonal arrangement for 6 or fewer legs
+      const angleStep = (2 * Math.PI) / count;
+      return legs.map((leg, index) => ({
+        ...leg,
+        x: (subProject.x || 0) + Math.cos(index * angleStep) * radius,
+        y: (subProject.y || 0) + Math.sin(index * angleStep) * radius
+      }));
+    } else {
+      // Spiral arrangement for more legs
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      return legs.map((leg, index) => {
+        const angle = index * goldenAngle;
+        const distance = Math.sqrt(index) * (radius / Math.sqrt(count));
+        return {
+          ...leg,
+          x: (subProject.x || 0) + Math.cos(angle) * distance,
+          y: (subProject.y || 0) + Math.sin(angle) * distance
+        };
+      });
+    }
   };
 
   const handleNodeClick = (node: Node) => {
@@ -377,6 +485,151 @@ export default function AdvancedMindmap({
     }
   }, [activeProjectId]);
 
+  // Filter nodes based on search and filter criteria
+  useEffect(() => {
+    let filtered = displayNodes;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(node => 
+        node.title.toLowerCase().includes(query) ||
+        node.subProjects?.some(sub => 
+          sub.name.toLowerCase().includes(query) ||
+          sub.description.toLowerCase().includes(query) ||
+          sub.legs?.some(leg => 
+            leg.name.toLowerCase().includes(query) ||
+            leg.description.toLowerCase().includes(query)
+          )
+        )
+      );
+    }
+
+    // Apply category filter
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter(node =>
+        node.subProjects?.some(sub => sub.category === selectedCategory)
+      );
+    }
+
+    // Apply status filter
+    if (selectedStatus !== "all") {
+      filtered = filtered.filter(node =>
+        node.subProjects?.some(sub => sub.status === selectedStatus)
+      );
+    }
+
+    setFilteredNodes(filtered);
+  }, [displayNodes, searchQuery, selectedCategory, selectedStatus]);
+
+  // Jump to search result
+  const jumpToSearchResult = (nodeId: string) => {
+    const node = displayNodes.find(n => n.id === nodeId);
+    if (node) {
+      handleNodeClick(node);
+      setShowSearchPanel(false);
+    }
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("all");
+    setSelectedStatus("all");
+  };
+
+  // Collapse/expand functionality
+  const toggleSubProjectCollapse = (subProjectId: string) => {
+    setCollapsedSubProjects(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(subProjectId)) {
+        newSet.delete(subProjectId);
+      } else {
+        newSet.add(subProjectId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleLegCollapse = (legId: string) => {
+    setCollapsedLegs(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(legId)) {
+        newSet.delete(legId);
+      } else {
+        newSet.add(legId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleCategoryCollapse = (category: string) => {
+    setCollapsedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(category)) {
+        newSet.delete(category);
+      } else {
+        newSet.add(category);
+      }
+      return newSet;
+    });
+  };
+
+  const expandAll = () => {
+    setCollapsedSubProjects(new Set());
+    setCollapsedLegs(new Set());
+    setCollapsedCategories(new Set());
+  };
+
+  const collapseAll = () => {
+    const allSubProjectIds = new Set<string>();
+    const allLegIds = new Set<string>();
+    const allCategories = new Set<string>();
+
+    nodes.forEach(node => {
+      node.subProjects?.forEach(sub => {
+        allSubProjectIds.add(sub.id);
+        allCategories.add(sub.category);
+        sub.legs?.forEach(leg => {
+          allLegIds.add(leg.id);
+        });
+      });
+    });
+
+    setCollapsedSubProjects(allSubProjectIds);
+    setCollapsedLegs(allLegIds);
+    setCollapsedCategories(allCategories);
+  };
+
+  // Auto-layout functionality
+  const applyAutoLayout = () => {
+    if (nodes.length === 0) return;
+    
+    const optimized = calculateOptimalNodePositions(nodes);
+    setOptimizedNodes(optimized);
+    setIsAutoLayoutEnabled(true);
+    
+    // Auto-focus on the first node after layout
+    if (optimized.length > 0) {
+      setTimeout(() => {
+        handleNodeClick(optimized[0]);
+      }, 500);
+    }
+  };
+
+  const resetToOriginalLayout = () => {
+    setOptimizedNodes([]);
+    setIsAutoLayoutEnabled(false);
+  };
+
+  // Auto-apply layout when nodes change (if enabled)
+  useEffect(() => {
+    if (isAutoLayoutEnabled && nodes.length > 0) {
+      const optimized = calculateOptimalNodePositions(nodes);
+      setOptimizedNodes(optimized);
+    }
+  }, [nodes, isAutoLayoutEnabled]);
+
   // Debug function to test focus on all projects
   const testFocusOnAllProjects = () => {
     console.log('Testing focus on all projects:');
@@ -501,12 +754,24 @@ export default function AdvancedMindmap({
   };
 
   const getNodeOpacity = (nodeId: string) => {
+    // If filters are active, show filtered nodes with full opacity, others dimmed
+    if (searchQuery || selectedCategory !== "all" || selectedStatus !== "all") {
+      const isFiltered = filteredNodes.some(n => n.id === nodeId);
+      if (active === nodeId || hoveredNode === nodeId) return 1;
+      if (isFiltered) return 0.9;
+      return 0.2; // Very dim for non-filtered nodes
+    }
+    
+    // Default opacity logic
     if (active === nodeId || hoveredNode === nodeId) return 1;
     if (active && active !== nodeId) return 0.4;
     return 0.8;
   };
 
-  const expandedNodeData = expandedNode ? nodes.find(n => n.id === expandedNode) : null;
+  // Use optimized nodes if auto-layout is enabled, otherwise use original nodes
+  const displayNodes = isAutoLayoutEnabled && optimizedNodes.length > 0 ? optimizedNodes : nodes;
+  
+  const expandedNodeData = expandedNode ? displayNodes.find(n => n.id === expandedNode) : null;
   const subProjectsWithPositions = expandedNodeData ? calculateSubProjectPositions(expandedNodeData) : [];
 
   return (
@@ -522,79 +787,267 @@ export default function AdvancedMindmap({
         onMouseLeave={handleMouseUp}
         style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       >
-        {/* Zoom Controls */}
-        <div className="mindmap-zoom-controls absolute top-4 left-4 flex flex-col gap-2 z-10 rounded-lg p-1">
-          <Button
-            onClick={() => handleZoom(0.2)}
-            size="sm"
-            variant="outline"
-            className="w-8 h-8 p-0"
-            title={active ? `Zoom In on ${nodes.find(n => n.id === active)?.title}` : "Zoom In"}
-          >
-            <ZoomIn className="w-4 h-4" />
-          </Button>
-          <Button
-            onClick={() => handleZoom(-0.2)}
-            size="sm"
-            variant="outline"
-            className="w-8 h-8 p-0"
-            title={active ? `Zoom Out on ${nodes.find(n => n.id === active)?.title}` : "Zoom Out"}
-          >
-            <ZoomOut className="w-4 h-4" />
-          </Button>
-          <Button
-            onClick={resetView}
-            size="sm"
-            variant="outline"
-            className="w-8 h-8 p-0"
-            title="Reset View & Clear Selection"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </Button>
-          {active && (
+        {/* Enhanced Zoom Controls */}
+        <div className="mindmap-zoom-controls absolute top-4 left-4 flex flex-col gap-2 z-10 bg-background/80 backdrop-blur-sm rounded-lg p-2 border border-border shadow-lg">
+          <div className="flex items-center gap-1">
             <Button
-              onClick={() => focusOnProject(active)}
+              onClick={() => handleZoom(0.2)}
               size="sm"
-              variant="secondary"
+              variant="outline"
+              className="w-8 h-8 p-0 hover:bg-primary hover:text-primary-foreground"
+              title={active ? `Zoom In on ${nodes.find(n => n.id === active)?.title}` : "Zoom In"}
+            >
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+            <Button
+              onClick={() => handleZoom(-0.2)}
+              size="sm"
+              variant="outline"
+              className="w-8 h-8 p-0 hover:bg-primary hover:text-primary-foreground"
+              title={active ? `Zoom Out on ${nodes.find(n => n.id === active)?.title}` : "Zoom Out"}
+            >
+              <ZoomOut className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              onClick={resetView}
+              size="sm"
+              variant="outline"
+              className="w-8 h-8 p-0 hover:bg-primary hover:text-primary-foreground"
+              title="Reset View & Clear Selection"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+            {active && (
+              <Button
+                onClick={() => focusOnProject(active)}
+                size="sm"
+                variant="secondary"
+                className="w-8 h-8 p-0 hover:bg-primary hover:text-primary-foreground"
+                title="Center on Selected Project"
+              >
+                <Target className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+          {/* Zoom Level Display */}
+          <div className="text-xs text-muted-foreground text-center px-1">
+            {Math.round(zoom * 100)}%
+          </div>
+        </div>
+
+        {/* View Mode Selector */}
+        <div className="absolute top-4 left-4 z-10 bg-background/80 backdrop-blur-sm rounded-lg border border-border shadow-lg">
+          <div className="flex items-center gap-1 p-2">
+            <Button
+              onClick={() => setViewMode('mindmap')}
+              size="sm"
+              variant={viewMode === 'mindmap' ? "secondary" : "ghost"}
               className="w-8 h-8 p-0"
-              title="Center on Selected Project"
+              title="Mindmap View"
             >
               <Target className="w-4 h-4" />
             </Button>
+            <Button
+              onClick={() => setViewMode('tree')}
+              size="sm"
+              variant={viewMode === 'tree' ? "secondary" : "ghost"}
+              className="w-8 h-8 p-0"
+              title="Tree View"
+            >
+              <Activity className="w-4 h-4" />
+            </Button>
+            <Button
+              onClick={() => setViewMode('kanban')}
+              size="sm"
+              variant={viewMode === 'kanban' ? "secondary" : "ghost"}
+              className="w-8 h-8 p-0"
+              title="Kanban View"
+            >
+              <Users className="w-4 h-4" />
+            </Button>
+            <Button
+              onClick={() => setViewMode('timeline')}
+              size="sm"
+              variant={viewMode === 'timeline' ? "secondary" : "ghost"}
+              className="w-8 h-8 p-0"
+              title="Timeline View"
+            >
+              <Clock className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Layout and Organization Controls */}
+        <div className="absolute top-4 right-1/2 transform translate-x-1/2 z-10 bg-background/80 backdrop-blur-sm rounded-lg border border-border shadow-lg">
+          <div className="flex items-center gap-1 p-2">
+            {/* Auto-Layout Controls */}
+            <div className="flex items-center gap-1 border-r border-border pr-2 mr-2">
+              <Button
+                onClick={isAutoLayoutEnabled ? resetToOriginalLayout : applyAutoLayout}
+                size="sm"
+                variant={isAutoLayoutEnabled ? "secondary" : "outline"}
+                className="w-8 h-8 p-0 hover:bg-primary hover:text-primary-foreground"
+                title={isAutoLayoutEnabled ? "Reset to Original Layout" : "Apply Auto-Layout"}
+              >
+                <Zap className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {/* Collapse/Expand Controls */}
+            <div className="flex items-center gap-1">
+              <Button
+                onClick={expandAll}
+                size="sm"
+                variant="outline"
+                className="w-8 h-8 p-0 hover:bg-primary hover:text-primary-foreground"
+                title="Expand All Groups"
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={collapseAll}
+                size="sm"
+                variant="outline"
+                className="w-8 h-8 p-0 hover:bg-primary hover:text-primary-foreground"
+                title="Collapse All Groups"
+              >
+                <EyeOff className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Filter Panel */}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-background/80 backdrop-blur-sm rounded-lg border border-border shadow-lg">
+          <div className="flex items-center gap-2 p-2">
+            <Button
+              onClick={() => setShowSearchPanel(!showSearchPanel)}
+              size="sm"
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Search className="w-4 h-4" />
+              <span className="hidden sm:inline">Search</span>
+            </Button>
+            <Button
+              onClick={clearFilters}
+              size="sm"
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground"
+              disabled={!searchQuery && selectedCategory === "all" && selectedStatus === "all"}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+            {(searchQuery || selectedCategory !== "all" || selectedStatus !== "all") && (
+              <Badge variant="secondary" className="text-xs">
+                {filteredNodes.length} result{filteredNodes.length !== 1 ? 's' : ''}
+              </Badge>
+            )}
+          </div>
+          
+          {showSearchPanel && (
+            <div className="absolute top-full left-0 mt-2 w-80 bg-background border border-border rounded-lg shadow-xl p-4">
+              <div className="space-y-4">
+                {/* Search Input */}
+                <div>
+                  <Label htmlFor="search" className="text-sm font-medium">Search Projects</Label>
+                  <div className="relative mt-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search projects, sub-projects, legs..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {/* Category Filter */}
+                <div>
+                  <Label className="text-sm font-medium">Category</Label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="All categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="sales">Sales</SelectItem>
+                      <SelectItem value="marketing">Marketing</SelectItem>
+                      <SelectItem value="social-media">Social Media</SelectItem>
+                      <SelectItem value="growth">Growth</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <Label className="text-sm font-medium">Status</Label>
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="planning">Planning</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="paused">Paused</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Search Results */}
+                {filteredNodes.length > 0 && (
+                  <div>
+                    <Label className="text-sm font-medium">Results</Label>
+                    <div className="mt-1 max-h-32 overflow-y-auto space-y-1">
+                      {filteredNodes.map(node => (
+                        <Button
+                          key={node.id}
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-left h-auto p-2"
+                          onClick={() => jumpToSearchResult(node.id)}
+                        >
+                          <div className="flex flex-col items-start">
+                            <span className="font-medium">{node.title}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {node.subProjects?.length || 0} sub-projects
+                            </span>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
-          {/* Debug button - remove in production */}
-          <Button
-            onClick={testFocusOnAllProjects}
-            size="sm"
-            variant="destructive"
-            className="w-8 h-8 p-0 text-xs"
-            title="Debug: Test focus on all projects"
-          >
-            D
-          </Button>
         </div>
 
         {/* Active Project Indicator */}
         {active && (
-          <div className="mindmap-info-panel absolute top-4 right-4 rounded-md px-3 py-1 text-sm font-medium z-10 text-white">
-            <div className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
+          <div className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-2 text-sm font-medium z-10 border border-border shadow-lg">
+            <div className="flex items-center gap-2 text-foreground">
+              <Target className="w-4 h-4 text-primary" />
               <span>Focused: {nodes.find(n => n.id === active)?.title}</span>
             </div>
           </div>
         )}
 
-        {/* Zoom Level Indicator */}
-        <div className="mindmap-info-panel absolute bottom-4 left-4 rounded-md px-3 py-1 text-sm font-medium z-10 text-white">
-          {Math.round(zoom * 100)}%
-        </div>
-
-        {/* Pan Instructions */}
-        <div className="mindmap-info-panel absolute bottom-4 right-4 rounded-md px-3 py-1 text-xs text-white/80 z-10">
+        {/* Navigation Instructions */}
+        <div className="absolute bottom-4 right-4 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-muted-foreground z-10 border border-border shadow-lg">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <Move className="w-3 h-3" />
               <span>Ctrl+Drag or Middle Mouse to pan</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Target className="w-3 h-3" />
+              <span>Scroll wheel to zoom</span>
             </div>
             {active && (
               <div className="flex items-center gap-2">
@@ -758,7 +1211,7 @@ export default function AdvancedMindmap({
               })}
 
           {/* Main project nodes */}
-          {nodes.map((n) => (
+          {displayNodes.map((n) => (
             <g 
               key={n.id} 
               transform={`translate(${n.x}, ${n.y}) scale(${getNodeScale(n.id)})`} 
@@ -829,6 +1282,7 @@ export default function AdvancedMindmap({
             const category = categoryConfig[subProject.category];
             const CategoryIcon = category.icon;
             const isSelected = selectedSubProject?.id === subProject.id;
+            const isCollapsed = collapsedSubProjects.has(subProject.id);
             
             return (
               <g 
@@ -837,7 +1291,8 @@ export default function AdvancedMindmap({
                 className="cursor-pointer transition-all duration-300 ease-out"
                 onClick={() => handleSubProjectClick(subProject, expandedNodeData)}
                 style={{
-                  opacity: selectedSubProject ? (selectedSubProject.id === subProject.id ? 1 : 0.5) : 1
+                  opacity: selectedSubProject ? (selectedSubProject.id === subProject.id ? 1 : 0.5) : 1,
+                  display: isCollapsed ? 'none' : 'block'
                 }}
               >
                 {/* Sub-project shadow */}
@@ -965,6 +1420,187 @@ export default function AdvancedMindmap({
               });
             })}
         </svg>
+
+        {/* Alternative View Modes */}
+        {viewMode !== 'mindmap' && (
+          <div className="absolute inset-0 bg-background rounded-3xl p-6 overflow-y-auto">
+            {viewMode === 'tree' && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-primary" />
+                  Tree View
+                </h3>
+                <div className="space-y-4">
+                  {displayNodes.map((node) => (
+                    <div key={node.id} className="border border-border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium text-lg">{node.title}</h4>
+                        <Button
+                          onClick={() => {
+                            handleNodeClick(node);
+                            setViewMode('mindmap');
+                          }}
+                          size="sm"
+                          variant="outline"
+                        >
+                          View Details
+                        </Button>
+                      </div>
+                      
+                      {node.subProjects && node.subProjects.length > 0 && (
+                        <div className="ml-4 space-y-2">
+                          {node.subProjects.map((subProject) => (
+                            <div key={subProject.id} className="border-l-2 border-primary/30 pl-4 py-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Badge className={categoryConfig[subProject.category].bgColor}>
+                                    {categoryConfig[subProject.category].label}
+                                  </Badge>
+                                  <span className="font-medium">{subProject.name}</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {subProject.progress}%
+                                  </Badge>
+                                </div>
+                                <Button
+                                  onClick={() => {
+                                    setSelectedSubProject(subProject);
+                                    setActive(node.id);
+                                    setViewMode('mindmap');
+                                  }}
+                                  size="sm"
+                                  variant="ghost"
+                                >
+                                  <ChevronRight className="w-4 h-4" />
+                                </Button>
+                              </div>
+                              
+                              {subProject.legs && subProject.legs.length > 0 && (
+                                <div className="ml-4 mt-2 space-y-1">
+                                  {subProject.legs.map((leg) => (
+                                    <div key={leg.id} className="flex items-center justify-between text-sm">
+                                      <span className="text-muted-foreground">{leg.name}</span>
+                                      <Badge variant="secondary" className="text-xs">
+                                        {leg.progress}%
+                                      </Badge>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {viewMode === 'kanban' && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-primary" />
+                  Kanban View
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {['planning', 'active', 'completed', 'paused'].map((status) => (
+                    <div key={status} className="bg-muted/20 rounded-lg p-4">
+                      <h4 className="font-medium mb-3 capitalize flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${
+                          status === 'planning' ? 'bg-gray-400' :
+                          status === 'active' ? 'bg-blue-500' :
+                          status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'
+                        }`} />
+                        {status} ({statusConfig[status as keyof typeof statusConfig]?.label || status})
+                      </h4>
+                      <div className="space-y-2">
+                        {displayNodes.flatMap(node => 
+                          node.subProjects?.filter(sub => sub.status === status) || []
+                        ).map((subProject) => (
+                          <Card key={subProject.id} className="p-3 cursor-pointer hover:shadow-md">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h5 className="font-medium text-sm">{subProject.name}</h5>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {subProject.description}
+                                </p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Badge className={categoryConfig[subProject.category].bgColor}>
+                                    {categoryConfig[subProject.category].label}
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground">
+                                    {subProject.progress}%
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {viewMode === 'timeline' && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-primary" />
+                  Timeline View
+                </h3>
+                <div className="space-y-4">
+                  {displayNodes.map((node) => (
+                    <div key={node.id} className="border border-border rounded-lg p-4">
+                      <h4 className="font-medium text-lg mb-3">{node.title}</h4>
+                      <div className="space-y-3">
+                        {node.subProjects?.map((subProject) => (
+                          <div key={subProject.id} className="flex items-center gap-4">
+                            <div className="flex-shrink-0">
+                              <div className={`w-4 h-4 rounded-full ${
+                                subProject.status === 'completed' ? 'bg-green-500' :
+                                subProject.status === 'active' ? 'bg-blue-500' :
+                                subProject.status === 'planning' ? 'bg-gray-400' : 'bg-yellow-500'
+                              }`} />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <h5 className="font-medium">{subProject.name}</h5>
+                                <div className="flex items-center gap-2">
+                                  <Badge className={categoryConfig[subProject.category].bgColor}>
+                                    {categoryConfig[subProject.category].label}
+                                  </Badge>
+                                  <Badge variant="outline">
+                                    {statusConfig[subProject.status]?.label || subProject.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {subProject.description}
+                              </p>
+                              <div className="mt-2">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                                  <span>Progress</span>
+                                  <span>{subProject.progress}%</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div 
+                                    className="bg-primary h-2 rounded-full transition-all duration-500"
+                                    style={{ width: `${subProject.progress}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Floating action buttons */}
         <div className="absolute top-4 right-4 flex gap-3">
@@ -1247,6 +1883,19 @@ export default function AdvancedMindmap({
                 </CardTitle>
                 <div className="flex gap-2">
                   <Button 
+                    onClick={() => toggleSubProjectCollapse(selectedSubProject.id)}
+                    size="sm"
+                    variant="outline"
+                    title={collapsedSubProjects.has(selectedSubProject.id) ? "Expand Sub-Project" : "Collapse Sub-Project"}
+                  >
+                    {collapsedSubProjects.has(selectedSubProject.id) ? (
+                      <Eye className="w-4 h-4 mr-2" />
+                    ) : (
+                      <EyeOff className="w-4 h-4 mr-2" />
+                    )}
+                    {collapsedSubProjects.has(selectedSubProject.id) ? "Expand" : "Collapse"}
+                  </Button>
+                  <Button 
                     onClick={() => handleAddLeg(selectedSubProject)}
                     size="sm"
                     variant="outline"
@@ -1340,22 +1989,59 @@ export default function AdvancedMindmap({
                   <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <Target className="w-5 h-5" />
                     Legs ({selectedSubProject.legs.length})
+                    <Button
+                      onClick={() => {
+                        // Toggle all legs for this sub-project
+                        selectedSubProject.legs?.forEach(leg => {
+                          toggleLegCollapse(leg.id);
+                        });
+                      }}
+                      size="sm"
+                      variant="ghost"
+                      className="ml-auto"
+                      title="Toggle All Legs"
+                    >
+                      {selectedSubProject.legs.every(leg => collapsedLegs.has(leg.id)) ? (
+                        <Eye className="w-4 h-4" />
+                      ) : (
+                        <EyeOff className="w-4 h-4" />
+                      )}
+                    </Button>
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {selectedSubProject.legs.map((leg) => {
                       const status = statusConfig[leg.status];
+                      const isCollapsed = collapsedLegs.has(leg.id);
                       
                       return (
                         <Card 
                           key={leg.id} 
                           className={`hover:shadow-md transition-all duration-300 hover:scale-105 cursor-pointer ${
                             selectedLeg?.id === leg.id ? 'ring-2 ring-primary' : ''
-                          }`}
+                          } ${isCollapsed ? 'opacity-60' : ''}`}
                           onClick={() => handleLegClick(leg, selectedSubProject)}
                         >
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between mb-2">
-                              <h4 className="font-medium text-sm">{leg.name}</h4>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium text-sm">{leg.name}</h4>
+                                <Button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleLegCollapse(leg.id);
+                                  }}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 w-6 p-0"
+                                  title={isCollapsed ? "Expand Leg" : "Collapse Leg"}
+                                >
+                                  {isCollapsed ? (
+                                    <Eye className="w-3 h-3" />
+                                  ) : (
+                                    <EyeOff className="w-3 h-3" />
+                                  )}
+                                </Button>
+                              </div>
                               <Badge className={`text-xs ${status.color}`}>
                                 {status.label}
                               </Badge>
