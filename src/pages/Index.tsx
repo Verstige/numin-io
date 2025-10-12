@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
+import DashboardDirectory from "@/components/DashboardDirectory";
 import AdvancedMindmap from "@/components/AdvancedMindmap";
 import ProjectCard from "@/components/ProjectCard";
 import ChatInterface from "@/components/ChatInterface";
@@ -353,6 +354,8 @@ export default function Index() {
   const [currentUserRole] = useState<"owner" | "admin" | "member" | "viewer">("admin");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [dynamicMindmapNodes, setDynamicMindmapNodes] = useState([]);
+  const [hasEverCreatedProject, setHasEverCreatedProject] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   // Handle new project creation
   const handleAddNewProject = (projectData: { title: string; description: string }) => {
@@ -390,6 +393,10 @@ export default function Index() {
     // Save to localStorage
     localStorage.setItem('userProjects', JSON.stringify(updatedProjects));
     localStorage.setItem('userMindmapNodes', JSON.stringify(updatedNodes));
+    localStorage.setItem('hasEverCreatedProject', 'true'); // Mark that user has created a project
+    
+    // Update state
+    setHasEverCreatedProject(true);
     
     console.log("New project added:", newProject);
     console.log("New node created:", newNode);
@@ -478,13 +485,16 @@ export default function Index() {
             setProjects(parsedProjects);
             setFilteredProjects(parsedProjects);
             setDynamicMindmapNodes(parsedNodes);
+            setHasEverCreatedProject(true); // User has created projects before
           }
         } else {
-          // All users start with empty workspace (no mock data)
+          // Check if user has ever created a project (for first-time users)
+          const hasCreatedProject = localStorage.getItem('hasEverCreatedProject');
           if (mounted) {
             setProjects([]);
             setFilteredProjects([]);
             setDynamicMindmapNodes([]);
+            setHasEverCreatedProject(hasCreatedProject === 'true');
           }
         }
       } catch (error) {
@@ -636,10 +646,12 @@ export default function Index() {
     localStorage.removeItem('userProjects');
     localStorage.removeItem('userMindmapNodes');
     localStorage.removeItem('activeProjectId');
+    localStorage.removeItem('hasEverCreatedProject');
     setProjects([]);
     setFilteredProjects([]);
     setDynamicMindmapNodes([]);
     setActiveProject(null);
+    setHasEverCreatedProject(false);
     console.log('User data cleared');
   };
 
@@ -665,6 +677,7 @@ export default function Index() {
         localStorage.removeItem('userProjects');
         localStorage.removeItem('userMindmapNodes');
         localStorage.removeItem('activeProjectId');
+        localStorage.removeItem('hasEverCreatedProject');
         console.log('Logged out successfully');
       }
     } catch (error) {
@@ -682,10 +695,13 @@ export default function Index() {
       <div className="hidden lg:block">
         <Sidebar 
           onNewProject={() => setIsNewProjectOpen(true)}
+          onDashboard={() => setShowDashboard(true)}
+          onGetStarted={() => setIsNewProjectOpen(true)}
           projects={projects}
           onSearch={handleSearch}
           onFilter={handleFilter}
           isLoading={isLoading}
+          hasEverCreatedProject={hasEverCreatedProject}
         />
       </div>
 
@@ -805,8 +821,8 @@ export default function Index() {
         </div>
         
         <div className="p-3 sm:p-4 md:p-6 lg:p-8">
-          {/* Show welcome screen for new users */}
-          {projects.length === 0 && !isLoading ? (
+          {/* Show welcome screen only for truly new users (never created a project) */}
+          {projects.length === 0 && !isLoading && !hasEverCreatedProject ? (
             <NewUserWelcome 
               onCreateProject={() => setIsNewProjectOpen(true)}
               onViewDemo={() => window.location.href = '/demo'}
@@ -1046,6 +1062,17 @@ export default function Index() {
         projects={projects}
         onSelectProject={handleQuickSwitcherSelect}
       />
+
+      {/* Dashboard Directory */}
+      {showDashboard && (
+        <DashboardDirectory
+          onSelectTab={(tab) => {
+            setCurrentTab(tab as WorkspaceTab);
+            setShowDashboard(false);
+          }}
+          onClose={() => setShowDashboard(false)}
+        />
+      )}
     </div>
   );
 }

@@ -9,6 +9,8 @@ import { useState } from "react";
 
 interface SidebarProps {
   onNewProject: () => void;
+  onDashboard?: () => void;
+  onGetStarted?: () => void;
   projects?: Array<{
     id: string;
     name: string;
@@ -19,9 +21,19 @@ interface SidebarProps {
   onSearch?: (query: string) => void;
   onFilter?: (filter: { status?: string; priority?: string }) => void;
   isLoading?: boolean;
+  hasEverCreatedProject?: boolean;
 }
 
-export default function Sidebar({ onNewProject, projects = [], onSearch, onFilter, isLoading = false }: SidebarProps) {
+export default function Sidebar({ 
+  onNewProject, 
+  onDashboard, 
+  onGetStarted, 
+  projects = [], 
+  onSearch, 
+  onFilter, 
+  isLoading = false, 
+  hasEverCreatedProject = false 
+}: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -155,6 +167,7 @@ export default function Sidebar({ onNewProject, projects = [], onSearch, onFilte
         <Button 
           variant="secondary" 
           className="w-full justify-start gap-3 bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-accent-foreground border-sidebar-border"
+          onClick={onDashboard}
         >
           <LayoutDashboard className="w-5 h-5" />
           Dashboard
@@ -167,6 +180,16 @@ export default function Sidebar({ onNewProject, projects = [], onSearch, onFilte
           <Plus className="w-5 h-5" />
           New Brand
         </Button>
+        {hasEverCreatedProject && (
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm"
+            onClick={onGetStarted}
+          >
+            <Sparkles className="w-4 h-4" />
+            Get Started
+          </Button>
+        )}
       </nav>
 
       {/* Settings */}
