@@ -1,4 +1,4 @@
-import { LayoutDashboard, Plus, Settings, Sparkles, Search, Filter } from "lucide-react";
+import { LayoutDashboard, Plus, Settings, Sparkles, Search, Filter, Bot, Workflow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import ThemeToggle from "./ThemeToggle";
 import { SidebarStatsSkeleton } from "./LoadingSkeleton";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   onNewProject: () => void;
@@ -37,6 +38,7 @@ export default function Sidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const navigate = useNavigate();
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -172,6 +174,20 @@ export default function Sidebar({
           <LayoutDashboard className="w-5 h-5" />
           Dashboard
         </Button>
+        
+        {/* Nexus AI Business Suite */}
+        <div className="border-t border-sidebar-border pt-2 mt-2">
+          <div className="text-xs font-medium text-sidebar-foreground/60 mb-2 px-2">AI Business Suite</div>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            onClick={() => navigate('/nexus')}
+          >
+            <Bot className="w-5 h-5" />
+            Nexus AI
+          </Button>
+        </div>
+
         <Button 
           variant="ghost" 
           className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
