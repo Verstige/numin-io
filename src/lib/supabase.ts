@@ -160,6 +160,183 @@ export interface Database {
           updated_at?: string
         }
       }
+      // Nexus AI Tables
+      ai_agents: {
+        Row: {
+          id: string
+          name: string
+          role: string
+          description: string | null
+          system_prompt: string
+          model: any
+          memory: any
+          permissions: any
+          status: string
+          created_at: string
+          updated_at: string
+          last_activity: string
+          metrics: any
+          created_by: string
+          team_id: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          role: string
+          description?: string | null
+          system_prompt: string
+          model?: any
+          memory?: any
+          permissions?: any
+          status?: string
+          created_at?: string
+          updated_at?: string
+          last_activity?: string
+          metrics?: any
+          created_by: string
+          team_id: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          role?: string
+          description?: string | null
+          system_prompt?: string
+          model?: any
+          memory?: any
+          permissions?: any
+          status?: string
+          created_at?: string
+          updated_at?: string
+          last_activity?: string
+          metrics?: any
+          created_by?: string
+          team_id?: string
+        }
+      }
+      workflows: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          nodes: any
+          edges: any
+          triggers: any
+          status: string
+          created_at: string
+          updated_at: string
+          created_by: string
+          team_id: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          nodes?: any
+          edges?: any
+          triggers?: any
+          status?: string
+          created_at?: string
+          updated_at?: string
+          created_by: string
+          team_id: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          nodes?: any
+          edges?: any
+          triggers?: any
+          status?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string
+          team_id?: string
+        }
+      }
+      api_connectors: {
+        Row: {
+          id: string
+          name: string
+          type: string
+          config: any
+          status: string
+          last_sync: string | null
+          permissions: any
+          created_at: string
+          updated_at: string
+          created_by: string
+          team_id: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          type: string
+          config?: any
+          status?: string
+          last_sync?: string | null
+          permissions?: any
+          created_at?: string
+          updated_at?: string
+          created_by: string
+          team_id: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          type?: string
+          config?: any
+          status?: string
+          last_sync?: string | null
+          permissions?: any
+          created_at?: string
+          updated_at?: string
+          created_by?: string
+          team_id?: string
+        }
+      }
+      rag_documents: {
+        Row: {
+          id: string
+          title: string
+          content: string
+          source: string
+          type: string
+          embedding: any
+          metadata: any
+          created_at: string
+          updated_at: string
+          created_by: string
+          team_id: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          content: string
+          source: string
+          type: string
+          embedding?: any
+          metadata?: any
+          created_at?: string
+          updated_at?: string
+          created_by: string
+          team_id: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          content?: string
+          source?: string
+          type?: string
+          embedding?: any
+          metadata?: any
+          created_at?: string
+          updated_at?: string
+          created_by?: string
+          team_id?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

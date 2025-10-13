@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import RenaMindmap from "@/components/RenaMindmap";
+import EnhancedProjectMap from "@/components/EnhancedProjectMap";
 import ProjectCard from "@/components/ProjectCard";
 import ChatInterface from "@/components/ChatInterface";
 import ProjectContextPanel from "@/components/ProjectContextPanel";
@@ -49,6 +50,7 @@ export default function Index() {
   const [invitations] = useState<TeamInvitation[]>([]);
   const [currentTab, setCurrentTab] = useState<WorkspaceTab>("mindmap");
   const [currentUserRole] = useState<"owner" | "admin" | "member" | "viewer">("admin"); // Mock current user role
+  const [useEnhancedMap, setUseEnhancedMap] = useState(false);
 
   // Simulate loading initial data
   useEffect(() => {
@@ -226,13 +228,43 @@ export default function Index() {
               mindmapContent={
                 isLoading ? (
                   <MindmapSkeleton />
+                ) : useEnhancedMap ? (
+                  <div className="h-full">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold">Enhanced Project Map</h3>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setUseEnhancedMap(false)}
+                      >
+                        Switch to Simple View
+                      </Button>
+                    </div>
+                    <EnhancedProjectMap
+                      onProjectSelect={handleOpenProject}
+                      selectedProjectId={activeProject?.id}
+                      projects={projects}
+                    />
+                  </div>
                 ) : projects.length > 0 ? (
-                  <RenaMindmap
-                    nodes={[]}
-                    edges={[]}
-                    onOpenProject={handleOpenProject}
-                    activeProjectId={activeProject?.id}
-                  />
+                  <div className="h-full">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold">Project Mindmap</h3>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setUseEnhancedMap(true)}
+                      >
+                        Switch to Enhanced View
+                      </Button>
+                    </div>
+                    <RenaMindmap
+                      nodes={[]}
+                      edges={[]}
+                      onOpenProject={handleOpenProject}
+                      activeProjectId={activeProject?.id}
+                    />
+                  </div>
                 ) : (
                   <EmptyState 
                     type="no-projects" 
