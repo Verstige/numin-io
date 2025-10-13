@@ -32,7 +32,7 @@ import {
   CheckSquare, 
   Flag, 
   Users, 
-  UserGroup,
+  Users2,
   Plus,
   Edit,
   Trash2,
@@ -213,7 +213,7 @@ const TeamNode = ({ data, selected }: { data: any; selected: boolean }) => (
   }`}>
     <Handle type="target" position={Position.Top} className="w-3 h-3" />
     <div className="flex items-center gap-2 mb-1">
-      <UserGroup className="w-4 h-4 text-indigo-500" />
+      <Users2 className="w-4 h-4 text-indigo-500" />
       <div className="font-semibold text-sm text-gray-800">{data.title}</div>
     </div>
     
@@ -273,7 +273,7 @@ const PROJECT_NODE_TEMPLATES = [
   {
     type: 'team',
     label: 'Team',
-    icon: <UserGroup className="w-4 h-4" />,
+    icon: <Users2 className="w-4 h-4" />,
     color: 'indigo',
     description: 'Team or department'
   }

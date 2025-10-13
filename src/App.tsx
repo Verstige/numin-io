@@ -11,7 +11,6 @@ import NotFound from "./app/not-found";
 import DemoWorkspace from "./components/DemoWorkspace";
 import NexusDashboard from "./components/NexusDashboard";
 import NexusDemo from "./components/NexusDemo";
-import ProjectMapDemo from "./components/ProjectMapDemo";
 
 const queryClient = new QueryClient();
 
@@ -41,7 +40,6 @@ const App = () => (
             } />
             <Route path="/demo" element={<DemoWorkspace />} />
             <Route path="/nexus-demo" element={<NexusDemo />} />
-            <Route path="/project-map-demo" element={<ProjectMapDemo />} />
             <Route path="/home" element={<LandingPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
