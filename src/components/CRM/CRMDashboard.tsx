@@ -71,6 +71,9 @@ export default function CRMDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isAddContactOpen, setIsAddContactOpen] = useState(false);
+  const [isViewContactOpen, setIsViewContactOpen] = useState(false);
+  const [isEditContactOpen, setIsEditContactOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [activeTab, setActiveTab] = useState<'contacts' | 'deals' | 'analytics'>('contacts');
   const [analyticsFilter, setAnalyticsFilter] = useState<'status' | 'source' | 'tags' | 'all'>('all');
   const [isManageSourcesOpen, setIsManageSourcesOpen] = useState(false);
@@ -89,6 +92,10 @@ export default function CRMDashboard() {
     notes: '',
     tags: [] as string[]
   });
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Initialize empty data - replace with actual API calls
   useEffect(() => {
@@ -106,6 +113,17 @@ export default function CRMDashboard() {
     const matchesStatus = statusFilter === 'all' || contact.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredContacts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedContacts = filteredContacts.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -187,6 +205,78 @@ export default function CRMDashboard() {
 
   const handleRemoveSource = (sourceToRemove: string) => {
     setAvailableSources(availableSources.filter(source => source !== sourceToRemove));
+  };
+
+  const handleViewContact = (contact: Contact) => {
+    setSelectedContact(contact);
+    setIsViewContactOpen(true);
+  };
+
+  const handleEditContact = (contact: Contact) => {
+    setSelectedContact(contact);
+    setNewContact({
+      name: contact.name,
+      email: contact.email,
+      phone: contact.phone || '',
+      company: contact.company || '',
+      position: contact.position || '',
+      status: contact.status,
+      source: contact.source,
+      notes: contact.notes || '',
+      tags: contact.tags
+    });
+    setIsEditContactOpen(true);
+  };
+
+  const handleUpdateContact = () => {
+    if (!selectedContact || !newContact.name || !newContact.email) {
+      alert('Please fill in at least name and email fields');
+      return;
+    }
+
+    const updatedContact: Contact = {
+      ...selectedContact,
+      ...newContact,
+      updatedAt: new Date().toISOString()
+    };
+
+    setContacts(prev => prev.map(contact => 
+      contact.id === selectedContact.id ? updatedContact : contact
+    ));
+
+    // Save to localStorage
+    const updatedContacts = contacts.map(contact => 
+      contact.id === selectedContact.id ? updatedContact : contact
+    );
+    localStorage.setItem('crmContacts', JSON.stringify(updatedContacts));
+
+    setIsEditContactOpen(false);
+    setSelectedContact(null);
+    setNewContact({
+      name: '',
+      email: '',
+      phone: '',
+      company: '',
+      position: '',
+      status: 'lead',
+      source: '',
+      notes: '',
+      tags: []
+    });
+
+    alert('Contact updated successfully!');
+  };
+
+  const handleDeleteContact = (contactId: string) => {
+    if (window.confirm('Are you sure you want to delete this contact?')) {
+      setContacts(prev => prev.filter(contact => contact.id !== contactId));
+      
+      // Save to localStorage
+      const updatedContacts = contacts.filter(contact => contact.id !== contactId);
+      localStorage.setItem('crmContacts', JSON.stringify(updatedContacts));
+      
+      alert('Contact deleted successfully!');
+    }
   };
 
   // Analytics calculations
@@ -413,75 +503,133 @@ export default function CRMDashboard() {
           </Card>
 
           {/* Contacts List */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredContacts.map((contact) => (
-              <Card key={contact.id} className="bg-chatgpt-card border-border shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="font-semibold text-foreground">{contact.name}</h3>
-                      <p className="text-sm text-muted-foreground">{contact.position}</p>
-                      <p className="text-sm text-muted-foreground">{contact.company}</p>
+          <div className="space-y-2">
+            {paginatedContacts.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">No contacts found</h3>
+                <p className="text-muted-foreground">Try adjusting your search or filters, or add a new contact.</p>
+              </div>
+            ) : (
+              <>
+                {/* List Header */}
+                <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-muted/30 rounded-lg text-sm font-medium text-muted-foreground">
+                  <div className="col-span-3">Name</div>
+                  <div className="col-span-2">Company</div>
+                  <div className="col-span-2">Email</div>
+                  <div className="col-span-2">Phone</div>
+                  <div className="col-span-2">Status</div>
+                  <div className="col-span-1">Actions</div>
+                </div>
+                
+                {/* Contact Rows */}
+                {paginatedContacts.map((contact) => (
+                  <div key={contact.id} className="grid grid-cols-12 gap-4 px-4 py-4 bg-chatgpt-card border border-border rounded-lg hover:bg-muted/20 transition-colors">
+                    <div className="col-span-3">
+                      <div className="font-semibold text-foreground">{contact.name}</div>
+                      <div className="text-sm text-muted-foreground">{contact.position}</div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit Contact
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Mail className="w-4 h-4 mr-2" />
-                          Send Email
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="col-span-2">
+                      <div className="text-sm text-foreground">{contact.company || '-'}</div>
+                    </div>
+                    <div className="col-span-2">
+                      <div className="text-sm text-foreground">{contact.email}</div>
+                    </div>
+                    <div className="col-span-2">
+                      <div className="text-sm text-foreground">{contact.phone || '-'}</div>
+                    </div>
+                    <div className="col-span-2">
+                      <Badge className={`${getStatusColor(contact.status)} border`}>
+                        {contact.status}
+                      </Badge>
+                    </div>
+                    <div className="col-span-1">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewContact(contact)}>
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditContact(contact)}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit Contact
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Mail className="w-4 h-4 mr-2" />
+                            Send Email
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleDeleteContact(contact.id)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Mail className="w-4 h-4" />
-                      {contact.email}
+                ))}
+                
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-6">
+                    <div className="text-sm text-muted-foreground">
+                      Showing {startIndex + 1} to {Math.min(endIndex, filteredContacts.length)} of {filteredContacts.length} contacts
                     </div>
-                    {contact.phone && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Phone className="w-4 h-4" />
-                        {contact.phone}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+                          
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={currentPage === pageNum ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(pageNum)}
+                              className="w-8 h-8 p-0"
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
                       </div>
-                    )}
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Building2 className="w-4 h-4" />
-                      {contact.source}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <Badge className={`${getStatusColor(contact.status)} border`}>
-                      {contact.status}
-                    </Badge>
-                    <div className="flex gap-1">
-                      {contact.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                )}
+              </>
+            )}
           </div>
         </div>
       )}
@@ -1082,6 +1230,280 @@ export default function CRMDashboard() {
                 className="border-border text-foreground hover:bg-background/50"
               >
                 Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Contact Dialog */}
+      <Dialog open={isViewContactOpen} onOpenChange={setIsViewContactOpen}>
+        <DialogContent className="max-w-2xl bg-chatgpt-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Contact Details</DialogTitle>
+          </DialogHeader>
+          
+          {selectedContact && (
+            <div className="space-y-6">
+              {/* Contact Header */}
+              <div className="flex items-start gap-4 p-4 bg-background/50 rounded-lg border border-border">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-foreground">{selectedContact.name}</h3>
+                  <p className="text-muted-foreground">{selectedContact.position}</p>
+                  <p className="text-muted-foreground">{selectedContact.company}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge className={`${
+                      selectedContact.status === 'lead' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
+                      selectedContact.status === 'prospect' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                      selectedContact.status === 'customer' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                      'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                    }`}>
+                      {selectedContact.status.charAt(0).toUpperCase() + selectedContact.status.slice(1)}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {selectedContact.source}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Email</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-foreground">{selectedContact.email}</span>
+                    </div>
+                  </div>
+                  
+                  {selectedContact.phone && (
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Phone</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-foreground">{selectedContact.phone}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedContact.company && (
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Company</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Building2 className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-foreground">{selectedContact.company}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Created</Label>
+                    <p className="text-foreground">{new Date(selectedContact.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Last Updated</Label>
+                    <p className="text-foreground">{new Date(selectedContact.updatedAt).toLocaleDateString()}</p>
+                  </div>
+                  
+                  {selectedContact.lastContact && (
+                    <div>
+                      <Label className="text-sm font-medium text-muted-foreground">Last Contact</Label>
+                      <p className="text-foreground">{new Date(selectedContact.lastContact).toLocaleDateString()}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Tags */}
+              {selectedContact.tags.length > 0 && (
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground mb-2 block">Tags</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedContact.tags.map((tag, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        <Tag className="w-3 h-3 mr-1" />
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {selectedContact.notes && (
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground mb-2 block">Notes</Label>
+                  <div className="p-3 bg-background/50 rounded-lg border border-border">
+                    <p className="text-foreground whitespace-pre-wrap">{selectedContact.notes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Dialog Actions */}
+              <div className="flex items-center justify-end gap-2 pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsViewContactOpen(false)}
+                  className="border-border text-foreground hover:bg-background/50"
+                >
+                  Close
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setIsViewContactOpen(false);
+                    handleEditContact(selectedContact);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Contact
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Contact Dialog */}
+      <Dialog open={isEditContactOpen} onOpenChange={setIsEditContactOpen}>
+        <DialogContent className="max-w-2xl bg-chatgpt-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Edit Contact</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-name" className="text-foreground">Name *</Label>
+                <Input
+                  id="edit-name"
+                  placeholder="Enter contact name"
+                  value={newContact.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-email" className="text-foreground">Email *</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  placeholder="Enter email address"
+                  value={newContact.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-phone" className="text-foreground">Phone</Label>
+                <Input
+                  id="edit-phone"
+                  placeholder="Enter phone number"
+                  value={newContact.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-company" className="text-foreground">Company</Label>
+                <Input
+                  id="edit-company"
+                  placeholder="Enter company name"
+                  value={newContact.company}
+                  onChange={(e) => handleInputChange('company', e.target.value)}
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-position" className="text-foreground">Position</Label>
+                <Input
+                  id="edit-position"
+                  placeholder="Enter job title"
+                  value={newContact.position}
+                  onChange={(e) => handleInputChange('position', e.target.value)}
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-status" className="text-foreground">Status</Label>
+                <Select value={newContact.status} onValueChange={(value: 'lead' | 'prospect' | 'customer' | 'inactive') => handleInputChange('status', value)}>
+                  <SelectTrigger className="bg-background border-border text-foreground">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lead">Lead</SelectItem>
+                    <SelectItem value="prospect">Prospect</SelectItem>
+                    <SelectItem value="customer">Customer</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-source" className="text-foreground">Source</Label>
+                <Select value={newContact.source} onValueChange={(value) => handleInputChange('source', value)}>
+                  <SelectTrigger className="bg-background border-border text-foreground">
+                    <SelectValue placeholder="Select source" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableSources.map((source) => (
+                      <SelectItem key={source} value={source}>{source}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="md:col-span-2">
+                <Label htmlFor="edit-tags" className="text-foreground">Tags</Label>
+                <Input
+                  id="edit-tags"
+                  placeholder="Enter tags separated by commas"
+                  value={newContact.tags.join(', ')}
+                  onChange={(e) => handleTagsChange(e.target.value)}
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <Label htmlFor="edit-notes" className="text-foreground">Notes</Label>
+                <Textarea
+                  id="edit-notes"
+                  placeholder="Enter additional notes"
+                  value={newContact.notes}
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground min-h-[100px]"
+                />
+              </div>
+            </div>
+
+            {/* Dialog Actions */}
+            <div className="flex items-center justify-end gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditContactOpen(false)}
+                className="border-border text-foreground hover:bg-background/50"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleUpdateContact}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Update Contact
               </Button>
             </div>
           </div>

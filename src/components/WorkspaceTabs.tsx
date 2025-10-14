@@ -10,11 +10,12 @@ import {
   Bell,
   Timer,
   UserPlus,
-  Mail
+  Mail,
+  Calendar
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type WorkspaceTab = "mindmap" | "notes" | "tasks" | "team" | "timer" | "crm" | "email";
+export type WorkspaceTab = "mindmap" | "notes" | "tasks" | "team" | "timer" | "crm" | "email" | "calendar";
 
 interface WorkspaceTabsProps {
   activeTab: WorkspaceTab;
@@ -29,21 +30,17 @@ interface WorkspaceTabsProps {
   timerContent: React.ReactNode;
   crmContent: React.ReactNode;
   emailContent: React.ReactNode;
+  calendarContent: React.ReactNode;
   // Notification counts
   taskNotifications?: number;
   teamNotifications?: number;
   timerNotifications?: number;
   crmNotifications?: number;
   emailNotifications?: number;
+  calendarNotifications?: number;
 }
 
 const tabConfig = [
-  {
-    id: "mindmap" as WorkspaceTab,
-    label: "ProjectMap",
-    icon: Network,
-    description: "Project ecosystem overview"
-  },
   {
     id: "notes" as WorkspaceTab,
     label: "Notes",
@@ -58,7 +55,7 @@ const tabConfig = [
   },
   {
     id: "crm" as WorkspaceTab,
-    label: "Connections",
+    label: "Connect",
     icon: UserPlus,
     description: "Customer relationship management"
   },
@@ -67,6 +64,12 @@ const tabConfig = [
     label: "Email",
     icon: Mail,
     description: "Email management & Gmail integration"
+  },
+  {
+    id: "calendar" as WorkspaceTab,
+    label: "Calendar",
+    icon: Calendar,
+    description: "Workspace calendar & scheduling"
   },
   {
     id: "team" as WorkspaceTab,
@@ -95,11 +98,13 @@ export default function WorkspaceTabs({
   timerContent,
   crmContent,
   emailContent,
+  calendarContent,
   taskNotifications = 0,
   teamNotifications = 0,
   timerNotifications = 0,
   crmNotifications = 0,
-  emailNotifications = 0
+  emailNotifications = 0,
+  calendarNotifications = 0
 }: WorkspaceTabsProps) {
   const canAccessTab = (tab: typeof tabConfig[0]) => {
     if (tab.requiresRole) {
@@ -108,7 +113,7 @@ export default function WorkspaceTabs({
     return true;
   };
 
-  const availableTabs = tabConfig.filter(tab => canAccessTab(tab));
+  const availableTabs = tabConfig.filter(tab => canAccessTab(tab) && tab.id !== "mindmap");
 
   const handleTabClick = (tabId: WorkspaceTab) => {
     onTabChange(tabId);
@@ -127,6 +132,35 @@ export default function WorkspaceTabs({
 
   return (
     <div className={cn("w-full", className)}>
+      {/* Centered ProjectMap Button */}
+      <div className="w-full mb-4 sm:mb-6 lg:mb-8">
+        <div className="flex items-center justify-center px-2 sm:px-0">
+          <button
+            onClick={() => handleTabClick("mindmap")}
+            className={cn(
+              "relative flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl transition-all duration-300",
+              "hover:bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/20",
+              "min-w-[140px] sm:min-w-[180px] justify-center group touch-manipulation",
+              "active:scale-95",
+              activeTab === "mindmap"
+                ? "bg-background shadow-lg border border-border text-foreground scale-105" 
+                : "text-muted-foreground hover:text-foreground hover:scale-102 bg-muted/20 border border-border/50"
+            )}
+          >
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Network className={cn(
+                "w-5 h-5 sm:w-6 sm:h-6 transition-colors", 
+                activeTab === "mindmap" ? "text-primary" : "group-hover:text-primary"
+              )} />
+              <span className="font-semibold text-sm sm:text-base">Business Map</span>
+            </div>
+            {activeTab === "mindmap" && (
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-8 sm:w-12 h-1.5 bg-gradient-to-r from-primary to-primary/60 rounded-full" />
+            )}
+          </button>
+        </div>
+      </div>
+
       {/* Custom Horizontal Tab Navigation */}
       <div className="w-full mb-4 sm:mb-6 lg:mb-8">
         <div className="flex items-center justify-center px-2 sm:px-0">
@@ -187,7 +221,9 @@ export default function WorkspaceTabs({
           <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary/10 rounded-full">
             <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full animate-pulse" />
             <p className="text-xs sm:text-sm font-medium text-primary">
-              {availableTabs.find(tab => tab.id === activeTab)?.description}
+              {activeTab === "mindmap" 
+                ? "Business ecosystem overview" 
+                : availableTabs.find(tab => tab.id === activeTab)?.description}
             </p>
           </div>
         </div>
@@ -238,6 +274,12 @@ export default function WorkspaceTabs({
           {activeTab === "email" && (
             <div className="animate-fade-in">
               {emailContent}
+            </div>
+          )}
+          
+          {activeTab === "calendar" && (
+            <div className="animate-fade-in">
+              {calendarContent}
             </div>
           )}
         </div>

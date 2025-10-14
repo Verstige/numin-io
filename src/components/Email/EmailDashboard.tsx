@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Mail, 
   Search, 
@@ -30,8 +31,13 @@ import {
   Copy,
   Edit3,
   X,
-  Send as SendIcon
+  Send as SendIcon,
+  RefreshCw,
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
+import { gmailService, type GmailAccount, type GmailMessage } from '@/lib/gmail-integration';
+import { toast } from '@/hooks/use-toast';
 
 // Types
 interface Email {
@@ -57,6 +63,10 @@ interface Folder {
 
 export default function EmailDashboard() {
   const [emails, setEmails] = useState<Email[]>([]);
+  const [gmailAccounts, setGmailAccounts] = useState<GmailAccount[]>([]);
+  const [gmailEmails, setGmailEmails] = useState<GmailMessage[]>([]);
+  const [isGmailConnected, setIsGmailConnected] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [selectedFolder, setSelectedFolder] = useState('inbox');
   const [searchQuery, setSearchQuery] = useState('');
@@ -95,9 +105,97 @@ export default function EmailDashboard() {
   ];
 
   useEffect(() => {
+    loadGmailData();
     // TODO: Replace with actual API calls to load emails
     setEmails([]);
   }, []);
+
+  const loadGmailData = async () => {
+    try {
+      const accounts = gmailService.getConnectedAccounts();
+      setGmailAccounts(accounts);
+      setIsGmailConnected(accounts.length > 0);
+
+      if (accounts.length > 0) {
+        // Load emails from all connected accounts
+        const allEmails: GmailMessage[] = [];
+        for (const account of accounts) {
+          try {
+            const accountEmails = await gmailService.fetchEmails(account.id, 50);
+            allEmails.push(...accountEmails);
+          } catch (error) {
+            console.error(`Failed to load emails for account ${account.email}:`, error);
+          }
+        }
+        setGmailEmails(allEmails);
+      }
+    } catch (error) {
+      console.error('Failed to load Gmail data:', error);
+    }
+  };
+
+  const handleSyncGmail = async () => {
+    if (gmailAccounts.length === 0) return;
+
+    setIsSyncing(true);
+    try {
+      let totalAdded = 0;
+      let totalUpdated = 0;
+
+      for (const account of gmailAccounts) {
+        const result = await gmailService.syncEmails(account.id);
+        totalAdded += result.messagesAdded;
+        totalUpdated += result.messagesUpdated;
+      }
+
+      toast({
+        title: "Gmail Sync Complete",
+        description: `Added ${totalAdded} new emails, updated ${totalUpdated} emails.`,
+      });
+
+      // Reload data
+      await loadGmailData();
+    } catch (error) {
+      toast({
+        title: "Sync Failed",
+        description: "Failed to sync Gmail emails. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleSendViaGmail = async (to: string, subject: string, body: string) => {
+    if (gmailAccounts.length === 0) {
+      toast({
+        title: "No Gmail Account",
+        description: "Please connect a Gmail account in Settings to send emails.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Use the first connected account for sending
+      const account = gmailAccounts[0];
+      await gmailService.sendEmail(account.id, to, subject, body);
+      
+      toast({
+        title: "Email Sent",
+        description: `Email sent successfully to ${to}`,
+      });
+
+      // Refresh emails
+      await loadGmailData();
+    } catch (error) {
+      toast({
+        title: "Send Failed",
+        description: "Failed to send email. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const filteredEmails = emails.filter(email => {
     const matchesFolder = email.folder === selectedFolder;
@@ -158,23 +256,38 @@ export default function EmailDashboard() {
     });
   };
 
-  const handleSendEmail = () => {
-    // Simulate sending email
-    const newEmail: Email = {
-      id: Date.now().toString(),
-      from: 'you@company.com',
-      to: composeData.to,
-      subject: composeData.subject,
-      content: composeData.content,
-      timestamp: new Date().toISOString(),
-      isRead: true,
-      isStarred: false,
-      isImportant: false,
-      folder: 'sent',
-      tags: []
-    };
+  const handleSendEmail = async () => {
+    if (!composeData.to || !composeData.subject || !composeData.content) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all fields before sending.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (isGmailConnected) {
+      // Send via Gmail
+      await handleSendViaGmail(composeData.to, composeData.subject, composeData.content);
+    } else {
+      // Fallback to local storage
+      const newEmail: Email = {
+        id: Date.now().toString(),
+        from: 'you@company.com',
+        to: composeData.to,
+        subject: composeData.subject,
+        content: composeData.content,
+        timestamp: new Date().toISOString(),
+        isRead: true,
+        isStarred: false,
+        isImportant: false,
+        folder: 'sent',
+        tags: []
+      };
+      
+      setEmails(prev => [newEmail, ...prev]);
+    }
     
-    setEmails(prev => [newEmail, ...prev]);
     setIsComposing(false);
     setComposeData({ to: '', subject: '', content: '' });
   };
@@ -537,6 +650,48 @@ Best,
               <p className="text-sm text-muted-foreground">AI-Powered</p>
             </div>
           </div>
+          
+          {/* Gmail Integration Status */}
+          {isGmailConnected ? (
+            <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                    Gmail Connected
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSyncGmail}
+                  disabled={isSyncing}
+                  className="h-6 px-2 text-green-600 hover:text-green-700 hover:bg-green-500/10"
+                >
+                  {isSyncing ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-3 h-3" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                {gmailEmails.length} emails synced
+              </p>
+            </div>
+          ) : (
+            <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertCircle className="w-4 h-4 text-amber-500" />
+                <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                  Gmail Not Connected
+                </span>
+              </div>
+              <p className="text-xs text-amber-600 dark:text-amber-500">
+                Connect Gmail in Settings to sync emails
+              </p>
+            </div>
+          )}
           <Button 
             className="w-full bg-blue-600 hover:bg-blue-700"
             onClick={handleComposeEmail}

@@ -30,6 +30,8 @@ interface BuiltInNote {
   visibility: "public" | "team" | "private";
   author: string;
   projectId?: string;
+  dueDate?: Date;
+  reminderDate?: Date;
 }
 
 interface BuiltInNotesProps {
@@ -52,7 +54,9 @@ export default function BuiltInNotes({ projectId, currentUser = "Current User" }
     title: "", 
     content: "", 
     tags: "",
-    visibility: "team" as BuiltInNote["visibility"]
+    visibility: "team" as BuiltInNote["visibility"],
+    dueDate: "",
+    reminderDate: ""
   });
 
   // Load notes from localStorage or use mock data
@@ -113,7 +117,9 @@ export default function BuiltInNotes({ projectId, currentUser = "Current User" }
       updatedAt: new Date(),
       visibility: newNote.visibility,
       author: currentUser,
-      projectId: projectId || undefined
+      projectId: projectId || undefined,
+      dueDate: newNote.dueDate ? new Date(newNote.dueDate) : undefined,
+      reminderDate: newNote.reminderDate ? new Date(newNote.reminderDate) : undefined
     };
 
     const updatedNotes = [note, ...notes];
@@ -263,6 +269,26 @@ export default function BuiltInNotes({ projectId, currentUser = "Current User" }
               rows={6}
               className="bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Due Date</label>
+                <Input
+                  type="date"
+                  value={newNote.dueDate}
+                  onChange={(e) => setNewNote(prev => ({ ...prev, dueDate: e.target.value }))}
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Reminder Date</label>
+                <Input
+                  type="date"
+                  value={newNote.reminderDate}
+                  onChange={(e) => setNewNote(prev => ({ ...prev, reminderDate: e.target.value }))}
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+            </div>
             <div className="flex gap-4">
               <Input
                 placeholder="Tags (comma separated)..."
@@ -342,6 +368,22 @@ export default function BuiltInNotes({ projectId, currentUser = "Current User" }
                   </Badge>
                 ))}
               </div>
+              {(note.dueDate || note.reminderDate) && (
+                <div className="flex items-center gap-4 mb-2 text-xs text-muted-foreground">
+                  {note.dueDate && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>Due: {note.dueDate.toLocaleDateString()}</span>
+                    </div>
+                  )}
+                  {note.reminderDate && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>Reminder: {note.reminderDate.toLocaleDateString()}</span>
+                    </div>
+                  )}
+                </div>
+              )}
               <Badge className={cn("text-xs", getVisibilityColor(note.visibility))}>
                 {note.visibility}
               </Badge>

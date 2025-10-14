@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Loader2, CheckCircle, AlertCircle, Eye, EyeOff, Sparkles, FolderPlus, Users, Brain, Zap, Target, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 interface SignUpFormProps {
@@ -112,22 +113,144 @@ export default function SignUpForm({ onSuccess, onSwitchToSignIn }: SignUpFormPr
   }
 
   if (success) {
+    const features = [
+      {
+        icon: <Brain className="w-5 h-5 text-blue-500" />,
+        title: "AI-Powered Insights",
+        description: "Get intelligent brand recommendations and automated insights"
+      },
+      {
+        icon: <Target className="w-5 h-5 text-green-500" />,
+        title: "Brand Mapping",
+        description: "Visualize your brand ecosystem with interactive mind maps"
+      },
+      {
+        icon: <Users className="w-5 h-5 text-purple-500" />,
+        title: "Team Collaboration",
+        description: "Invite team members and collaborate in real-time"
+      },
+      {
+        icon: <Zap className="w-5 h-5 text-orange-500" />,
+        title: "Smart Automation",
+        description: "Automated task tracking and progress monitoring"
+      }
+    ];
+
+    const steps = [
+      {
+        step: "1",
+        title: "Create Your First Brand",
+        description: "Start by adding a brand to your workspace"
+      },
+      {
+        step: "2", 
+        title: "Invite Your Team",
+        description: "Add team members to collaborate on brands"
+      },
+      {
+        step: "3",
+        title: "Get AI Insights",
+        description: "Let Nova AI help you manage and optimize your work"
+      }
+    ];
+
     return (
-      <Card className="w-full max-w-md mx-auto">
-        <CardContent className="pt-6">
+      <div className="w-full max-w-4xl mx-auto space-y-8">
+        {/* Success Header */}
+        <Card className="w-full max-w-md mx-auto">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-green-800">Account Created Successfully!</h3>
+                <p className="text-sm text-green-600 mt-2">
+                  Please check your email to verify your account.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Welcome Content */}
+        <div className="space-y-8">
+          {/* Welcome Header */}
           <div className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-950/20 rounded-full border border-blue-200 dark:border-blue-800">
+              <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                Welcome to Nexus
+              </span>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-green-800">Account Created Successfully!</h3>
-              <p className="text-sm text-green-600 mt-2">
-                Please check your email to verify your account.
-              </p>
-            </div>
+            
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Your AI Workspace Awaits
+            </h1>
+            
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Transform your ideas into organized, intelligent brand workflows with AI-powered insights and seamless team collaboration.
+            </p>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Quick Start Action */}
+          <div className="flex justify-center">
+            <Button 
+              onClick={onSuccess}
+              size="lg"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+            >
+              <FolderPlus className="w-5 h-5 mr-2" />
+              Get Started
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
+
+          {/* Features Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {features.map((feature, index) => (
+              <Card key={index} className="text-center hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="mx-auto mb-3 w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+                    {feature.icon}
+                  </div>
+                  <CardTitle className="text-base">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-xs">
+                    {feature.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Getting Started Steps */}
+          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
+            <CardHeader className="text-center">
+              <CardTitle className="text-xl">Getting Started</CardTitle>
+              <CardDescription>
+                Follow these simple steps to set up your AI-powered workspace
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {steps.map((step, index) => (
+                  <div key={index} className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
+                      {step.step}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm mb-1">{step.title}</h3>
+                      <p className="text-xs text-muted-foreground">{step.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     )
   }
 

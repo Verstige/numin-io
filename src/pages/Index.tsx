@@ -20,10 +20,10 @@ import ViewableTasks from "@/components/ViewableTasks";
 import TeamManagement from "@/components/TeamManagement";
 import TimeTracker from "@/components/TimeTracker";
 import NovaChatInterface from "@/components/NovaChatInterface";
+import WorkspaceCalendar from "@/components/WorkspaceCalendar";
 import ResourcesSection from "@/components/ResourcesSection";
 import { type TeamMember, type ActivityItem } from "@/lib/collaboration";
 import { useAuth } from "@/contexts/AuthContext";
-import NewUserWelcome from "@/components/NewUserWelcome";
 import { getUserDisplayName, getUserFirstName } from "@/lib/user-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Target, Menu, X, LogOut, Plus } from "lucide-react";
+import { Search, Target, Menu, X, LogOut, Plus, Bot, Map, LayoutDashboard, Settings, Users, Calendar, CheckSquare, Mail, StickyNote, Clock } from "lucide-react";
 
 interface Project {
   id: string;
@@ -364,6 +364,7 @@ export default function Index() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [selectedProjectFromMap, setSelectedProjectFromMap] = useState<Project | null>(null);
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
   const [isQuickSwitcherOpen, setIsQuickSwitcherOpen] = useState(false);
@@ -574,6 +575,21 @@ export default function Index() {
     }
   }, [activeProject]);
 
+  // Load tasks from localStorage
+  useEffect(() => {
+    const savedTasks = localStorage.getItem('viewableTasks');
+    if (savedTasks) {
+      const parsedTasks = JSON.parse(savedTasks).map((task: any) => ({
+        ...task,
+        createdAt: new Date(task.createdAt),
+        updatedAt: new Date(task.updatedAt),
+        dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+        startDate: task.startDate ? new Date(task.startDate) : undefined
+      }));
+      setTasks(parsedTasks);
+    }
+  }, []);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -781,7 +797,6 @@ export default function Index() {
       <Sidebar 
         onNewProject={() => setIsNewProjectOpen(true)}
         onDashboard={() => setShowDashboard(true)}
-        onGetStarted={() => setIsNewProjectOpen(true)}
         onConnections={() => {
           setCurrentTab('crm');
         }}
@@ -789,6 +804,9 @@ export default function Index() {
           setCurrentTab('email');
         }}
         onProjectMap={handleProjectMap}
+        onCalendar={() => {
+          setCurrentTab('calendar');
+        }}
         onNotes={handleNotes}
         onTasks={handleTasks}
         onTeam={handleTeam}
@@ -838,72 +856,183 @@ export default function Index() {
                     onChange={(e) => handleSearch(e.target.value)}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                
+                {/* AI Business Suite Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Bot className="w-4 h-4 text-blue-400" />
+                    <span className="text-sm font-semibold text-foreground">AI Business Suite</span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 pl-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setCurrentTab("mindmap");
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`touch-manipulation active:scale-95 justify-start ${currentTab === "mindmap" ? "bg-blue-500/10 border-blue-500/20" : ""}`}
+                    >
+                      <Map className="w-4 h-4 mr-2" />
+                      Business Map
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigate('/nexus');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="touch-manipulation active:scale-95 justify-start"
+                    >
+                      <Bot className="w-4 h-4 mr-2" />
+                      Nexus Agents
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        onDashboard();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="touch-manipulation active:scale-95 justify-start"
+                    >
+                      <LayoutDashboard className="w-4 h-4 mr-2" />
+                      App Library
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        navigate('/settings');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="touch-manipulation active:scale-95 justify-start"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      My Account
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Business Tools Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="w-4 h-4 text-green-400" />
+                    <span className="text-sm font-semibold text-foreground">Business Tools</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pl-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        onCalendar();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`touch-manipulation active:scale-95 justify-start ${currentTab === "calendar" ? "bg-green-500/10 border-green-500/20" : ""}`}
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Calendar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        onConnections();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`touch-manipulation active:scale-95 justify-start ${currentTab === "crm" ? "bg-green-500/10 border-green-500/20" : ""}`}
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      Connect
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        onTasks();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`touch-manipulation active:scale-95 justify-start ${currentTab === "tasks" ? "bg-green-500/10 border-green-500/20" : ""}`}
+                    >
+                      <CheckSquare className="w-4 h-4 mr-2" />
+                      Tasks
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        onEmail();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`touch-manipulation active:scale-95 justify-start ${currentTab === "email" ? "bg-green-500/10 border-green-500/20" : ""}`}
+                    >
+                      <Mail className="w-4 h-4 mr-2" />
+                      Email
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        onNotes();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`touch-manipulation active:scale-95 justify-start ${currentTab === "notes" ? "bg-green-500/10 border-green-500/20" : ""}`}
+                    >
+                      <StickyNote className="w-4 h-4 mr-2" />
+                      Notes
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        onTimer();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`touch-manipulation active:scale-95 justify-start ${currentTab === "timer" ? "bg-green-500/10 border-green-500/20" : ""}`}
+                    >
+                      <Clock className="w-4 h-4 mr-2" />
+                      Timer
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        onTeam();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`touch-manipulation active:scale-95 justify-start ${currentTab === "team" ? "bg-green-500/10 border-green-500/20" : ""}`}
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      Team
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-2 pt-4 border-t border-border/50">
                   <Button
-                    variant="outline"
-                    size="sm"
                     onClick={() => {
-                      setCurrentTab("mindmap");
+                      setIsNewProjectOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`touch-manipulation active:scale-95 ${currentTab === "mindmap" ? "bg-blue-500/10 border-blue-500/20" : ""}`}
+                    className="w-full"
                   >
-                    Mindmap
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Brand
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
                     onClick={() => {
-                      setCurrentTab("notes");
+                      handleLogout();
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`touch-manipulation active:scale-95 ${currentTab === "notes" ? "bg-blue-500/10 border-blue-500/20" : ""}`}
+                    className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
                   >
-                    Notes
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setCurrentTab("tasks");
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`touch-manipulation active:scale-95 ${currentTab === "tasks" ? "bg-blue-500/10 border-blue-500/20" : ""}`}
-                  >
-                    Tasks
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setCurrentTab("team");
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`touch-manipulation active:scale-95 ${currentTab === "team" ? "bg-blue-500/10 border-blue-500/20" : ""}`}
-                  >
-                    Team
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
                   </Button>
                 </div>
-                <Button
-                  onClick={() => {
-                    setIsNewProjectOpen(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full"
-                >
-                  New Brand
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    handleLogout();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </Button>
               </div>
             </div>
           )}
@@ -986,11 +1115,12 @@ export default function Index() {
         </div>
         
         <div className="p-3 sm:p-4 md:p-6 lg:p-8">
-          {/* Show welcome screen only for truly new users (never created a project) */}
+          {/* Main workspace content */}
           {projects.length === 0 && !isLoading && !hasEverCreatedProject ? (
-            <NewUserWelcome 
-              onCreateProject={() => setIsNewProjectOpen(true)}
-              onViewDemo={() => window.location.href = '/demo'}
+            <EmptyState 
+              type="no-projects" 
+              onAction={() => setIsNewProjectOpen(true)}
+              actionText="Create Your First Project"
             />
           ) : (
             <>
@@ -1094,11 +1224,23 @@ export default function Index() {
             }
             crmContent={<CRMDashboard />}
             emailContent={<EmailDashboard />}
+            calendarContent={
+              <WorkspaceCalendar 
+                tasks={tasks.map(task => ({
+                  id: task.id,
+                  title: task.title,
+                  dueDate: task.dueDate,
+                  status: task.status,
+                  priority: task.priority
+                }))}
+              />
+            }
             taskNotifications={0}
             teamNotifications={0}
             timerNotifications={0}
             crmNotifications={0}
             emailNotifications={0}
+            calendarNotifications={0}
           />
 
           {/* Enhanced Project Overview Panel */}

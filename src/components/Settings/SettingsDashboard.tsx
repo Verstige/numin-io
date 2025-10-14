@@ -26,6 +26,7 @@ import {
   Save,
   Edit
 } from 'lucide-react';
+import GmailIntegration from './GmailIntegration';
 
 // Types
 interface UserProfile {
@@ -471,7 +472,18 @@ export default function SettingsDashboard() {
               <p className="text-muted-foreground">Connect your favorite tools and services to enhance your workflow</p>
             </CardHeader>
             <CardContent className="space-y-6">
-              {integrations.map((integration) => (
+              {/* Gmail Integration */}
+              <GmailIntegration onConnectionChange={(connected) => {
+                // Update integration status
+                setIntegrations(prev => prev.map(integration => 
+                  integration.id === 'gmail' 
+                    ? { ...integration, connected, status: connected ? 'connected' : 'disconnected' }
+                    : integration
+                ));
+              }} />
+
+              {/* Other Integrations */}
+              {integrations.filter(integration => integration.id !== 'gmail').map((integration) => (
                 <div key={integration.id} className="flex items-center justify-between p-4 bg-background/50 rounded-lg border border-border">
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-blue-500/20 rounded-lg">

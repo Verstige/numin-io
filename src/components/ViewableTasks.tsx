@@ -35,6 +35,7 @@ interface Task {
   assignee: string;
   assigneeAvatar?: string;
   dueDate?: Date;
+  startDate?: Date;
   createdAt: Date;
   updatedAt: Date;
   tags: string[];
@@ -67,7 +68,9 @@ export default function ViewableTasks({ projectId, currentUser = "Current User" 
     priority: "medium" as Task["priority"],
     assignee: currentUser,
     visibility: "team" as Task["visibility"],
-    tags: ""
+    tags: "",
+    dueDate: "",
+    startDate: ""
   });
 
   // Load tasks from localStorage or use mock data
@@ -207,7 +210,9 @@ export default function ViewableTasks({ projectId, currentUser = "Current User" 
       updatedAt: new Date(),
       tags: newTask.tags.split(',').map(tag => tag.trim()).filter(Boolean),
       projectId: projectId || undefined,
-      visibility: newTask.visibility
+      visibility: newTask.visibility,
+      dueDate: newTask.dueDate ? new Date(newTask.dueDate) : undefined,
+      startDate: newTask.startDate ? new Date(newTask.startDate) : undefined
     };
 
     const updatedTasks = [task, ...tasks];
@@ -369,6 +374,26 @@ export default function ViewableTasks({ projectId, currentUser = "Current User" 
                 />
               </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Start Date</label>
+                <Input
+                  type="date"
+                  value={newTask.startDate}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, startDate: e.target.value }))}
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Due Date</label>
+                <Input
+                  type="date"
+                  value={newTask.dueDate}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, dueDate: e.target.value }))}
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+            </div>
             <div className="flex gap-4">
               <Input
                 placeholder="Tags (comma separated)..."
@@ -488,6 +513,24 @@ export default function ViewableTasks({ projectId, currentUser = "Current User" 
                     </Badge>
                   ))}
                 </div>
+
+                {/* Dates */}
+                {(task.startDate || task.dueDate) && (
+                  <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
+                    {task.startDate && (
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        <span>Start: {task.startDate.toLocaleDateString()}</span>
+                      </div>
+                    )}
+                    {task.dueDate && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        <span>Due: {task.dueDate.toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Subtasks */}
                 {task.subtasks && task.subtasks.length > 0 && isExpanded && (

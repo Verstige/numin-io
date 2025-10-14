@@ -15,6 +15,7 @@ import NexusDemo from "./components/NexusDemo";
 import CRMDashboard from "./components/CRM/CRMDashboard";
 import EmailDashboard from "./components/Email/EmailDashboard";
 import SettingsDashboard from "./components/Settings/SettingsDashboard";
+import GmailCallback from "./pages/GmailCallback";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
             <SettingsDashboard />
           </ProtectedRoute>
         } />
+        <Route path="/auth/gmail/callback" element={<GmailCallback />} />
             <Route path="/demo" element={<DemoWorkspace />} />
             <Route path="/nexus-demo" element={<NexusDemo />} />
             <Route path="/home" element={<LandingPage />} />
