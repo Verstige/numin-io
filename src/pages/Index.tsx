@@ -17,6 +17,8 @@ import ActivityFeed from "@/components/ActivityFeed";
 import WorkspaceTabs, { type WorkspaceTab } from "@/components/WorkspaceTabs";
 import BuiltInNotes from "@/components/BuiltInNotes";
 import ViewableTasks from "@/components/ViewableTasks";
+import BookingManager from "@/components/BookingManager";
+import BookingDemo from "@/components/BookingDemo";
 import TeamManagement from "@/components/TeamManagement";
 import TimeTracker from "@/components/TimeTracker";
 import NovaChatInterface from "@/components/NovaChatInterface";
@@ -33,7 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, Target, Menu, X, LogOut, Plus, Bot, Map, LayoutDashboard, Settings, Users, Calendar, CheckSquare, Mail, StickyNote, Clock } from "lucide-react";
+import { Search, Target, Menu, X, LogOut, Plus, Bot, Map, LayoutDashboard, Settings, Users, Calendar, CheckSquare, Mail, StickyNote, Clock, Sparkles } from "lucide-react";
 
 interface Project {
   id: string;
@@ -421,16 +423,18 @@ export default function Index() {
     setProjects(updatedProjects);
     setDynamicMindmapNodes(updatedNodes);
     
-    // Save to localStorage
-    localStorage.setItem('userProjects', JSON.stringify(updatedProjects));
-    localStorage.setItem('userMindmapNodes', JSON.stringify(updatedNodes));
-    localStorage.setItem('hasEverCreatedProject', 'true'); // Mark that user has created a project
+    // Save to localStorage with user-specific keys
+    const userId = profile?.id || 'anonymous';
+    localStorage.setItem(`userProjects_${userId}`, JSON.stringify(updatedProjects));
+    localStorage.setItem(`userMindmapNodes_${userId}`, JSON.stringify(updatedNodes));
+    localStorage.setItem(`hasEverCreatedProject_${userId}`, 'true'); // Mark that user has created a project
     
     // Update state
     setHasEverCreatedProject(true);
     
     console.log("New project added:", newProject);
     console.log("New node created:", newNode);
+    console.log("Saved for user:", userId);
   };
 
   // Handle new sub-project creation
@@ -504,9 +508,15 @@ export default function Index() {
       setIsLoading(true);
       
       try {
+        // Get user-specific localStorage keys
+        const userId = profile?.id || 'anonymous';
+        const userProjectsKey = `userProjects_${userId}`;
+        const userMindmapNodesKey = `userMindmapNodes_${userId}`;
+        const hasCreatedProjectKey = `hasEverCreatedProject_${userId}`;
+        
         // Load saved projects from localStorage first (no artificial delay)
-        const savedProjects = localStorage.getItem('userProjects');
-        const savedMindmapNodes = localStorage.getItem('userMindmapNodes');
+        const savedProjects = localStorage.getItem(userProjectsKey);
+        const savedMindmapNodes = localStorage.getItem(userMindmapNodesKey);
         
         if (savedProjects && savedMindmapNodes) {
           // Load user's saved projects
@@ -520,10 +530,10 @@ export default function Index() {
           }
         } else {
           // Check if user has ever created a project (for first-time users)
-          const hasCreatedProject = localStorage.getItem('hasEverCreatedProject');
+          const hasCreatedProject = localStorage.getItem(hasCreatedProjectKey);
           if (mounted) {
             // Load projects from localStorage - no mock data
-            const savedProjects = localStorage.getItem('userProjects');
+            const savedProjects = localStorage.getItem(userProjectsKey);
             const projects = savedProjects ? JSON.parse(savedProjects) : [];
             
             setProjects(projects);
@@ -561,12 +571,13 @@ export default function Index() {
       mounted = false;
       clearTimeout(timeout);
     };
-  }, []);
+  }, [profile?.id]); // Add profile.id as dependency
 
   // Load active project from localStorage on mount
   useEffect(() => {
-    if (projects.length > 0) {
-      const savedActiveProjectId = localStorage.getItem('activeProjectId');
+    if (projects.length > 0 && profile?.id) {
+      const userId = profile.id;
+      const savedActiveProjectId = localStorage.getItem(`activeProjectId_${userId}`);
       if (savedActiveProjectId) {
         const savedProject = projects.find(p => p.id === savedActiveProjectId);
         if (savedProject) {
@@ -574,16 +585,18 @@ export default function Index() {
         }
       }
     }
-  }, [projects]);
+  }, [projects, profile?.id]);
 
   // Save active project to localStorage when it changes
   useEffect(() => {
-    if (activeProject) {
-      localStorage.setItem('activeProjectId', activeProject.id);
-    } else {
-      localStorage.removeItem('activeProjectId');
+    if (activeProject && profile?.id) {
+      const userId = profile.id;
+      localStorage.setItem(`activeProjectId_${userId}`, activeProject.id);
+    } else if (!activeProject && profile?.id) {
+      const userId = profile.id;
+      localStorage.removeItem(`activeProjectId_${userId}`);
     }
-  }, [activeProject]);
+  }, [activeProject, profile?.id]);
 
   // Load tasks from localStorage
   useEffect(() => {
@@ -694,6 +707,14 @@ export default function Index() {
     setProjects(newProjects);
     setFilteredProjects(newProjects);
     
+    // Save to localStorage with user-specific keys
+    const userId = profile?.id || 'anonymous';
+    localStorage.setItem(`userProjects_${userId}`, JSON.stringify(newProjects));
+    localStorage.setItem(`hasEverCreatedProject_${userId}`, 'true');
+    
+    // Update state
+    setHasEverCreatedProject(true);
+    
     // Notify AI agents of new project
     notifyProjectChange('created', project);
     
@@ -778,12 +799,27 @@ export default function Index() {
     setCurrentTab('timer');
   };
 
+  // Listen for external tab navigation requests
+  useEffect(() => {
+    const handleNavigateToTab = (event: CustomEvent) => {
+      const tab = event.detail;
+      setCurrentTab(tab as WorkspaceTab);
+    };
+
+    window.addEventListener('navigateToTab', handleNavigateToTab as EventListener);
+    
+    return () => {
+      window.removeEventListener('navigateToTab', handleNavigateToTab as EventListener);
+    };
+  }, []);
+
   // Debug function to clear localStorage (can be called from console)
   const clearUserData = () => {
-    localStorage.removeItem('userProjects');
-    localStorage.removeItem('userMindmapNodes');
-    localStorage.removeItem('activeProjectId');
-    localStorage.removeItem('hasEverCreatedProject');
+    const userId = profile?.id || 'anonymous';
+    localStorage.removeItem(`userProjects_${userId}`);
+    localStorage.removeItem(`userMindmapNodes_${userId}`);
+    localStorage.removeItem(`activeProjectId_${userId}`);
+    localStorage.removeItem(`hasEverCreatedProject_${userId}`);
     setProjects([]);
     setFilteredProjects([]);
     setDynamicMindmapNodes([]);
@@ -830,6 +866,9 @@ export default function Index() {
         onTasks={handleTasks}
         onTeam={handleTeam}
         onTimer={handleTimer}
+        onBookings={() => {
+          setCurrentTab('bookings');
+        }}
         onNavigateToTab={(tab) => setCurrentTab(tab as WorkspaceTab)}
         projects={projects}
         isLoading={isLoading}
@@ -1136,11 +1175,16 @@ export default function Index() {
         <div className="p-3 sm:p-4 md:p-6 lg:p-8">
           {/* Main workspace content */}
           {projects.length === 0 && !isLoading && !hasEverCreatedProject ? (
-            <EmptyState 
-              type="no-projects" 
-              onAction={() => setIsNewProjectOpen(true)}
-              actionText="Create Your First Project"
-            />
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gradient-to-r from-primary to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Create Your First Project</h3>
+              <p className="text-muted-foreground mb-4">Get started by creating your first brand project</p>
+              <Button onClick={() => setIsNewProjectOpen(true)} className="bg-primary hover:bg-primary/90">
+                Create Project
+              </Button>
+            </div>
           ) : (
             <>
           {/* Header */}
@@ -1213,10 +1257,16 @@ export default function Index() {
                   projects={projects}
                 />
               ) : (
-                <EmptyState 
-                  type="no-projects" 
-                  onAction={() => setIsNewProjectOpen(true)}
-                />
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gradient-to-r from-primary to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Create Your First Project</h3>
+                  <p className="text-muted-foreground mb-4">Get started by creating your first brand project</p>
+                  <Button onClick={() => setIsNewProjectOpen(true)} className="bg-primary hover:bg-primary/90">
+                    Create Project
+                  </Button>
+                </div>
               )
             }
             notesContent={<BuiltInNotes projectId={activeProject?.id} currentUser={getUserDisplayName(profile)} />}
@@ -1254,12 +1304,15 @@ export default function Index() {
                 }))}
               />
             }
+            bookingsContent={<BookingManager />}
+            bookingDemoContent={<BookingDemo />}
             taskNotifications={0}
             teamNotifications={0}
             timerNotifications={0}
             crmNotifications={0}
             emailNotifications={0}
             calendarNotifications={0}
+            bookingsNotifications={0}
           />
 
           {/* Enhanced Project Overview Panel */}

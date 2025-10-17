@@ -11,11 +11,12 @@ import {
   Timer,
   UserPlus,
   Mail,
-  Calendar
+  Calendar,
+  CalendarDays
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type WorkspaceTab = "mindmap" | "notes" | "tasks" | "team" | "timer" | "crm" | "email" | "calendar";
+export type WorkspaceTab = "mindmap" | "notes" | "tasks" | "team" | "timer" | "crm" | "email" | "calendar" | "bookings" | "booking-demo";
 
 interface WorkspaceTabsProps {
   activeTab: WorkspaceTab;
@@ -31,6 +32,8 @@ interface WorkspaceTabsProps {
   crmContent: React.ReactNode;
   emailContent: React.ReactNode;
   calendarContent: React.ReactNode;
+  bookingsContent: React.ReactNode;
+  bookingDemoContent: React.ReactNode;
   // Notification counts
   taskNotifications?: number;
   teamNotifications?: number;
@@ -38,6 +41,9 @@ interface WorkspaceTabsProps {
   crmNotifications?: number;
   emailNotifications?: number;
   calendarNotifications?: number;
+  bookingsNotifications?: number;
+  // Email composition trigger
+  onComposeEmail?: (to: string, subject?: string, content?: string) => void;
 }
 
 const tabConfig = [
@@ -83,6 +89,18 @@ const tabConfig = [
     label: "Timer",
     icon: Timer,
     description: "Time tracking"
+  },
+  {
+    id: "bookings" as WorkspaceTab,
+    label: "Bookings",
+    icon: CalendarDays,
+    description: "Appointment booking management"
+  },
+  {
+    id: "booking-demo" as WorkspaceTab,
+    label: "Booking Demo",
+    icon: Calendar,
+    description: "Test the booking system"
   }
 ];
 
@@ -99,12 +117,15 @@ export default function WorkspaceTabs({
   crmContent,
   emailContent,
   calendarContent,
+  bookingsContent,
+  bookingDemoContent,
   taskNotifications = 0,
   teamNotifications = 0,
   timerNotifications = 0,
   crmNotifications = 0,
   emailNotifications = 0,
-  calendarNotifications = 0
+  calendarNotifications = 0,
+  bookingsNotifications = 0
 }: WorkspaceTabsProps) {
   const canAccessTab = (tab: typeof tabConfig[0]) => {
     if (tab.requiresRole) {
@@ -126,6 +147,8 @@ export default function WorkspaceTabs({
       case "timer": return timerNotifications;
       case "crm": return crmNotifications;
       case "email": return emailNotifications;
+      case "calendar": return calendarNotifications;
+      case "bookings": return bookingsNotifications;
       default: return 0;
     }
   };
@@ -284,6 +307,18 @@ export default function WorkspaceTabs({
           {activeTab === "calendar" && (
             <div className="animate-fade-in">
               {calendarContent}
+            </div>
+          )}
+          
+          {activeTab === "bookings" && (
+            <div className="animate-fade-in">
+              {bookingsContent}
+            </div>
+          )}
+          
+          {activeTab === "booking-demo" && (
+            <div className="animate-fade-in">
+              {bookingDemoContent}
             </div>
           )}
         </div>

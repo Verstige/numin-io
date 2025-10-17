@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* High-quality image rendering for logos */
+.logo-img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  filter: contrast(1.1) brightness(1.05);
+}
+
 /* Floating animation for AI characters */
 @keyframes float {
   0%, 100% {

@@ -16,21 +16,36 @@ import CRMDashboard from "./components/CRM/CRMDashboard";
 import EmailDashboard from "./components/Email/EmailDashboard";
 import SettingsDashboard from "./components/Settings/SettingsDashboard";
 import GmailCallback from "./pages/GmailCallback";
+import PublicBookingPage from "./components/PublicBookingPage";
+import { ReminderSystem } from "./lib/reminder-system";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true
-          }}
-        >
+const App = () => {
+  // Initialize reminder system when app starts
+  useEffect(() => {
+    const reminderSystem = ReminderSystem.getInstance();
+    reminderSystem.start();
+    
+    // Cleanup on unmount
+    return () => {
+      reminderSystem.stop();
+    };
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true
+            }}
+          >
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/workspace" element={
@@ -59,6 +74,7 @@ const App = () => (
           </ProtectedRoute>
         } />
         <Route path="/auth/gmail/callback" element={<GmailCallback />} />
+        <Route path="/book/:templateId" element={<PublicBookingPage />} />
             <Route path="/demo" element={<DemoWorkspace />} />
             <Route path="/nexus-demo" element={<NexusDemo />} />
             <Route path="/home" element={<LandingPage />} />
@@ -69,6 +85,7 @@ const App = () => (
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

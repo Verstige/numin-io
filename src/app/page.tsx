@@ -18,7 +18,6 @@ import ViewableTasks from "@/components/ViewableTasks";
 import TeamManagement from "@/components/TeamManagement";
 import { mockTeamMembers, mockActivityFeed, mockInvitations, type TeamMember, type ActivityItem, type TeamInvitation } from "@/lib/collaboration";
 import { useAuth } from "@/contexts/AuthContext";
-import NewUserWelcome from "@/components/NewUserWelcome";
 import { getUserDisplayName, getUserFirstName } from "@/lib/user-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 
 interface Project {
   id: string;
@@ -247,17 +246,8 @@ export default function Index() {
       {/* Main Content */}
       <div className="flex-1 overflow-auto bg-gradient-subtle">
         <div className="p-4 md:p-8">
-          {/* Show welcome screen for all users */}
-          <NewUserWelcome 
-            onCreateProject={() => setIsNewProjectOpen(true)}
-            onViewDemo={() => window.location.href = '/demo'}
-            isNewUser={projects.length === 0}
-            userName={getUserFirstName(profile)}
-          />
-          
-          {/* Main Workspace Content - only show if user has projects or after welcome */}
-          {projects.length > 0 && (
-            <>
+          {/* Main Workspace Content - always show */}
+          <>
               {/* Header */}
               <div className="mb-6 md:mb-8 animate-fade-in text-center">
                 <h1 className="text-3xl md:text-4xl font-bold mb-2 text-foreground">
@@ -283,10 +273,16 @@ export default function Index() {
                     projects={projects}
                   />
                 ) : (
-                  <EmptyState 
-                    type="no-projects" 
-                    onAction={() => setIsNewProjectOpen(true)}
-                  />
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gradient-to-r from-primary to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                      <Sparkles className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Create Your First Project</h3>
+                    <p className="text-muted-foreground mb-4">Get started by creating your first brand project</p>
+                    <Button onClick={() => setIsNewProjectOpen(true)} className="bg-primary hover:bg-primary/90">
+                      Create Project
+                    </Button>
+                  </div>
                 )
               }
               notesContent={<BuiltInNotes projectId={activeProject?.id} currentUser={getUserDisplayName(profile)} />}
@@ -343,16 +339,20 @@ export default function Index() {
               ) : (
                 // No projects at all
                 <div className="col-span-full">
-                  <EmptyState 
-                    type="no-projects" 
-                    onAction={() => setIsNewProjectOpen(true)}
-                  />
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gradient-to-r from-primary to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                      <Sparkles className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Create Your First Project</h3>
+                    <p className="text-muted-foreground mb-4">Get started by creating your first brand project</p>
+                    <Button onClick={() => setIsNewProjectOpen(true)} className="bg-primary hover:bg-primary/90">
+                      Create Project
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
-          )}
-            </>
-          )}
+          </>
         </div>
       </div>
 

@@ -110,6 +110,25 @@ export default function EmailDashboard() {
     setEmails([]);
   }, []);
 
+  // Listen for external email composition triggers
+  useEffect(() => {
+    const handleComposeEmail = (event: CustomEvent) => {
+      const { to, subject, content } = event.detail;
+      setIsComposing(true);
+      setComposeData({
+        to: to || '',
+        subject: subject || '',
+        content: content || ''
+      });
+    };
+
+    window.addEventListener('composeEmail', handleComposeEmail as EventListener);
+    
+    return () => {
+      window.removeEventListener('composeEmail', handleComposeEmail as EventListener);
+    };
+  }, []);
+
   const loadGmailData = async () => {
     try {
       const accounts = gmailService.getConnectedAccounts();
@@ -481,6 +500,42 @@ Best,
               className="border-border text-foreground hover:bg-background/50"
             >
               Cancel
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Save as draft functionality
+                const draftEmail = {
+                  id: `draft_${Date.now()}`,
+                  from: 'you@company.com',
+                  to: composeData.to,
+                  subject: composeData.subject || '(No Subject)',
+                  content: composeData.content,
+                  timestamp: new Date().toISOString(),
+                  isRead: true,
+                  isStarred: false,
+                  isImportant: false,
+                  folder: 'drafts'
+                };
+                
+                // Add to drafts (in a real app, this would save to backend)
+                setEmails(prev => [draftEmail, ...prev]);
+                
+                // Show success message
+                toast({
+                  title: "Draft Saved",
+                  description: "Your email has been saved as a draft.",
+                });
+                
+                // Reset compose data
+                setComposeData({ to: '', subject: '', content: '' });
+                setIsComposing(false);
+              }}
+              disabled={!composeData.to || !composeData.content}
+              className="border-border text-foreground hover:bg-background/50"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Save Draft
             </Button>
             <Button
               onClick={handleSendEmail}

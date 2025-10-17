@@ -86,29 +86,75 @@ export default function WorkspaceCalendar({ tasks = [], onEventClick }: Workspac
     }
   }, []);
 
-  // Generate calendar events from tasks
+  // Generate calendar events from tasks and bookings
   useEffect(() => {
-    const taskEvents: CalendarEvent[] = tasks
-      .filter(task => task.dueDate)
-      .map(task => ({
-        id: `task-${task.id}`,
-        title: task.title,
-        description: `Task: ${task.title}`,
-        date: new Date(task.dueDate!),
-        type: 'task' as const,
-        priority: task.priority as 'low' | 'medium' | 'high',
-        projectId: task.id,
-        taskId: task.id,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }));
+    const loadCalendarEvents = () => {
+      const taskEvents: CalendarEvent[] = tasks
+        .filter(task => task.dueDate)
+        .map(task => ({
+          id: `task-${task.id}`,
+          title: task.title,
+          description: `Task: ${task.title}`,
+          date: new Date(task.dueDate!),
+          type: 'task' as const,
+          priority: task.priority as 'low' | 'medium' | 'high',
+          projectId: task.id,
+          taskId: task.id,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }));
 
-    // Combine with existing events, avoiding duplicates
-    setEvents(prev => {
-      const existingTaskIds = prev.filter(e => e.type === 'task').map(e => e.taskId);
-      const newTaskEvents = taskEvents.filter(te => !existingTaskIds.includes(te.taskId));
-      return [...prev, ...newTaskEvents];
-    });
+      // Load bookings and convert to calendar events
+      const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+      const bookingEvents: CalendarEvent[] = bookings
+        .filter((booking: any) => booking.status !== 'cancelled')
+        .map((booking: any) => ({
+          id: `booking-${booking.id}`,
+          title: `Meeting with ${booking.customerName}`,
+          description: `${booking.meetingType} meeting - ${booking.customerEmail}`,
+          date: new Date(booking.startTime),
+          time: new Date(booking.startTime).toTimeString().slice(0, 5),
+          duration: booking.duration,
+          type: 'meeting' as const,
+          priority: 'medium' as const,
+          attendees: [booking.customerEmail],
+          location: booking.location,
+          projectId: booking.templateId,
+          createdAt: new Date(booking.createdAt),
+          updatedAt: new Date(booking.updatedAt)
+        }));
+
+      // Combine with existing events, avoiding duplicates
+      setEvents(prev => {
+        // Remove old task and booking events
+        const nonTaskBookingEvents = prev.filter(e => 
+          !e.id.startsWith('task-') && !e.id.startsWith('booking-')
+        );
+        
+        // Add new task events
+        const existingTaskIds = prev.filter(e => e.type === 'task').map(e => e.taskId);
+        const newTaskEvents = taskEvents.filter(te => !existingTaskIds.includes(te.taskId));
+        
+        // Add new booking events
+        const existingBookingIds = prev.filter(e => e.id.startsWith('booking-')).map(e => e.id);
+        const newBookingEvents = bookingEvents.filter(be => !existingBookingIds.includes(be.id));
+        
+        return [...nonTaskBookingEvents, ...newTaskEvents, ...newBookingEvents];
+      });
+    };
+
+    loadCalendarEvents();
+
+    // Listen for booking updates
+    const handleBookingUpdate = () => {
+      loadCalendarEvents();
+    };
+
+    window.addEventListener('bookingsUpdated', handleBookingUpdate);
+
+    return () => {
+      window.removeEventListener('bookingsUpdated', handleBookingUpdate);
+    };
   }, [tasks]);
 
   // Save events to localStorage whenever events change

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Plus, Settings, Sparkles, Search, Bot, Users, Mail, Network, Database, Zap, Map, StickyNote, CheckSquare, Clock, ChevronLeft, ChevronRight, ChevronDown, Calendar } from "lucide-react";
+import { LayoutDashboard, Plus, Settings, Sparkles, Search, Bot, Users, Mail, Network, Database, Zap, Map, StickyNote, CheckSquare, Clock, ChevronLeft, ChevronRight, ChevronDown, Calendar, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ interface SidebarProps {
   onTeam?: () => void;
   onTimer?: () => void;
   onCalendar?: () => void;
+  onBookings?: () => void;
   onNavigateToTab?: (tab: string) => void;
   projects?: Array<{
     id: string;
@@ -41,6 +42,7 @@ export default function Sidebar({
   onTeam,
   onTimer,
   onCalendar,
+  onBookings,
   onNavigateToTab,
   projects = [], 
   isLoading = false, 
@@ -69,8 +71,16 @@ export default function Sidebar({
       <div className="mb-8">
         <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-            <div className={`${isMinimized ? 'w-8 h-8' : 'w-12 h-12'} rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25 transition-all duration-300`}>
-              <Network className={`${isMinimized ? 'w-4 h-4' : 'w-7 h-7'} text-white transition-all duration-300`} />
+            <div className={`${isMinimized ? 'w-8 h-8' : 'w-12 h-12'} rounded-xl overflow-hidden shadow-lg shadow-blue-500/25 transition-all duration-300`}>
+              <img 
+                src="https://storage.googleapis.com/msgsndr/555cPqlZh4po0jGHqsnl/media/68f25ce3855bde33b4cb5dd2.png"
+                alt="Nexus AI Logo"
+                className={`${isMinimized ? 'w-8 h-8' : 'w-12 h-12'} object-contain transition-all duration-300 logo-img`}
+                loading="eager"
+                decoding="sync"
+                width={isMinimized ? 32 : 48}
+                height={isMinimized ? 32 : 48}
+              />
             </div>
             {!isMinimized && (
               <div className="transition-opacity duration-300">
@@ -264,6 +274,16 @@ export default function Sidebar({
                     <Users className="w-4 h-4 group-hover:text-primary transition-colors" />
                     {!isMinimized && <span className="font-medium">Team</span>}
                   </Button>
+                  
+                  <Button 
+                    variant="ghost" 
+                    className={`w-full ${isMinimized ? 'justify-center' : 'justify-start gap-3'} text-sidebar-foreground hover:text-foreground hover:bg-primary/15 hover:scale-102 transition-all duration-300 h-10 border-0 shadow-none group`}
+                    onClick={onBookings}
+                    title={isMinimized ? "Bookings" : undefined}
+                  >
+                    <CalendarDays className="w-4 h-4 group-hover:text-primary transition-colors" />
+                    {!isMinimized && <span className="font-medium">Bookings</span>}
+                  </Button>
                 </div>
               )}
             </div>
@@ -317,7 +337,7 @@ export default function Sidebar({
               <span className="text-sidebar-foreground/70">Quick Switcher</span>
               <kbd className="px-2 py-1 bg-background/50 border border-border/50 rounded text-xs font-mono">⌘K</kbd>
             </div>
-            <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between">
               <span className="text-sidebar-foreground/70">Close Project</span>
               <kbd className="px-2 py-1 bg-background/50 border border-border/50 rounded text-xs font-mono">Esc</kbd>
           </div>

@@ -57,7 +57,8 @@ import {
   Minimize2,
   X,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Package
 } from 'lucide-react';
 
 // Custom Node Components
@@ -309,6 +310,7 @@ function EnhancedProjectMapContent({
   const [filterStatus, setFilterStatus] = useState('all');
   const [isEcosystemMinimized, setIsEcosystemMinimized] = useState(false);
   const [isEcosystemClosed, setIsEcosystemClosed] = useState(false);
+  const [isLayouting, setIsLayouting] = useState(false);
 
   // Initialize with existing projects and enhanced sample data
   useEffect(() => {
@@ -513,22 +515,117 @@ function EnhancedProjectMapContent({
   }, [nodes, searchQuery, filterStatus]);
 
   const getLayoutedElements = useCallback((nodes: Node[], edges: Edge[]) => {
-    // Simple grid layout for now - can be enhanced with D3 or other layout algorithms
-    const layoutedNodes = nodes.map((node, index) => ({
-      ...node,
-      position: {
-        x: 100 + (index % 4) * 250,
-        y: 100 + Math.floor(index / 4) * 200
-      }
-    }));
+    if (nodes.length === 0) return { nodes: [], edges };
+    
+    // Improved hierarchical layout algorithm
+    const layoutedNodes = [...nodes];
+    const nodeTypes = ['project', 'team', 'resource', 'milestone', 'task'];
+    
+    // Group nodes by type for better organization
+    const nodesByType = nodeTypes.reduce((acc, type) => {
+      acc[type] = layoutedNodes.filter(node => node.type === type);
+      return acc;
+    }, {} as Record<string, Node[]>);
+    
+    let currentX = 100;
+    let currentY = 100;
+    const spacingX = 300;
+    const spacingY = 250;
+    
+    // Layout projects first (main elements)
+    nodesByType.project.forEach((node, index) => {
+      const row = Math.floor(index / 3);
+      const col = index % 3;
+      layoutedNodes[layoutedNodes.indexOf(node)] = {
+        ...node,
+        position: {
+          x: currentX + col * spacingX,
+          y: currentY + row * spacingY
+        }
+      };
+    });
+    
+    // Layout teams (to the right of projects)
+    currentX = 100 + 3 * spacingX + 100;
+    currentY = 100;
+    nodesByType.team.forEach((node, index) => {
+      const row = Math.floor(index / 2);
+      const col = index % 2;
+      layoutedNodes[layoutedNodes.indexOf(node)] = {
+        ...node,
+        position: {
+          x: currentX + col * spacingX,
+          y: currentY + row * spacingY
+        }
+      };
+    });
+    
+    // Layout resources (below teams)
+    currentX = 100 + 3 * spacingX + 100;
+    currentY = 100 + 2 * spacingY + 100;
+    nodesByType.resource.forEach((node, index) => {
+      const row = Math.floor(index / 3);
+      const col = index % 3;
+      layoutedNodes[layoutedNodes.indexOf(node)] = {
+        ...node,
+        position: {
+          x: currentX + col * spacingX,
+          y: currentY + row * spacingY
+        }
+      };
+    });
+    
+    // Layout milestones (below projects)
+    currentX = 100;
+    currentY = 100 + 3 * spacingY + 100;
+    nodesByType.milestone.forEach((node, index) => {
+      const row = Math.floor(index / 4);
+      const col = index % 4;
+      layoutedNodes[layoutedNodes.indexOf(node)] = {
+        ...node,
+        position: {
+          x: currentX + col * spacingX,
+          y: currentY + row * spacingY
+        }
+      };
+    });
+    
+    // Layout tasks (scattered around)
+    nodesByType.task.forEach((node, index) => {
+      const row = Math.floor(index / 5);
+      const col = index % 5;
+      layoutedNodes[layoutedNodes.indexOf(node)] = {
+        ...node,
+        position: {
+          x: 100 + col * 200,
+          y: 100 + 4 * spacingY + row * 150
+        }
+      };
+    });
     
     return { nodes: layoutedNodes, edges };
   }, []);
 
   const onLayout = useCallback(() => {
-    const { nodes: layoutedNodes } = getLayoutedElements(nodes, edges);
-    setNodes(layoutedNodes);
-  }, [nodes, edges, getLayoutedElements, setNodes]);
+    setIsLayouting(true);
+    
+    // Add a small delay to show the loading state
+    setTimeout(() => {
+      const { nodes: layoutedNodes } = getLayoutedElements(nodes, edges);
+      setNodes(layoutedNodes);
+      
+      // Fit the view to show all nodes after layout
+      setTimeout(() => {
+        reactFlowInstance?.fitView({ 
+          padding: 0.1,
+          includeHiddenNodes: false,
+          minZoom: 0.1,
+          maxZoom: 1
+        });
+        setIsLayouting(false);
+      }, 100);
+    }, 200);
+  }, [nodes, edges, getLayoutedElements, setNodes, reactFlowInstance]);
 
   // Simple fallback for debugging
   if (projects.length === 0) {
@@ -545,8 +642,9 @@ function EnhancedProjectMapContent({
 
   return (
     <div className="flex flex-col lg:flex-row h-[500px] sm:h-[600px] lg:h-[600px] bg-chatgpt-card rounded-2xl sm:rounded-3xl shadow-glass border border-border">
-      {/* Sidebar */}
-      <div className="w-full lg:w-80 bg-background/80 backdrop-blur-sm border-r-0 lg:border-r border-b lg:border-b-0 border-border flex flex-col max-h-[200px] sm:max-h-[250px] lg:max-h-none overflow-hidden">
+      {/* Sidebar - Only show in overview mode */}
+      {viewMode === 'overview' && (
+        <div className="w-full lg:w-80 bg-background/80 backdrop-blur-sm border-r-0 lg:border-r border-b lg:border-b-0 border-border flex flex-col max-h-[200px] sm:max-h-[250px] lg:max-h-none overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-border">
           <h2 className="text-lg font-semibold mb-3 text-foreground">Project Map</h2>
@@ -603,9 +701,23 @@ function EnhancedProjectMapContent({
 
         {/* Actions */}
         <div className="p-4 border-t border-border space-y-2">
-          <Button onClick={onLayout} variant="outline" className="w-full border-border hover:bg-background/50">
-            <Zap className="w-4 h-4 mr-2" />
-            Auto Layout
+          <Button 
+            onClick={onLayout} 
+            variant="outline" 
+            className="w-full border-border hover:bg-background/50"
+            disabled={isLayouting || nodes.length === 0}
+          >
+            {isLayouting ? (
+              <>
+                <div className="w-4 h-4 mr-2 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                Organizing...
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4 mr-2" />
+                Auto Layout
+              </>
+            )}
           </Button>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" className="flex-1 border-border hover:bg-background/50">
@@ -619,9 +731,11 @@ function EnhancedProjectMapContent({
           </div>
         </div>
       </div>
+      )}
 
       {/* Main Canvas */}
       <div className="flex-1 relative min-h-[300px] sm:min-h-[400px] lg:min-h-0">
+        {viewMode === 'overview' && (
         <ReactFlow
           nodes={filteredNodes}
           edges={edges}
@@ -643,8 +757,207 @@ function EnhancedProjectMapContent({
             color="rgba(255, 255, 255, 0.1)"
           />
         </ReactFlow>
+        )}
 
-        {/* Custom Zoom Controls - Top Left */}
+        {viewMode === 'timeline' && (
+          <div className="w-full h-full bg-background/50 rounded-lg border border-border p-6">
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold text-foreground mb-2">Project Timeline</h3>
+              <p className="text-muted-foreground">Track project milestones and deadlines</p>
+            </div>
+            
+            <div className="space-y-4">
+              {filteredNodes.filter(node => node.type === 'project').map((project, index) => (
+                <Card key={project.id} className="bg-background/80 border-border">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{project.data.title}</CardTitle>
+                      <Badge variant={project.data.status === 'active' ? 'default' : 'secondary'}>
+                        {project.data.status}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {project.data.progress !== undefined && (
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-muted-foreground">Progress</span>
+                            <span className="text-foreground font-medium">{project.data.progress}%</span>
+                          </div>
+                          <Progress value={project.data.progress} className="h-2" />
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Start Date:</span>
+                          <p className="text-foreground font-medium">
+                            {project.data.startDate || 'Not set'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Deadline:</span>
+                          <p className="text-foreground font-medium">
+                            {project.data.deadline || 'Not set'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {project.data.milestones && project.data.milestones.length > 0 && (
+                        <div>
+                          <span className="text-sm text-muted-foreground">Milestones:</span>
+                          <div className="mt-2 space-y-1">
+                            {project.data.milestones.map((milestone: any, idx: number) => (
+                              <div key={idx} className="flex items-center gap-2 text-sm">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <span className="text-foreground">{milestone.name}</span>
+                                <span className="text-muted-foreground">- {milestone.date}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              {filteredNodes.filter(node => node.type === 'project').length === 0 && (
+                <div className="text-center py-12">
+                  <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Projects Found</h3>
+                  <p className="text-muted-foreground">Create a project to see it in the timeline view.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {viewMode === 'resources' && (
+          <div className="w-full h-full bg-background/50 rounded-lg border border-border p-6">
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold text-foreground mb-2">Resource Management</h3>
+              <p className="text-muted-foreground">Manage team members, budgets, and project resources</p>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Team Resources */}
+              <Card className="bg-background/80 border-border">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Team Members
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {filteredNodes.filter(node => node.type === 'team').map((team) => (
+                      <div key={team.id} className="flex items-center justify-between p-3 bg-background/50 rounded-lg border border-border">
+                        <div>
+                          <p className="font-medium text-foreground">{team.data.title}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {team.data.memberCount || 0} members
+                          </p>
+                        </div>
+                        <Badge variant="outline">{team.data.status}</Badge>
+                      </div>
+                    ))}
+                    
+                    {filteredNodes.filter(node => node.type === 'team').length === 0 && (
+                      <div className="text-center py-8">
+                        <Users className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">No team members assigned</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Budget & Resources */}
+              <Card className="bg-background/80 border-border">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="w-5 h-5" />
+                    Budget & Resources
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {filteredNodes.filter(node => node.type === 'project').map((project) => (
+                      <div key={project.id} className="p-3 bg-background/50 rounded-lg border border-border">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-medium text-foreground">{project.data.title}</p>
+                          <Badge variant="outline">{project.data.status}</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Budget:</span>
+                            <p className="text-foreground font-medium">
+                              {project.data.budget || 'Not set'}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Spent:</span>
+                            <p className="text-foreground font-medium">
+                              {project.data.spent || '$0'}
+                            </p>
+                          </div>
+                        </div>
+                        {project.data.budget && project.data.spent && (
+                          <div className="mt-2">
+                            <Progress 
+                              value={parseFloat(project.data.spent.replace(/[^0-9.]/g, '')) / parseFloat(project.data.budget.replace(/[^0-9.]/g, '')) * 100} 
+                              className="h-2" 
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    
+                    {filteredNodes.filter(node => node.type === 'project').length === 0 && (
+                      <div className="text-center py-8">
+                        <DollarSign className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">No budget information available</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Resource Types */}
+              <Card className="bg-background/80 border-border lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="w-5 h-5" />
+                    Resource Types
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {filteredNodes.filter(node => node.type === 'resource').map((resource) => (
+                      <div key={resource.id} className="p-3 bg-background/50 rounded-lg border border-border text-center">
+                        <Package className="w-6 h-6 text-primary mx-auto mb-2" />
+                        <p className="font-medium text-foreground text-sm">{resource.data.title}</p>
+                        <p className="text-xs text-muted-foreground">{resource.data.status}</p>
+                      </div>
+                    ))}
+                    
+                    {filteredNodes.filter(node => node.type === 'resource').length === 0 && (
+                      <div className="col-span-full text-center py-8">
+                        <Package className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">No resources defined</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Zoom Controls - Top Left - Only show in overview mode */}
+        {viewMode === 'overview' && (
         <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex flex-col gap-1 sm:gap-2 z-10">
           <div className="bg-background/90 backdrop-blur-sm rounded-lg shadow-lg border border-border p-1 flex flex-col gap-1">
             <Button
@@ -676,6 +989,7 @@ function EnhancedProjectMapContent({
             </Button>
           </div>
         </div>
+        )}
 
         {/* View Mode Toggle */}
         <div className="absolute top-4 right-4 flex gap-2">
@@ -705,8 +1019,8 @@ function EnhancedProjectMapContent({
           </Button>
         </div>
 
-        {/* Enhanced Business Ecosystem Overview */}
-        {!isEcosystemClosed && (
+        {/* Enhanced Business Ecosystem Overview - Only show in overview mode */}
+        {viewMode === 'overview' && !isEcosystemClosed && (
           <div className={`absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-auto bg-background/90 backdrop-blur-sm rounded-lg shadow-lg border border-border max-w-sm transition-all duration-300 z-10 ${
             isEcosystemMinimized ? 'p-2' : 'p-3 sm:p-4'
           }`}>
@@ -818,8 +1132,8 @@ function EnhancedProjectMapContent({
           </div>
         )}
         
-        {/* Reopen button when closed */}
-        {isEcosystemClosed && (
+        {/* Reopen button when closed - Only show in overview mode */}
+        {viewMode === 'overview' && isEcosystemClosed && (
           <div className="absolute bottom-4 left-4">
             <Button
               size="sm"

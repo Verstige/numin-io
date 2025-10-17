@@ -48,6 +48,11 @@ import AgentManager from './AgentManager';
 import WorkflowBuilder from './WorkflowBuilder';
 import WorkflowExecutionConsole from './WorkflowExecutionConsole';
 import IntegratedAIAgents from './IntegratedAIAgents';
+import ActiveAgentsDashboard from './ActiveAgentsDashboard';
+import AIAgentDemo from './AIAgentDemo';
+import AgentWorkspaceTest from './AgentWorkspaceTest';
+import SupportTicketsSection from './SupportTicketsSection';
+import AgentReportsSection from './AgentReportsSection';
 import { AIAgent, Workflow as WorkflowType, APIConnector } from '@/types/nexus';
 import { agentManager } from '@/lib/agent-manager';
 
@@ -290,6 +295,30 @@ export default function EnhancedNexusDashboard({ className }: EnhancedNexusDashb
       label: 'Integrated AI',
       icon: <Brain className="w-5 h-5" />,
       badge: 'New'
+    },
+    {
+      id: 'demo',
+      label: 'Live Demo',
+      icon: <Play className="w-5 h-5" />,
+      badge: 'Demo'
+    },
+    {
+      id: 'test',
+      label: 'Workspace Test',
+      icon: <Database className="w-5 h-5" />,
+      badge: 'Test'
+    },
+    {
+      id: 'support',
+      label: 'Support Tickets',
+      icon: <Bell className="w-5 h-5" />,
+      badge: null
+    },
+    {
+      id: 'reports',
+      label: 'Agent Reports',
+      icon: <FileText className="w-5 h-5" />,
+      badge: null
     },
     {
       id: 'workflows',
@@ -803,6 +832,7 @@ export default function EnhancedNexusDashboard({ className }: EnhancedNexusDashb
                 {activeTab === 'overview' && 'Manage your AI agents, workflows, and business automation'}
                 {activeTab === 'agents' && 'Create and manage your AI agents'}
                 {activeTab === 'integrated' && 'Integrated AI agents working together'}
+                {activeTab === 'demo' && 'Watch AI agents perform real workspace operations'}
                 {activeTab === 'workflows' && 'Build and execute automated workflows'}
                 {activeTab === 'console' && 'Monitor workflow executions in real-time'}
                 {activeTab === 'templates' && 'Browse pre-built workflow templates'}
@@ -1000,15 +1030,37 @@ export default function EnhancedNexusDashboard({ className }: EnhancedNexusDashb
 
         {/* Agents Tab */}
         {activeTab === 'agents' && (
-          <AgentManager 
-            onAgentSelect={setSelectedAgent}
-            selectedAgentId={selectedAgent?.id}
+          <ActiveAgentsDashboard 
+            onAgentSelect={(agentId) => {
+              const agent = agents.find(a => a.id === agentId);
+              setSelectedAgent(agent || null);
+            }}
           />
         )}
 
         {/* Integrated AI Tab */}
         {activeTab === 'integrated' && (
           <IntegratedAIAgents />
+        )}
+
+        {/* Demo Tab */}
+        {activeTab === 'demo' && (
+          <AIAgentDemo />
+        )}
+
+        {/* Test Tab */}
+        {activeTab === 'test' && (
+          <AgentWorkspaceTest />
+        )}
+
+        {/* Support Tickets Tab */}
+        {activeTab === 'support' && (
+          <SupportTicketsSection />
+        )}
+
+        {/* Agent Reports Tab */}
+        {activeTab === 'reports' && (
+          <AgentReportsSection />
         )}
 
         {/* Workflows Tab */}
