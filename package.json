@@ -10,9 +10,20 @@
     "build:netlify": "npm ci && npm run build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "netlify:build": "npm run build"
+    "netlify:build": "npm run build",
+    "ios:build": "npm run build && npx cap sync ios",
+    "ios:open": "npx cap open ios",
+    "ios:run": "npm run ios:build && npm run ios:open"
   },
   "dependencies": {
+    "@capacitor/app": "^7.1.0",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/haptics": "^7.0.2",
+    "@capacitor/ios": "^7.4.3",
+    "@capacitor/keyboard": "^7.0.3",
+    "@capacitor/splash-screen": "^7.0.3",
+    "@capacitor/status-bar": "^7.0.3",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",

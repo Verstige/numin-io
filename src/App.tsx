@@ -18,15 +18,19 @@ import SettingsDashboard from "./components/Settings/SettingsDashboard";
 import GmailCallback from "./pages/GmailCallback";
 import PublicBookingPage from "./components/PublicBookingPage";
 import { ReminderSystem } from "./lib/reminder-system";
+import { initializeMobileApp } from "./lib/mobile-config";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Initialize reminder system when app starts
+  // Initialize reminder system and mobile app when app starts
   useEffect(() => {
     const reminderSystem = ReminderSystem.getInstance();
     reminderSystem.start();
+    
+    // Initialize mobile-specific configurations
+    initializeMobileApp();
     
     // Cleanup on unmount
     return () => {

@@ -537,8 +537,8 @@ function EnhancedProjectMapContent({
       const row = Math.floor(index / 3);
       const col = index % 3;
       layoutedNodes[layoutedNodes.indexOf(node)] = {
-        ...node,
-        position: {
+      ...node,
+      position: {
           x: currentX + col * spacingX,
           y: currentY + row * spacingY
         }
@@ -611,8 +611,8 @@ function EnhancedProjectMapContent({
     
     // Add a small delay to show the loading state
     setTimeout(() => {
-      const { nodes: layoutedNodes } = getLayoutedElements(nodes, edges);
-      setNodes(layoutedNodes);
+    const { nodes: layoutedNodes } = getLayoutedElements(nodes, edges);
+    setNodes(layoutedNodes);
       
       // Fit the view to show all nodes after layout
       setTimeout(() => {
@@ -644,7 +644,7 @@ function EnhancedProjectMapContent({
     <div className="flex flex-col lg:flex-row h-[500px] sm:h-[600px] lg:h-[600px] bg-chatgpt-card rounded-2xl sm:rounded-3xl shadow-glass border border-border">
       {/* Sidebar - Only show in overview mode */}
       {viewMode === 'overview' && (
-        <div className="w-full lg:w-80 bg-background/80 backdrop-blur-sm border-r-0 lg:border-r border-b lg:border-b-0 border-border flex flex-col max-h-[200px] sm:max-h-[250px] lg:max-h-none overflow-hidden">
+      <div className="w-full lg:w-80 bg-background/80 backdrop-blur-sm border-r-0 lg:border-r border-b lg:border-b-0 border-border flex flex-col max-h-[200px] sm:max-h-[250px] lg:max-h-none overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-border">
           <h2 className="text-lg font-semibold mb-3 text-foreground">Project Map</h2>
@@ -714,8 +714,8 @@ function EnhancedProjectMapContent({
               </>
             ) : (
               <>
-                <Zap className="w-4 h-4 mr-2" />
-                Auto Layout
+            <Zap className="w-4 h-4 mr-2" />
+            Auto Layout
               </>
             )}
           </Button>

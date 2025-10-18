@@ -514,6 +514,7 @@ export default function Index() {
         const userMindmapNodesKey = `userMindmapNodes_${userId}`;
         const hasCreatedProjectKey = `hasEverCreatedProject_${userId}`;
         
+        
         // Load saved projects from localStorage first (no artificial delay)
         const savedProjects = localStorage.getItem(userProjectsKey);
         const savedMindmapNodes = localStorage.getItem(userMindmapNodesKey);
@@ -753,8 +754,9 @@ export default function Index() {
     setFilteredProjects(updatedProjects);
     setActiveProject(updatedProject);
     
-    // Save to localStorage
-    localStorage.setItem('userProjects', JSON.stringify(updatedProjects));
+    // Save to localStorage with user-specific keys
+    const userId = profile?.id || 'anonymous';
+    localStorage.setItem(`userProjects_${userId}`, JSON.stringify(updatedProjects));
   };
 
   const handleDeleteProject = (projectId: string) => {
@@ -774,8 +776,9 @@ export default function Index() {
       notifyProjectChange('deleted', projectToDelete);
     }
     
-    // Save to localStorage
-    localStorage.setItem('userProjects', JSON.stringify(updatedProjects));
+    // Save to localStorage with user-specific keys
+    const userId = profile?.id || 'anonymous';
+    localStorage.setItem(`userProjects_${userId}`, JSON.stringify(updatedProjects));
   };
 
   // New handler functions for sidebar buttons
@@ -835,9 +838,10 @@ export default function Index() {
     console.log('filteredProjects.length:', filteredProjects.length);
     console.log('dynamicMindmapNodes.length:', dynamicMindmapNodes.length);
     console.log('activeProject:', activeProject);
-    console.log('localStorage userProjects:', localStorage.getItem('userProjects') ? 'exists' : 'missing');
-    console.log('localStorage userMindmapNodes:', localStorage.getItem('userMindmapNodes') ? 'exists' : 'missing');
-    console.log('localStorage activeProjectId:', localStorage.getItem('activeProjectId'));
+    const userId = profile?.id || 'anonymous';
+    console.log('localStorage userProjects:', localStorage.getItem(`userProjects_${userId}`) ? 'exists' : 'missing');
+    console.log('localStorage userMindmapNodes:', localStorage.getItem(`userMindmapNodes_${userId}`) ? 'exists' : 'missing');
+    console.log('localStorage activeProjectId:', localStorage.getItem(`activeProjectId_${userId}`));
   };
 
 
