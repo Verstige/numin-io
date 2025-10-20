@@ -1,4 +1,4 @@
-import { LayoutDashboard, Plus, Settings, Sparkles, Search, Bot, Users, Mail, Network, Database, Zap, Map, StickyNote, CheckSquare, Clock, ChevronLeft, ChevronRight, ChevronDown, Calendar, CalendarDays } from "lucide-react";
+import { LayoutDashboard, Plus, Settings, Sparkles, Search, Bot, Users, Mail, Network, Database, Zap, Map, StickyNote, CheckSquare, Clock, ChevronLeft, ChevronRight, ChevronDown, Calendar, CalendarDays, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import { SidebarStatsSkeleton } from "./LoadingSkeleton";
 import PlatformSearch from "./PlatformSearch";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   onNewProject: () => void;
@@ -48,6 +49,7 @@ export default function Sidebar({
   isLoading = false, 
   hasEverCreatedProject = false 
 }: SidebarProps) {
+  const { signOut } = useAuth();
   const navigate = useNavigate();
   const [isMinimized, setIsMinimized] = useState(false);
   const [isAIBusinessSuiteMinimized, setIsAIBusinessSuiteMinimized] = useState(false);
@@ -356,6 +358,26 @@ export default function Sidebar({
 
 
       </nav>
+
+      {/* Sign Out Button */}
+      <div className="mt-auto pt-4 border-t border-sidebar-border">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={async () => {
+            try {
+              await signOut();
+              navigate('/');
+            } catch (error) {
+              console.error('Error signing out:', error);
+            }
+          }}
+          className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          {!isMinimized && "Sign Out"}
+        </Button>
+      </div>
 
     </div>
   );
