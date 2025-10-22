@@ -363,7 +363,7 @@ const mindmapEdges = [
 ];
 
 export default function Index() {
-  const { profile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
@@ -424,7 +424,7 @@ export default function Index() {
     setDynamicMindmapNodes(updatedNodes);
     
     // Save to localStorage with user-specific keys
-    const userId = profile?.id || 'anonymous';
+    const userId = user?.id || 'anonymous';
     localStorage.setItem(`userProjects_${userId}`, JSON.stringify(updatedProjects));
     localStorage.setItem(`userMindmapNodes_${userId}`, JSON.stringify(updatedNodes));
     localStorage.setItem(`hasEverCreatedProject_${userId}`, 'true'); // Mark that user has created a project
@@ -509,7 +509,7 @@ export default function Index() {
       
       try {
         // Get user-specific localStorage keys
-        const userId = profile?.id || 'anonymous';
+        const userId = user?.id || 'anonymous';
         const userProjectsKey = `userProjects_${userId}`;
         const userMindmapNodesKey = `userMindmapNodes_${userId}`;
         const hasCreatedProjectKey = `hasEverCreatedProject_${userId}`;
@@ -572,12 +572,12 @@ export default function Index() {
       mounted = false;
       clearTimeout(timeout);
     };
-  }, [profile?.id]); // Add profile.id as dependency
+  }, [user?.id]); // Add user.id as dependency
 
   // Load active project from localStorage on mount
   useEffect(() => {
-    if (projects.length > 0 && profile?.id) {
-      const userId = profile.id;
+    if (projects.length > 0 && user?.id) {
+      const userId = user.id;
       const savedActiveProjectId = localStorage.getItem(`activeProjectId_${userId}`);
       if (savedActiveProjectId) {
         const savedProject = projects.find(p => p.id === savedActiveProjectId);
@@ -586,18 +586,18 @@ export default function Index() {
         }
       }
     }
-  }, [projects, profile?.id]);
+  }, [projects, user?.id]);
 
   // Save active project to localStorage when it changes
   useEffect(() => {
-    if (activeProject && profile?.id) {
-      const userId = profile.id;
+    if (activeProject && user?.id) {
+      const userId = user.id;
       localStorage.setItem(`activeProjectId_${userId}`, activeProject.id);
-    } else if (!activeProject && profile?.id) {
-      const userId = profile.id;
+    } else if (!activeProject && user?.id) {
+      const userId = user.id;
       localStorage.removeItem(`activeProjectId_${userId}`);
     }
-  }, [activeProject, profile?.id]);
+  }, [activeProject, user?.id]);
 
   // Load tasks from localStorage
   useEffect(() => {
@@ -709,7 +709,7 @@ export default function Index() {
     setFilteredProjects(newProjects);
     
     // Save to localStorage with user-specific keys
-    const userId = profile?.id || 'anonymous';
+    const userId = user?.id || 'anonymous';
     localStorage.setItem(`userProjects_${userId}`, JSON.stringify(newProjects));
     localStorage.setItem(`hasEverCreatedProject_${userId}`, 'true');
     
@@ -755,7 +755,7 @@ export default function Index() {
     setActiveProject(updatedProject);
     
     // Save to localStorage with user-specific keys
-    const userId = profile?.id || 'anonymous';
+    const userId = user?.id || 'anonymous';
     localStorage.setItem(`userProjects_${userId}`, JSON.stringify(updatedProjects));
   };
 
@@ -777,7 +777,7 @@ export default function Index() {
     }
     
     // Save to localStorage with user-specific keys
-    const userId = profile?.id || 'anonymous';
+    const userId = user?.id || 'anonymous';
     localStorage.setItem(`userProjects_${userId}`, JSON.stringify(updatedProjects));
   };
 
@@ -818,7 +818,7 @@ export default function Index() {
 
   // Debug function to clear localStorage (can be called from console)
   const clearUserData = () => {
-    const userId = profile?.id || 'anonymous';
+    const userId = user?.id || 'anonymous';
     localStorage.removeItem(`userProjects_${userId}`);
     localStorage.removeItem(`userMindmapNodes_${userId}`);
     localStorage.removeItem(`activeProjectId_${userId}`);
@@ -838,7 +838,7 @@ export default function Index() {
     console.log('filteredProjects.length:', filteredProjects.length);
     console.log('dynamicMindmapNodes.length:', dynamicMindmapNodes.length);
     console.log('activeProject:', activeProject);
-    const userId = profile?.id || 'anonymous';
+    const userId = user?.id || 'anonymous';
     console.log('localStorage userProjects:', localStorage.getItem(`userProjects_${userId}`) ? 'exists' : 'missing');
     console.log('localStorage userMindmapNodes:', localStorage.getItem(`userMindmapNodes_${userId}`) ? 'exists' : 'missing');
     console.log('localStorage activeProjectId:', localStorage.getItem(`activeProjectId_${userId}`));
@@ -1191,7 +1191,7 @@ export default function Index() {
           {/* Nova AI Chat Interface */}
           <div className="mb-6 sm:mb-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
             <NovaChatInterface 
-              userName={getUserDisplayName(profile)}
+              userName={getUserDisplayName(user)}
               workspaceContext={{
                 projects: filteredProjects.map(p => ({
                   id: p.id,
@@ -1223,8 +1223,8 @@ export default function Index() {
                 })),
                 notes: [], // TODO: Add notes from BuiltInNotes component
                 currentUser: {
-                  name: getUserDisplayName(profile),
-                  email: profile?.email || ''
+                  name: getUserDisplayName(user),
+                  email: user?.email || ''
                 },
                 businessStage: 'startup', // TODO: Add business stage selection
                 industry: 'technology' // TODO: Add industry selection
@@ -1258,12 +1258,12 @@ export default function Index() {
                 </div>
               )
             }
-            notesContent={<BuiltInNotes projectId={activeProject?.id} currentUser={getUserDisplayName(profile)} />}
-            tasksContent={<ViewableTasks projectId={activeProject?.id} currentUser={getUserDisplayName(profile)} />}
+            notesContent={<BuiltInNotes projectId={activeProject?.id} currentUser={getUserDisplayName(user)} />}
+            tasksContent={<ViewableTasks projectId={activeProject?.id} currentUser={getUserDisplayName(user)} />}
             teamContent={<TeamManagement />}
             timerContent={
               <TimeTracker 
-                userId={profile?.id || "current-user"} 
+                userId={user?.id || "current-user"} 
                 projects={projects.map(p => ({
                   id: p.id,
                   name: p.name,
