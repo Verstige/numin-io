@@ -36,6 +36,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, Target, Menu, X, LogOut, Plus, Bot, Map, LayoutDashboard, Settings, Users, Calendar, CheckSquare, Mail, StickyNote, Clock, Sparkles } from "lucide-react";
+import * as ProjectsService from "@/lib/projects-service";
 
 interface Project {
   id: string;
@@ -508,52 +509,85 @@ export default function Index() {
       setIsLoading(true);
       
       try {
-        // Get user-specific localStorage keys
-        const userId = user?.id || 'anonymous';
-        const userProjectsKey = `userProjects_${userId}`;
-        const userMindmapNodesKey = `userMindmapNodes_${userId}`;
-        const hasCreatedProjectKey = `hasEverCreatedProject_${userId}`;
+        console.log('🔄 Loading projects from Supabase...');
         
+        // Load projects from Supabase
+        const supabaseProjects = await ProjectsService.getUserProjects();
         
-        // Load saved projects from localStorage first (no artificial delay)
-        const savedProjects = localStorage.getItem(userProjectsKey);
-        const savedMindmapNodes = localStorage.getItem(userMindmapNodesKey);
-        
-        if (savedProjects && savedMindmapNodes) {
-          // Load user's saved projects
-          const parsedProjects = JSON.parse(savedProjects);
-          const parsedNodes = JSON.parse(savedMindmapNodes);
-          if (mounted) {
-            setProjects(parsedProjects);
-            setFilteredProjects(parsedProjects);
-            setDynamicMindmapNodes(parsedNodes);
-            setHasEverCreatedProject(true); // User has created projects before
-          }
-        } else {
-          // Check if user has ever created a project (for first-time users)
-          const hasCreatedProject = localStorage.getItem(hasCreatedProjectKey);
-          if (mounted) {
-            // Load projects from localStorage - no mock data
-            const savedProjects = localStorage.getItem(userProjectsKey);
-            const projects = savedProjects ? JSON.parse(savedProjects) : [];
-            
-            setProjects(projects);
-            setFilteredProjects(projects);
+        if (mounted) {
+          // Convert Supabase projects to local format
+          const localProjects = supabaseProjects.map(p => ({
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            status: p.status,
+            priority: p.priority,
+            location: p.location,
+            website: p.website,
+            industry: p.industry,
+            products: p.products,
+            targetAudience: p.target_audience,
+            businessStage: p.business_stage,
+            revenue: p.revenue,
+            employees: p.employees,
+            founded: p.founded,
+            contactEmail: p.contact_email,
+            phone: p.phone,
+            socialMedia: p.social_media,
+            additionalNotes: p.additional_notes,
+          }));
+          
+          console.log(`✅ Loaded ${localProjects.length} projects from Supabase`);
+          
+          setProjects(localProjects);
+          setFilteredProjects(localProjects);
+          setHasEverCreatedProject(localProjects.length > 0);
+          
+          // Load mindmap nodes from localStorage (will be migrated to Supabase later)
+          const userId = user?.id || 'anonymous';
+          const savedMindmapNodes = localStorage.getItem(`userMindmapNodes_${userId}`);
+          if (savedMindmapNodes) {
+            setDynamicMindmapNodes(JSON.parse(savedMindmapNodes));
+          } else {
             setDynamicMindmapNodes([]);
-            setHasEverCreatedProject(hasCreatedProject === 'true');
+          }
+          
+          // Also save to localStorage as backup
+          if (localProjects.length > 0) {
+            localStorage.setItem(`userProjects_${userId}`, JSON.stringify(localProjects));
+            localStorage.setItem(`hasEverCreatedProject_${userId}`, 'true');
           }
         }
       } catch (error) {
-        console.error('Error loading initial data:', error);
-        // Fallback to empty state
+        console.error('❌ Error loading projects from Supabase:', error);
+        
+        // Fallback to localStorage if Supabase fails
+        const userId = user?.id || 'anonymous';
+        const savedProjects = localStorage.getItem(`userProjects_${userId}`);
+        const savedMindmapNodes = localStorage.getItem(`userMindmapNodes_${userId}`);
+        
         if (mounted) {
-          setProjects([]);
-          setFilteredProjects([]);
-          setDynamicMindmapNodes([]);
+          if (savedProjects) {
+            console.log('⚠️ Falling back to localStorage projects');
+            const projects = JSON.parse(savedProjects);
+            setProjects(projects);
+            setFilteredProjects(projects);
+            setHasEverCreatedProject(projects.length > 0);
+          } else {
+            setProjects([]);
+            setFilteredProjects([]);
+            setHasEverCreatedProject(false);
+          }
+          
+          if (savedMindmapNodes) {
+            setDynamicMindmapNodes(JSON.parse(savedMindmapNodes));
+          } else {
+            setDynamicMindmapNodes([]);
+          }
         }
       } finally {
         if (mounted) {
-      setIsLoading(false);
+          setIsLoading(false);
         }
       }
     };
@@ -566,7 +600,7 @@ export default function Index() {
         console.log('Index loading timeout - setting loading to false');
         setIsLoading(false);
       }
-    }, 3000); // 3 second timeout
+    }, 5000); // 5 second timeout
 
     return () => {
       mounted = false;
@@ -679,66 +713,101 @@ export default function Index() {
 
 
 
-  const handleCreateProject = () => {
+  const handleCreateProject = async () => {
     if (!newProject.name.trim()) return;
     
-    const project: Project = {
-      id: `p${projects.length + 1}`,
-      name: newProject.name,
-      description: newProject.description,
-      status: "Planning",
-      priority: newProject.priority,
-      // Enhanced business details
-      location: newProject.location || undefined,
-      website: newProject.website || undefined,
-      industry: newProject.industry || undefined,
-      products: newProject.products || undefined,
-      targetAudience: newProject.targetAudience || undefined,
-      businessStage: newProject.businessStage || undefined,
-      revenue: newProject.revenue || undefined,
-      employees: newProject.employees || undefined,
-      founded: newProject.founded || undefined,
-      contactEmail: newProject.contactEmail || undefined,
-      phone: newProject.phone || undefined,
-      socialMedia: newProject.socialMedia || undefined,
-      additionalNotes: newProject.additionalNotes || undefined
-    };
-    
-    const newProjects = [...projects, project];
-    setProjects(newProjects);
-    setFilteredProjects(newProjects);
-    
-    // Save to localStorage with user-specific keys
-    const userId = user?.id || 'anonymous';
-    localStorage.setItem(`userProjects_${userId}`, JSON.stringify(newProjects));
-    localStorage.setItem(`hasEverCreatedProject_${userId}`, 'true');
-    
-    // Update state
-    setHasEverCreatedProject(true);
-    
-    // Notify AI agents of new project
-    notifyProjectChange('created', project);
-    
-    // Reset form with all fields
-    setNewProject({ 
-      name: "", 
-      description: "", 
-      priority: "medium",
-      location: "",
-      website: "",
-      industry: "",
-      products: "",
-      targetAudience: "",
-      businessStage: "",
-      revenue: "",
-      employees: "",
-      founded: "",
-      contactEmail: "",
-      phone: "",
-      socialMedia: "",
-      additionalNotes: ""
-    });
-    setIsNewProjectOpen(false);
+    try {
+      console.log('📝 Creating project in Supabase...');
+      
+      // Create project in Supabase
+      const createdProject = await ProjectsService.createProject({
+        name: newProject.name,
+        description: newProject.description,
+        status: "Planning",
+        priority: newProject.priority,
+        location: newProject.location || undefined,
+        website: newProject.website || undefined,
+        industry: newProject.industry || undefined,
+        products: newProject.products || undefined,
+        target_audience: newProject.targetAudience || undefined,
+        business_stage: newProject.businessStage || undefined,
+        revenue: newProject.revenue || undefined,
+        employees: newProject.employees || undefined,
+        founded: newProject.founded || undefined,
+        contact_email: newProject.contactEmail || undefined,
+        phone: newProject.phone || undefined,
+        social_media: newProject.socialMedia || undefined,
+        additional_notes: newProject.additionalNotes || undefined,
+      });
+      
+      if (!createdProject) {
+        console.error('❌ Failed to create project in Supabase');
+        return;
+      }
+      
+      console.log('✅ Project created in Supabase:', createdProject.id);
+      
+      // Convert to local format
+      const project: Project = {
+        id: createdProject.id,
+        name: createdProject.name,
+        description: createdProject.description,
+        status: createdProject.status,
+        priority: createdProject.priority,
+        location: createdProject.location,
+        website: createdProject.website,
+        industry: createdProject.industry,
+        products: createdProject.products,
+        targetAudience: createdProject.target_audience,
+        businessStage: createdProject.business_stage,
+        revenue: createdProject.revenue,
+        employees: createdProject.employees,
+        founded: createdProject.founded,
+        contactEmail: createdProject.contact_email,
+        phone: createdProject.phone,
+        socialMedia: createdProject.social_media,
+        additionalNotes: createdProject.additional_notes,
+      };
+      
+      const newProjects = [...projects, project];
+      setProjects(newProjects);
+      setFilteredProjects(newProjects);
+      
+      // Also save to localStorage as backup
+      const userId = user?.id || 'anonymous';
+      localStorage.setItem(`userProjects_${userId}`, JSON.stringify(newProjects));
+      localStorage.setItem(`hasEverCreatedProject_${userId}`, 'true');
+      
+      // Update state
+      setHasEverCreatedProject(true);
+      
+      // Notify AI agents of new project
+      notifyProjectChange('created', project);
+      
+      // Reset form with all fields
+      setNewProject({ 
+        name: "", 
+        description: "", 
+        priority: "medium",
+        location: "",
+        website: "",
+        industry: "",
+        products: "",
+        targetAudience: "",
+        businessStage: "",
+        revenue: "",
+        employees: "",
+        founded: "",
+        contactEmail: "",
+        phone: "",
+        socialMedia: "",
+        additionalNotes: ""
+      });
+      setIsNewProjectOpen(false);
+    } catch (error) {
+      console.error('❌ Error creating project:', error);
+      // TODO: Show error toast to user
+    }
   };
 
   const handleQuickSwitcherSelect = (projectId: string) => {
@@ -746,39 +815,92 @@ export default function Index() {
     setIsQuickSwitcherOpen(false);
   };
 
-  const handleUpdateProject = (updatedProject: Project) => {
-    const updatedProjects = projects.map(p => 
-      p.id === updatedProject.id ? updatedProject : p
-    );
-    setProjects(updatedProjects);
-    setFilteredProjects(updatedProjects);
-    setActiveProject(updatedProject);
-    
-    // Save to localStorage with user-specific keys
-    const userId = user?.id || 'anonymous';
-    localStorage.setItem(`userProjects_${userId}`, JSON.stringify(updatedProjects));
+  const handleUpdateProject = async (updatedProject: Project) => {
+    try {
+      console.log('📝 Updating project in Supabase:', updatedProject.id);
+      
+      // Update project in Supabase
+      const result = await ProjectsService.updateProject(updatedProject.id, {
+        name: updatedProject.name,
+        description: updatedProject.description,
+        status: updatedProject.status,
+        priority: updatedProject.priority,
+        location: updatedProject.location,
+        website: updatedProject.website,
+        industry: updatedProject.industry,
+        products: updatedProject.products,
+        target_audience: updatedProject.targetAudience,
+        business_stage: updatedProject.businessStage,
+        revenue: updatedProject.revenue,
+        employees: updatedProject.employees,
+        founded: updatedProject.founded,
+        contact_email: updatedProject.contactEmail,
+        phone: updatedProject.phone,
+        social_media: updatedProject.socialMedia,
+        additional_notes: updatedProject.additionalNotes,
+      });
+      
+      if (!result) {
+        console.error('❌ Failed to update project in Supabase');
+        return;
+      }
+      
+      console.log('✅ Project updated in Supabase');
+      
+      const updatedProjects = projects.map(p => 
+        p.id === updatedProject.id ? updatedProject : p
+      );
+      setProjects(updatedProjects);
+      setFilteredProjects(updatedProjects);
+      setActiveProject(updatedProject);
+      
+      // Also save to localStorage as backup
+      const userId = user?.id || 'anonymous';
+      localStorage.setItem(`userProjects_${userId}`, JSON.stringify(updatedProjects));
+    } catch (error) {
+      console.error('❌ Error updating project:', error);
+      // TODO: Show error toast to user
+    }
   };
 
-  const handleDeleteProject = (projectId: string) => {
-    const projectToDelete = projects.find(p => p.id === projectId);
-    const updatedProjects = projects.filter(p => p.id !== projectId);
-    setProjects(updatedProjects);
-    setFilteredProjects(updatedProjects);
-    
-    // Clear active project if it was deleted
-    if (activeProject?.id === projectId) {
-      setActiveProject(null);
-      setSelectedProjectFromMap(null);
+  const handleDeleteProject = async (projectId: string) => {
+    try {
+      console.log('🗑️ Deleting project from Supabase:', projectId);
+      
+      const projectToDelete = projects.find(p => p.id === projectId);
+      
+      // Delete project from Supabase
+      const success = await ProjectsService.deleteProject(projectId);
+      
+      if (!success) {
+        console.error('❌ Failed to delete project from Supabase');
+        return;
+      }
+      
+      console.log('✅ Project deleted from Supabase');
+      
+      const updatedProjects = projects.filter(p => p.id !== projectId);
+      setProjects(updatedProjects);
+      setFilteredProjects(updatedProjects);
+      
+      // Clear active project if it was deleted
+      if (activeProject?.id === projectId) {
+        setActiveProject(null);
+        setSelectedProjectFromMap(null);
+      }
+      
+      // Notify AI agents of deleted project
+      if (projectToDelete) {
+        notifyProjectChange('deleted', projectToDelete);
+      }
+      
+      // Also save to localStorage as backup
+      const userId = user?.id || 'anonymous';
+      localStorage.setItem(`userProjects_${userId}`, JSON.stringify(updatedProjects));
+    } catch (error) {
+      console.error('❌ Error deleting project:', error);
+      // TODO: Show error toast to user
     }
-    
-    // Notify AI agents of deleted project
-    if (projectToDelete) {
-      notifyProjectChange('deleted', projectToDelete);
-    }
-    
-    // Save to localStorage with user-specific keys
-    const userId = user?.id || 'anonymous';
-    localStorage.setItem(`userProjects_${userId}`, JSON.stringify(updatedProjects));
   };
 
   // New handler functions for sidebar buttons
