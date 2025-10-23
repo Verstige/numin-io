@@ -51,21 +51,27 @@ export default function BuiltInNotes({ projectId, currentUser = "Current User", 
   // Load notes from database
   useEffect(() => {
     const loadNotes = async () => {
-      if (!teamId || !user) return;
+      if (!user) return;
       
       try {
         setIsLoading(true);
+        console.log('📝 Loading notes from database...');
+        
+        // Use user ID as team ID for now
+        const currentTeamId = teamId || user.id;
+        
         // First, try to migrate any localStorage data
-        await MigrationService.migrateLocalStorageNotes(teamId, user.id);
+        await MigrationService.migrateLocalStorageNotes(currentTeamId, user.id);
         
         // Then load from database
-        const dbNotes = await WorkspaceNotesService.getNotes(teamId, projectId);
+        const dbNotes = await WorkspaceNotesService.getNotes(currentTeamId, projectId);
         setNotes(dbNotes);
+        console.log('✅ Notes loaded:', dbNotes.length);
       } catch (error) {
         console.error('Error loading notes:', error);
         toast({
           title: "Error",
-          description: "Failed to load notes. Please try again.",
+          description: "Failed to load notes. Please check if database tables exist.",
           variant: "destructive",
         });
       } finally {

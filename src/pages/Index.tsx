@@ -742,6 +742,7 @@ export default function Index() {
       
       if (!createdProject) {
         console.error('❌ Failed to create project in Supabase');
+        alert('Failed to create project. Please check your database connection and try again.');
         return;
       }
       
@@ -804,9 +805,12 @@ export default function Index() {
         additionalNotes: ""
       });
       setIsNewProjectOpen(false);
+      
+      // Show success message
+      alert('Business created successfully!');
     } catch (error) {
       console.error('❌ Error creating project:', error);
-      // TODO: Show error toast to user
+      alert(`Error creating project: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -1380,8 +1384,8 @@ export default function Index() {
                 </div>
               )
             }
-            notesContent={<BuiltInNotes projectId={activeProject?.id} currentUser={getUserDisplayName(user)} />}
-            tasksContent={<ViewableTasks projectId={activeProject?.id} currentUser={getUserDisplayName(user)} />}
+            notesContent={<BuiltInNotes projectId={activeProject?.id} currentUser={getUserDisplayName(user)} teamId={user?.id} />}
+            tasksContent={<ViewableTasks projectId={activeProject?.id} currentUser={getUserDisplayName(user)} teamId={user?.id} />}
             teamContent={<TeamManagement />}
             timerContent={
               <TimeTracker 

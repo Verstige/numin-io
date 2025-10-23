@@ -61,21 +61,27 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
   // Load tasks from database
   useEffect(() => {
     const loadTasks = async () => {
-      if (!teamId || !user) return;
+      if (!user) return;
       
       try {
         setIsLoading(true);
+        console.log('📝 Loading tasks from database...');
+        
+        // Use user ID as team ID for now
+        const currentTeamId = teamId || user.id;
+        
         // First, try to migrate any localStorage data
-        await MigrationService.migrateLocalStorageTasks(teamId, user.id);
+        await MigrationService.migrateLocalStorageTasks(currentTeamId, user.id);
         
         // Then load from database
-        const dbTasks = await WorkspaceTasksService.getTasks(teamId, projectId);
+        const dbTasks = await WorkspaceTasksService.getTasks(currentTeamId, projectId);
         setTasks(dbTasks);
+        console.log('✅ Tasks loaded:', dbTasks.length);
       } catch (error) {
         console.error('Error loading tasks:', error);
         toast({
           title: "Error",
-          description: "Failed to load tasks. Please try again.",
+          description: "Failed to load tasks. Please check if database tables exist.",
           variant: "destructive",
         });
       } finally {

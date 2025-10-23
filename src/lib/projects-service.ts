@@ -102,6 +102,7 @@ export async function createProject(input: CreateProjectInput): Promise<Project 
       status: input.status || 'Active',
       priority: input.priority || 'medium',
       created_by: user.id,
+      team_id: user.id, // Use user ID as team ID for now
       location: input.location,
       website: input.website,
       industry: input.industry,
