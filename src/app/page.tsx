@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import EnhancedProjectMap from "@/components/EnhancedProjectMap";
 import ProjectCard from "@/components/ProjectCard";
@@ -278,8 +279,12 @@ export default function Index() {
                     <div className="w-16 h-16 bg-gradient-to-r from-primary to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                       <Sparkles className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Your Workspace is Ready</h3>
-                    <p className="text-muted-foreground mb-4">Start chatting with Nova AI or use the sidebar to navigate</p>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Create Your First Project</h3>
+                    <p className="text-muted-foreground mb-4">Start building your business ecosystem by creating your first project</p>
+                    <Button onClick={() => setIsNewProjectOpen(true)} className="mt-4">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Project
+                    </Button>
                   </div>
                 )
               }
@@ -341,8 +346,12 @@ export default function Index() {
                     <div className="w-16 h-16 bg-gradient-to-r from-primary to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                       <Sparkles className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Your Workspace is Ready</h3>
-                    <p className="text-muted-foreground mb-4">Start chatting with Nova AI or use the sidebar to navigate</p>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Create Your First Project</h3>
+                    <p className="text-muted-foreground mb-4">Start building your business ecosystem by creating your first project</p>
+                    <Button onClick={() => setIsNewProjectOpen(true)} className="mt-4">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Project
+                    </Button>
                   </div>
                 </div>
               )}

@@ -808,6 +808,38 @@ export default function Index() {
       
       // Show success message
       alert('Business created successfully!');
+      
+      // Force reload projects to ensure they show up
+      setTimeout(async () => {
+        try {
+          const reloadedProjects = await ProjectsService.getUserProjects();
+          const localProjects = reloadedProjects.map(p => ({
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            status: p.status,
+            priority: p.priority,
+            location: p.location,
+            website: p.website,
+            industry: p.industry,
+            products: p.products,
+            targetAudience: p.target_audience,
+            businessStage: p.business_stage,
+            revenue: p.revenue,
+            employees: p.employees,
+            founded: p.founded,
+            contactEmail: p.contact_email,
+            phone: p.phone,
+            socialMedia: p.social_media,
+            additionalNotes: p.additional_notes,
+          }));
+          setProjects(localProjects);
+          setFilteredProjects(localProjects);
+          console.log('🔄 Projects reloaded after creation:', localProjects.length);
+        } catch (error) {
+          console.error('Error reloading projects:', error);
+        }
+      }, 1000);
     } catch (error) {
       console.error('❌ Error creating project:', error);
       alert(`Error creating project: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -1379,8 +1411,12 @@ export default function Index() {
                   <div className="w-16 h-16 bg-gradient-to-r from-primary to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                     <Sparkles className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">Your Workspace is Ready</h3>
-                  <p className="text-muted-foreground mb-4">Start chatting with Nova AI or use the sidebar to navigate</p>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Create Your First Project</h3>
+                  <p className="text-muted-foreground mb-4">Start building your business ecosystem by creating your first project</p>
+                  <Button onClick={() => setIsNewProjectOpen(true)} className="mt-4">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Project
+                  </Button>
                 </div>
               )
             }

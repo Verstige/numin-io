@@ -50,7 +50,7 @@ export default function ChatInterface({
     if (messages.length === 0) {
       const welcomeMessage: Message = {
         role: "assistant",
-        content: `Hello! I'm Nova, your AI project management assistant. ${projectName ? `I see you've opened **${projectName}**.` : "Select a project to get started, and I'll help you with actionable insights and next steps."}`,
+        content: `Hello! I'm Nova, your AI business intelligence assistant. ${projectName ? `I see you've opened **${projectName}**.` : "I'm here to help you manage your business projects and provide intelligent insights."}`,
         timestamp: new Date()
       };
       
