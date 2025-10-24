@@ -627,18 +627,7 @@ function EnhancedProjectMapContent({
     }, 200);
   }, [nodes, edges, getLayoutedElements, setNodes, reactFlowInstance]);
 
-  // Simple fallback for debugging
-  if (projects.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-96 bg-chatgpt-card rounded-3xl shadow-glass border border-border">
-        <div className="text-center">
-          <Target className="w-12 h-12 text-primary mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">Enhanced Project Map</h3>
-          <p className="text-muted-foreground">Drag project types from the sidebar to get started</p>
-        </div>
-      </div>
-    );
-  }
+  // Always show the project map system, even when no projects exist
 
   return (
     <div className="flex flex-col lg:flex-row h-[500px] sm:h-[600px] lg:h-[600px] bg-chatgpt-card rounded-2xl sm:rounded-3xl shadow-glass border border-border">

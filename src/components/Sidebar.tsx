@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
-  onNewProject: () => void;
+  onNewProject?: () => void;
   onDashboard?: () => void;
   onConnections?: () => void;
   onEmail?: () => void;
@@ -33,7 +33,6 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ 
-  onNewProject, 
   onDashboard, 
   onConnections,
   onEmail,
@@ -115,15 +114,6 @@ export default function Sidebar({
         
         {/* Main Navigation Buttons */}
         <div className="space-y-2">
-          <Button 
-            variant="ghost" 
-            className={`w-full ${isMinimized ? 'justify-center' : 'justify-start gap-3'} text-sidebar-foreground hover:text-foreground hover:bg-primary/15 hover:scale-102 transition-all duration-300 h-10 border-0 shadow-none group`}
-            onClick={onNewProject}
-            title={isMinimized ? "New Project" : undefined}
-          >
-            <Plus className="w-4 h-4 group-hover:text-primary transition-colors" />
-            {!isMinimized && <span className="font-medium">New Project</span>}
-          </Button>
         </div>
         
         {/* AI Business Suite Section */}

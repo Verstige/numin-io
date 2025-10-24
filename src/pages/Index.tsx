@@ -370,7 +370,6 @@ export default function Index() {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [selectedProjectFromMap, setSelectedProjectFromMap] = useState<Project | null>(null);
-  const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
   const [isQuickSwitcherOpen, setIsQuickSwitcherOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [teamMembers] = useState<TeamMember[]>([]);
@@ -660,8 +659,6 @@ export default function Index() {
       if (e.key === 'Escape') {
         if (isQuickSwitcherOpen) {
           setIsQuickSwitcherOpen(false);
-        } else if (isNewProjectOpen) {
-          setIsNewProjectOpen(false);
         } else if (activeProject) {
           setActiveProject(null);
         }
@@ -670,26 +667,7 @@ export default function Index() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [activeProject, isNewProjectOpen, isQuickSwitcherOpen]);
-  const [newProject, setNewProject] = useState({
-    name: "",
-    description: "",
-    priority: "medium" as "low" | "medium" | "high",
-    // Enhanced business details
-    location: "",
-    website: "",
-    industry: "",
-    products: "",
-    targetAudience: "",
-    businessStage: "",
-    revenue: "",
-    employees: "",
-    founded: "",
-    contactEmail: "",
-    phone: "",
-    socialMedia: "",
-    additionalNotes: ""
-  });
+  }, [activeProject, isQuickSwitcherOpen]);
 
   const handleOpenProject = (projectId: string) => {
     const project = projects.find(p => p.id === projectId);
@@ -713,138 +691,6 @@ export default function Index() {
 
 
 
-  const handleCreateProject = async () => {
-    if (!newProject.name.trim()) return;
-    
-    try {
-      console.log('📝 Creating project in Supabase...');
-      
-      // Create project in Supabase
-      const createdProject = await ProjectsService.createProject({
-        name: newProject.name,
-        description: newProject.description,
-        status: "Planning",
-        priority: newProject.priority,
-        location: newProject.location || undefined,
-        website: newProject.website || undefined,
-        industry: newProject.industry || undefined,
-        products: newProject.products || undefined,
-        target_audience: newProject.targetAudience || undefined,
-        business_stage: newProject.businessStage || undefined,
-        revenue: newProject.revenue || undefined,
-        employees: newProject.employees || undefined,
-        founded: newProject.founded || undefined,
-        contact_email: newProject.contactEmail || undefined,
-        phone: newProject.phone || undefined,
-        social_media: newProject.socialMedia || undefined,
-        additional_notes: newProject.additionalNotes || undefined,
-      });
-      
-      if (!createdProject) {
-        console.error('❌ Failed to create project in Supabase');
-        alert('Failed to create project. Please check your database connection and try again.');
-        return;
-      }
-      
-      console.log('✅ Project created in Supabase:', createdProject.id);
-      
-      // Convert to local format
-      const project: Project = {
-        id: createdProject.id,
-        name: createdProject.name,
-        description: createdProject.description,
-        status: createdProject.status,
-        priority: createdProject.priority,
-        location: createdProject.location,
-        website: createdProject.website,
-        industry: createdProject.industry,
-        products: createdProject.products,
-        targetAudience: createdProject.target_audience,
-        businessStage: createdProject.business_stage,
-        revenue: createdProject.revenue,
-        employees: createdProject.employees,
-        founded: createdProject.founded,
-        contactEmail: createdProject.contact_email,
-        phone: createdProject.phone,
-        socialMedia: createdProject.social_media,
-        additionalNotes: createdProject.additional_notes,
-      };
-      
-      const newProjects = [...projects, project];
-      setProjects(newProjects);
-      setFilteredProjects(newProjects);
-      
-      // Also save to localStorage as backup
-      const userId = user?.id || 'anonymous';
-      localStorage.setItem(`userProjects_${userId}`, JSON.stringify(newProjects));
-      localStorage.setItem(`hasEverCreatedProject_${userId}`, 'true');
-      
-      // Update state
-      setHasEverCreatedProject(true);
-      
-      // Notify AI agents of new project
-      notifyProjectChange('created', project);
-      
-      // Reset form with all fields
-      setNewProject({ 
-        name: "", 
-        description: "", 
-        priority: "medium",
-        location: "",
-        website: "",
-        industry: "",
-        products: "",
-        targetAudience: "",
-        businessStage: "",
-        revenue: "",
-        employees: "",
-        founded: "",
-        contactEmail: "",
-        phone: "",
-        socialMedia: "",
-        additionalNotes: ""
-      });
-      setIsNewProjectOpen(false);
-      
-      // Show success message
-      alert('Business created successfully!');
-      
-      // Force reload projects to ensure they show up
-      setTimeout(async () => {
-        try {
-          const reloadedProjects = await ProjectsService.getUserProjects();
-          const localProjects = reloadedProjects.map(p => ({
-            id: p.id,
-            name: p.name,
-            description: p.description,
-            status: p.status,
-            priority: p.priority,
-            location: p.location,
-            website: p.website,
-            industry: p.industry,
-            products: p.products,
-            targetAudience: p.target_audience,
-            businessStage: p.business_stage,
-            revenue: p.revenue,
-            employees: p.employees,
-            founded: p.founded,
-            contactEmail: p.contact_email,
-            phone: p.phone,
-            socialMedia: p.social_media,
-            additionalNotes: p.additional_notes,
-          }));
-          setProjects(localProjects);
-          setFilteredProjects(localProjects);
-          console.log('🔄 Projects reloaded after creation:', localProjects.length);
-        } catch (error) {
-          console.error('Error reloading projects:', error);
-        }
-      }, 1000);
-    } catch (error) {
-      console.error('❌ Error creating project:', error);
-      alert(`Error creating project: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
 
   const handleQuickSwitcherSelect = (projectId: string) => {
     handleOpenProject(projectId);
@@ -1012,7 +858,6 @@ export default function Index() {
       {/* Sidebar */}
       <div className="hidden lg:block">
       <Sidebar 
-        onNewProject={() => setIsNewProjectOpen(true)}
         onDashboard={() => setShowDashboard(true)}
         onConnections={() => {
           setCurrentTab('crm');
@@ -1232,16 +1077,6 @@ export default function Index() {
                 {/* Action Buttons */}
                 <div className="space-y-2 pt-4 border-t border-border/50">
                   <Button
-                    onClick={() => {
-                      setIsNewProjectOpen(true);
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="w-full"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Brand
-                  </Button>
-                  <Button
                     variant="outline"
                     onClick={() => {
                       handleLogout();
@@ -1311,14 +1146,6 @@ export default function Index() {
                 
                 {/* Quick Actions */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
-                  <Button 
-                    size="lg" 
-                    className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 sm:px-8 py-3 rounded-xl shadow-lg shadow-blue-500/25 transition-all duration-300"
-                    onClick={() => setIsNewProjectOpen(true)}
-                  >
-                    <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                    Start New Project
-                  </Button>
                   <Button 
                     variant="outline" 
                     size="lg"
@@ -1400,24 +1227,12 @@ export default function Index() {
             mindmapContent={
               isLoading ? (
                 <MindmapSkeleton />
-              ) : projects.length > 0 ? (
+              ) : (
                 <EnhancedProjectMap
                   onProjectSelect={handleProjectMapSelect}
                   selectedProjectId={selectedProjectFromMap?.id}
                   projects={projects}
                 />
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gradient-to-r from-primary to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">Create Your First Project</h3>
-                  <p className="text-muted-foreground mb-4">Start building your business ecosystem by creating your first project</p>
-                  <Button onClick={() => setIsNewProjectOpen(true)} className="mt-4">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Project
-                  </Button>
-                </div>
               )
             }
             notesContent={<BuiltInNotes projectId={activeProject?.id} currentUser={getUserDisplayName(user)} teamId={user?.id} />}
@@ -1513,258 +1328,10 @@ export default function Index() {
             </>
       </div>
 
-      {/* New Brand Dialog */}
-      <Dialog open={isNewProjectOpen} onOpenChange={setIsNewProjectOpen}>
-        <DialogContent className="bg-card border-border max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Your Business</DialogTitle>
-            <DialogDescription>
-              Tell us about your business to help Nova AI provide better assistance
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 pt-4">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Basic Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                  <Label htmlFor="name">Business Name *</Label>
-              <Input
-                id="name"
-                value={newProject.name}
-                onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                    placeholder="e.g., My Business"
-                    className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-              />
-            </div>
-            <div>
-                  <Label htmlFor="industry">Industry</Label>
-                  <Input
-                    id="industry"
-                    value={newProject.industry}
-                    onChange={(e) => setNewProject({ ...newProject, industry: e.target.value })}
-                    placeholder="e.g., Technology, Healthcare, Retail"
-                    className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="description">Business Description</Label>
-              <Textarea
-                id="description"
-                value={newProject.description}
-                onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                  placeholder="Brief overview of your business, what you do, and your mission..."
-                  className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-                  rows={3}
-              />
-            </div>
-            </div>
 
-            {/* Business Details */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Business Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={newProject.location}
-                    onChange={(e) => setNewProject({ ...newProject, location: e.target.value })}
-                    placeholder="e.g., San Francisco, CA"
-                    className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="businessStage">Business Stage</Label>
-                  <Select
-                    value={newProject.businessStage}
-                    onValueChange={(value) => setNewProject({ ...newProject, businessStage: value })}
-                  >
-                    <SelectTrigger className="bg-background border-border text-foreground mt-1">
-                      <SelectValue placeholder="Select stage" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="idea">Idea Stage</SelectItem>
-                      <SelectItem value="startup">Startup</SelectItem>
-                      <SelectItem value="growth">Growth Stage</SelectItem>
-                      <SelectItem value="established">Established</SelectItem>
-                      <SelectItem value="expansion">Expansion</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="website">Website</Label>
-                  <Input
-                    id="website"
-                    value={newProject.website}
-                    onChange={(e) => setNewProject({ ...newProject, website: e.target.value })}
-                    placeholder="https://yourbusiness.com"
-                    className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="founded">Founded Year</Label>
-                  <Input
-                    id="founded"
-                    value={newProject.founded}
-                    onChange={(e) => setNewProject({ ...newProject, founded: e.target.value })}
-                    placeholder="2024"
-                    className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-                  />
-                </div>
-              </div>
-            </div>
 
-            {/* Products & Services */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Products & Services</h3>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="products">Products/Services</Label>
-                  <Textarea
-                    id="products"
-                    value={newProject.products}
-                    onChange={(e) => setNewProject({ ...newProject, products: e.target.value })}
-                    placeholder="Describe your main products or services..."
-                    className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="targetAudience">Target Audience</Label>
-                  <Textarea
-                    id="targetAudience"
-                    value={newProject.targetAudience}
-                    onChange={(e) => setNewProject({ ...newProject, targetAudience: e.target.value })}
-                    placeholder="Who are your ideal customers? Demographics, interests, needs..."
-                    className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-                    rows={2}
-                  />
-                </div>
-              </div>
-            </div>
 
-            {/* Contact Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Contact Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="contactEmail">Email</Label>
-                  <Input
-                    id="contactEmail"
-                    value={newProject.contactEmail}
-                    onChange={(e) => setNewProject({ ...newProject, contactEmail: e.target.value })}
-                    placeholder="contact@yourbusiness.com"
-                    className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={newProject.phone}
-                    onChange={(e) => setNewProject({ ...newProject, phone: e.target.value })}
-                    placeholder="+1 (555) 123-4567"
-                    className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="socialMedia">Social Media</Label>
-                  <Input
-                    id="socialMedia"
-                    value={newProject.socialMedia}
-                    onChange={(e) => setNewProject({ ...newProject, socialMedia: e.target.value })}
-                    placeholder="@yourbusiness, LinkedIn, etc."
-                    className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="employees">Team Size</Label>
-                  <Input
-                    id="employees"
-                    value={newProject.employees}
-                    onChange={(e) => setNewProject({ ...newProject, employees: e.target.value })}
-                    placeholder="e.g., 1-10, 11-50, 51-200"
-                    className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-                  />
-                </div>
-              </div>
-            </div>
 
-            {/* Additional Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Additional Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="revenue">Revenue Range</Label>
-                  <Select
-                    value={newProject.revenue}
-                    onValueChange={(value) => setNewProject({ ...newProject, revenue: value })}
-                  >
-                    <SelectTrigger className="bg-background border-border text-foreground mt-1">
-                      <SelectValue placeholder="Select range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pre-revenue">Pre-revenue</SelectItem>
-                      <SelectItem value="0-10k">$0 - $10K</SelectItem>
-                      <SelectItem value="10k-50k">$10K - $50K</SelectItem>
-                      <SelectItem value="50k-100k">$50K - $100K</SelectItem>
-                      <SelectItem value="100k-500k">$100K - $500K</SelectItem>
-                      <SelectItem value="500k-1m">$500K - $1M</SelectItem>
-                      <SelectItem value="1m+">$1M+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="priority">Priority Level</Label>
-              <Select
-                value={newProject.priority}
-                onValueChange={(value) => setNewProject({ ...newProject, priority: value as "low" | "medium" | "high" })}
-              >
-                    <SelectTrigger className="bg-background border-border text-foreground mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-              </div>
-              <div>
-                <Label htmlFor="additionalNotes">Additional Notes</Label>
-                <Textarea
-                  id="additionalNotes"
-                  value={newProject.additionalNotes}
-                  onChange={(e) => setNewProject({ ...newProject, additionalNotes: e.target.value })}
-                  placeholder="Any additional information about your business, goals, challenges, or specific areas where you need assistance..."
-                  className="bg-background border-border text-foreground placeholder:text-muted-foreground mt-1"
-                  rows={4}
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-4">
-            <Button 
-              onClick={handleCreateProject} 
-                className="flex-1 gradient-primary text-white shadow-primary"
-                disabled={!newProject.name.trim()}
-              >
-                Create Business
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsNewProjectOpen(false)}
-                className="px-8"
-              >
-                Cancel
-            </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Quick Switcher */}
       <QuickSwitcher

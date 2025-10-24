@@ -1,222 +1,133 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { 
   Plus, 
+  Search, 
   Edit3, 
   Trash2, 
-  Search,
-  Save,
-  X,
-  FileText,
-  Calendar,
+  Save, 
+  X, 
   Tag,
-  Users,
-  Lock,
-  Globe
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { WorkspaceNotesService, MigrationService, type WorkspaceNote } from "@/lib/workspace-persistence";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/use-toast";
+  Calendar,
+  User
+} from 'lucide-react';
 
-interface BuiltInNotesProps {
-  projectId?: string;
-  currentUser?: string;
-  teamId?: string;
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+  visibility: 'private' | 'team';
 }
 
-export default function BuiltInNotes({ projectId, currentUser = "Current User", teamId }: BuiltInNotesProps) {
-  const { user } = useAuth();
-  const [notes, setNotes] = useState<WorkspaceNote[]>([]);
-  const [filteredNotes, setFilteredNotes] = useState<WorkspaceNote[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [visibilityFilter, setVisibilityFilter] = useState<"all" | "public" | "team" | "private">("all");
+export default function BuiltInNotes() {
+  const [notes, setNotes] = useState<Note[]>([]);
   const [isCreating, setIsCreating] = useState(false);
-  const [editingNote, setEditingNote] = useState<WorkspaceNote | null>(null);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  const [newNote, setNewNote] = useState({ 
-    title: "", 
-    content: "", 
-    tags: "",
-    visibility: "team" as WorkspaceNote["visibility"],
-    dueDate: "",
-    reminderDate: ""
+
+  // Form state
+  const [newNote, setNewNote] = useState({
+    title: '',
+    content: '',
+    tags: '',
+    visibility: 'private' as 'private' | 'team'
   });
 
-  // Load notes from database
+  // Load notes from localStorage
   useEffect(() => {
-    const loadNotes = async () => {
-      if (!user) return;
-      
+    const loadNotes = () => {
       try {
-        setIsLoading(true);
-        console.log('📝 Loading notes...');
-        
-        const currentTeamId = teamId || user.id;
-        
-        // The service now returns immediately from localStorage
-        const notes = await WorkspaceNotesService.getNotes(currentTeamId, projectId);
-        setNotes(notes);
-        console.log('✅ Notes loaded:', notes.length);
-        
+        const savedNotes = localStorage.getItem('workspace_notes');
+        if (savedNotes) {
+          const parsedNotes = JSON.parse(savedNotes);
+          setNotes(parsedNotes);
+        }
       } catch (error) {
         console.error('Error loading notes:', error);
-        setNotes([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadNotes();
-  }, [teamId, user, projectId]);
+  }, []);
 
-  // Filter notes based on project, search, tags, and visibility
-  useEffect(() => {
-    let filtered = notes;
-
-    if (projectId) {
-      filtered = filtered.filter(note => note.projectId === projectId);
-    }
-
-    if (searchQuery) {
-      filtered = filtered.filter(note =>
-        note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        note.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        note.author.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (selectedTag) {
-      filtered = filtered.filter(note => note.tags.includes(selectedTag));
-    }
-
-    if (visibilityFilter !== "all") {
-      filtered = filtered.filter(note => note.visibility === visibilityFilter);
-    }
-
-    setFilteredNotes(filtered);
-  }, [notes, projectId, searchQuery, selectedTag, visibilityFilter]);
-
-  // Get all unique tags
-  const allTags = Array.from(new Set(notes.flatMap(note => note.tags)));
-
-  const handleCreateNote = async () => {
-    if (!newNote.title.trim() || !user) return;
-
+  // Save notes to localStorage
+  const saveNotes = (updatedNotes: Note[]) => {
     try {
-      const currentTeamId = teamId || user.id;
-      const note = await WorkspaceNotesService.createNote({
-        title: newNote.title,
-        content: newNote.content,
-        tags: newNote.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-        visibility: newNote.visibility,
-        author: currentUser,
-        projectId: projectId || undefined,
-        dueDate: newNote.dueDate ? new Date(newNote.dueDate) : undefined,
-        reminderDate: newNote.reminderDate ? new Date(newNote.reminderDate) : undefined
-      }, currentTeamId, user.id);
-
-      setNotes(prev => [note, ...prev]);
-      console.log('✅ Note created successfully');
-
-      setNewNote({ title: "", content: "", tags: "", visibility: "team", dueDate: "", reminderDate: "" });
-      setIsCreating(false);
-      
-      toast({
-        title: "Success",
-        description: "Note created successfully!",
-      });
+      localStorage.setItem('workspace_notes', JSON.stringify(updatedNotes));
+      setNotes(updatedNotes);
     } catch (error) {
-      console.error('Error creating note:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create note. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Error saving notes:', error);
     }
   };
 
-  const handleUpdateNote = async () => {
+  // Create new note
+  const handleCreateNote = () => {
+    if (!newNote.title.trim()) return;
+
+    const note: Note = {
+      id: Date.now().toString(),
+      title: newNote.title,
+      content: newNote.content,
+      tags: newNote.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      visibility: newNote.visibility
+    };
+
+    const updatedNotes = [...notes, note];
+    saveNotes(updatedNotes);
+    
+    // Reset form
+    setNewNote({ title: '', content: '', tags: '', visibility: 'private' });
+    setIsCreating(false);
+  };
+
+  // Update note
+  const handleUpdateNote = () => {
     if (!editingNote || !editingNote.title.trim()) return;
 
-    try {
-      const updatedNote = await WorkspaceNotesService.updateNote(editingNote.id, {
-        title: editingNote.title,
-        content: editingNote.content,
-        tags: editingNote.tags,
-        visibility: editingNote.visibility,
-        dueDate: editingNote.dueDate,
-        reminderDate: editingNote.reminderDate
-      });
+    const updatedNote = {
+      ...editingNote,
+      updatedAt: new Date().toISOString()
+    };
 
-      setNotes(prev => prev.map(note => 
-        note.id === editingNote.id ? updatedNote : note
-      ));
-      setEditingNote(null);
-      
-      toast({
-        title: "Success",
-        description: "Note updated successfully!",
-      });
-    } catch (error) {
-      console.error('Error updating note:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update note. Please try again.",
-        variant: "destructive",
-      });
+    const updatedNotes = notes.map(note => 
+      note.id === editingNote.id ? updatedNote : note
+    );
+    
+    saveNotes(updatedNotes);
+    setEditingNote(null);
+  };
+
+  // Delete note
+  const handleDeleteNote = (noteId: string) => {
+    if (window.confirm('Are you sure you want to delete this note?')) {
+      const updatedNotes = notes.filter(note => note.id !== noteId);
+      saveNotes(updatedNotes);
     }
   };
 
-  const handleDeleteNote = async (noteId: string) => {
-    try {
-      await WorkspaceNotesService.deleteNote(noteId);
-      setNotes(prev => prev.filter(note => note.id !== noteId));
-      
-      toast({
-        title: "Success",
-        description: "Note deleted successfully!",
-      });
-    } catch (error) {
-      console.error('Error deleting note:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete note. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+  // Filter notes
+  const filteredNotes = notes.filter(note => {
+    const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         note.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTag = !selectedTag || note.tags.includes(selectedTag);
+    return matchesSearch && matchesTag;
+  });
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
-
-  const getVisibilityIcon = (visibility: WorkspaceNote["visibility"]) => {
-    switch (visibility) {
-      case "public": return <Globe className="w-4 h-4 text-green-500" />;
-      case "team": return <Users className="w-4 h-4 text-blue-500" />;
-      case "private": return <Lock className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getVisibilityColor = (visibility: WorkspaceNote["visibility"]) => {
-    switch (visibility) {
-      case "public": return "bg-green-100 text-green-800";
-      case "team": return "bg-blue-100 text-blue-800";
-      case "private": return "bg-gray-100 text-gray-800";
-    }
-  };
+  // Get all unique tags
+  const allTags = [...new Set(notes.flatMap(note => note.tags))];
 
   if (isLoading) {
     return (
@@ -232,132 +143,84 @@ export default function BuiltInNotes({ projectId, currentUser = "Current User", 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Built-in Notes</h2>
-        <p className="text-muted-foreground">
-          {projectId ? "Project-specific team notes and documentation" : "Team workspace notes and documentation"}
-        </p>
-      </div>
-
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="flex gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:flex-none">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Search notes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full sm:w-64 bg-background border-border text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setSelectedTag(null)}
-            className={!selectedTag ? "bg-primary text-primary-foreground" : ""}
-          >
-            <Tag className="w-4 h-4" />
-          </Button>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold">Built-in Notes</h2>
+          <p className="text-muted-foreground">Organize your thoughts and ideas</p>
         </div>
-
         <Button onClick={() => setIsCreating(true)} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           New Note
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Visibility:</span>
-          <select
-            value={visibilityFilter}
-            onChange={(e) => setVisibilityFilter(e.target.value as typeof visibilityFilter)}
-            className="px-3 py-1 border border-border rounded-md text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="all">All</option>
-            <option value="public">Public</option>
-            <option value="team">Team</option>
-            <option value="private">Private</option>
-          </select>
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search notes..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
         </div>
-        
-        {allTags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <span className="text-sm text-muted-foreground mr-2">Tags:</span>
-            {allTags.map(tag => (
-              <Badge
-                key={tag}
-                variant={selectedTag === tag ? "default" : "secondary"}
-                className="cursor-pointer hover:bg-primary/10"
-                onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
+        <select
+          value={selectedTag}
+          onChange={(e) => setSelectedTag(e.target.value)}
+          className="px-3 py-2 border border-border rounded-md bg-background"
+        >
+          <option value="">All Tags</option>
+          {allTags.map(tag => (
+            <option key={tag} value={tag}>{tag}</option>
+          ))}
+        </select>
       </div>
 
       {/* Create Note Form */}
       {isCreating && (
-        <Card className="border-primary">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Create New Note
-            </CardTitle>
+            <CardTitle>Create New Note</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Input
-              placeholder="Note title..."
-              value={newNote.title}
-              onChange={(e) => setNewNote(prev => ({ ...prev, title: e.target.value }))}
-              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
-            />
-            <Textarea
-              placeholder="Write your note here (Markdown supported)..."
-              value={newNote.content}
-              onChange={(e) => setNewNote(prev => ({ ...prev, content: e.target.value }))}
-              rows={6}
-              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Due Date</label>
-                <Input
-                  type="date"
-                  value={newNote.dueDate}
-                  onChange={(e) => setNewNote(prev => ({ ...prev, dueDate: e.target.value }))}
-                  className="bg-background border-border text-foreground"
-                />
-              </div>
-              <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Reminder Date</label>
-                <Input
-                  type="date"
-                  value={newNote.reminderDate}
-                  onChange={(e) => setNewNote(prev => ({ ...prev, reminderDate: e.target.value }))}
-                  className="bg-background border-border text-foreground"
-                />
-              </div>
-            </div>
-            <div className="flex gap-4">
+            <div>
+              <label className="text-sm font-medium">Title *</label>
               <Input
-                placeholder="Tags (comma separated)..."
-                value={newNote.tags}
-                onChange={(e) => setNewNote(prev => ({ ...prev, tags: e.target.value }))}
-                className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground"
+                value={newNote.title}
+                onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
+                placeholder="Enter note title..."
+                className="mt-1"
               />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Content</label>
+              <Textarea
+                value={newNote.content}
+                onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
+                placeholder="Enter note content..."
+                rows={4}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Tags</label>
+              <Input
+                value={newNote.tags}
+                onChange={(e) => setNewNote({ ...newNote, tags: e.target.value })}
+                placeholder="Enter tags separated by commas..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Visibility</label>
               <select
                 value={newNote.visibility}
-                onChange={(e) => setNewNote(prev => ({ ...prev, visibility: e.target.value as BuiltInNote["visibility"] }))}
-                className="px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                onChange={(e) => setNewNote({ ...newNote, visibility: e.target.value as 'private' | 'team' })}
+                className="mt-1 px-3 py-2 border border-border rounded-md bg-background w-full"
               >
                 <option value="private">Private</option>
                 <option value="team">Team</option>
-                <option value="public">Public</option>
               </select>
             </div>
             <div className="flex gap-2">
@@ -366,6 +229,69 @@ export default function BuiltInNotes({ projectId, currentUser = "Current User", 
                 Save Note
               </Button>
               <Button variant="outline" onClick={() => setIsCreating(false)}>
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Edit Note Form */}
+      {editingNote && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Edit Note</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Title *</label>
+              <Input
+                value={editingNote.title}
+                onChange={(e) => setEditingNote({ ...editingNote, title: e.target.value })}
+                placeholder="Enter note title..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Content</label>
+              <Textarea
+                value={editingNote.content}
+                onChange={(e) => setEditingNote({ ...editingNote, content: e.target.value })}
+                placeholder="Enter note content..."
+                rows={4}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Tags</label>
+              <Input
+                value={editingNote.tags.join(', ')}
+                onChange={(e) => setEditingNote({ 
+                  ...editingNote, 
+                  tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag)
+                })}
+                placeholder="Enter tags separated by commas..."
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Visibility</label>
+              <select
+                value={editingNote.visibility}
+                onChange={(e) => setEditingNote({ ...editingNote, visibility: e.target.value as 'private' | 'team' })}
+                className="mt-1 px-3 py-2 border border-border rounded-md bg-background w-full"
+              >
+                <option value="private">Private</option>
+                <option value="team">Team</option>
+              </select>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleUpdateNote} disabled={!editingNote.title.trim()}>
+                <Save className="w-4 h-4 mr-2" />
+                Update Note
+              </Button>
+              <Button variant="outline" onClick={() => setEditingNote(null)}>
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
@@ -400,127 +326,54 @@ export default function BuiltInNotes({ projectId, currentUser = "Current User", 
                   </Button>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  {formatDate(note.updatedAt)}
-                </div>
-                <div className="flex items-center gap-2">
-                  {getVisibilityIcon(note.visibility)}
-                  <span className="text-xs text-muted-foreground">{note.author}</span>
-                </div>
-              </div>
             </CardHeader>
-            <CardContent className="pt-0">
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
-                {note.content.replace(/#{1,6}\s+/g, '').replace(/\*\*/g, '').substring(0, 150)}...
+            <CardContent>
+              <p className="text-muted-foreground text-sm mb-3 line-clamp-3">
+                {note.content}
               </p>
-              <div className="flex flex-wrap gap-1 mb-2">
+              <div className="flex flex-wrap gap-1 mb-3">
                 {note.tags.map(tag => (
                   <Badge key={tag} variant="secondary" className="text-xs">
+                    <Tag className="w-3 h-3 mr-1" />
                     {tag}
                   </Badge>
                 ))}
               </div>
-              {(note.dueDate || note.reminderDate) && (
-                <div className="flex items-center gap-4 mb-2 text-xs text-muted-foreground">
-                  {note.dueDate && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>Due: {note.dueDate.toLocaleDateString()}</span>
-                    </div>
-                  )}
-                  {note.reminderDate && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>Reminder: {note.reminderDate.toLocaleDateString()}</span>
-                    </div>
-                  )}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {new Date(note.updatedAt).toLocaleDateString()}
                 </div>
-              )}
-              <Badge className={cn("text-xs", getVisibilityColor(note.visibility))}>
-                {note.visibility}
-              </Badge>
+                <div className="flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  {note.visibility}
+                </div>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {filteredNotes.length === 0 && (
+      {/* Empty State */}
+      {filteredNotes.length === 0 && !isCreating && (
         <div className="text-center py-12">
-          <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">No notes found</h3>
-          <p className="text-muted-foreground mb-4">
-            {searchQuery || selectedTag || visibilityFilter !== "all"
-              ? "Try adjusting your search or filter criteria."
-              : "Create your first team note to get started."
-            }
-          </p>
-          {!searchQuery && !selectedTag && visibilityFilter === "all" && (
+          <div className="text-muted-foreground mb-4">
+            <Tag className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-semibold mb-2">No notes found</h3>
+            <p className="text-sm">
+              {searchTerm || selectedTag 
+                ? 'Try adjusting your search or filter criteria'
+                : 'Create your first note to get started'
+              }
+            </p>
+          </div>
+          {!searchTerm && !selectedTag && (
             <Button onClick={() => setIsCreating(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Create Note
+              Create First Note
             </Button>
           )}
         </div>
-      )}
-
-      {/* Edit Note Modal */}
-      {editingNote && (
-        <Card className="fixed inset-4 z-50 max-w-2xl mx-auto max-h-[90vh] overflow-auto border-primary scrollbar-none">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Edit3 className="w-5 h-5" />
-              Edit Note
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Input
-              placeholder="Note title..."
-              value={editingNote.title}
-              onChange={(e) => setEditingNote(prev => prev ? { ...prev, title: e.target.value } : null)}
-            />
-            <Textarea
-              placeholder="Write your note here (Markdown supported)..."
-              value={editingNote.content}
-              onChange={(e) => setEditingNote(prev => prev ? { ...prev, content: e.target.value } : null)}
-              rows={8}
-            />
-            <div className="flex gap-4">
-              <Input
-                placeholder="Tags (comma separated)..."
-                value={editingNote.tags.join(', ')}
-                onChange={(e) => setEditingNote(prev => prev ? { 
-                  ...prev, 
-                  tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
-                } : null)}
-                className="flex-1"
-              />
-              <select
-                value={editingNote.visibility}
-                onChange={(e) => setEditingNote(prev => prev ? { 
-                  ...prev, 
-                  visibility: e.target.value as BuiltInNote["visibility"]
-                } : null)}
-                className="px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                <option value="private">Private</option>
-                <option value="team">Team</option>
-                <option value="public">Public</option>
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleUpdateNote} disabled={!editingNote.title.trim()}>
-                <Save className="w-4 h-4 mr-2" />
-                Save Changes
-              </Button>
-              <Button variant="outline" onClick={() => setEditingNote(null)}>
-                <X className="w-4 h-4 mr-2" />
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       )}
     </div>
   );
