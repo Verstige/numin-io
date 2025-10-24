@@ -102,92 +102,161 @@ export interface ActivityItem {
 
 export class WorkspaceNotesService {
   static async getNotes(teamId: string, projectId?: string): Promise<WorkspaceNote[]> {
-    let query = supabase
-      .from('workspace_notes')
-      .select('*')
-      .eq('team_id', teamId)
-      .order('created_at', { ascending: false });
-
-    if (projectId) {
-      query = query.eq('project_id', projectId);
+    // Return immediately from localStorage (no async delay)
+    const savedNotes = localStorage.getItem('builtInNotes');
+    let localNotes: WorkspaceNote[] = [];
+    if (savedNotes) {
+      localNotes = JSON.parse(savedNotes);
+      console.log('📝 Loaded notes from localStorage:', localNotes.length);
     }
 
-    const { data, error } = await query;
-    if (error) throw error;
+    // Try database in background (don't wait for it)
+    setTimeout(async () => {
+      try {
+        let query = supabase
+          .from('notes')
+          .select('*')
+          .eq('created_by', teamId)
+          .order('created_at', { ascending: false });
 
-    return data?.map(note => ({
-      ...note,
-      createdAt: new Date(note.created_at),
-      updatedAt: new Date(note.updated_at),
-      dueDate: note.due_date ? new Date(note.due_date) : undefined,
-      reminderDate: note.reminder_date ? new Date(note.reminder_date) : undefined,
-    })) || [];
+        if (projectId) {
+          query = query.eq('project_id', projectId);
+        }
+
+        const { data, error } = await query;
+        if (!error && data) {
+          const dbNotes = data.map(note => ({
+            id: note.id,
+            title: note.title,
+            content: note.content || '',
+            tags: note.tags || [],
+            visibility: 'team' as const,
+            author: note.created_by,
+            projectId: note.project_id,
+            createdAt: new Date(note.created_at),
+            updatedAt: new Date(note.updated_at),
+          }));
+          
+          // Update localStorage with database data
+          localStorage.setItem('builtInNotes', JSON.stringify(dbNotes));
+          console.log('✅ Synced notes from database to localStorage');
+        }
+      } catch (dbError) {
+        console.warn('Database not available, using localStorage:', dbError);
+      }
+    }, 0);
+
+    return localNotes;
   }
 
   static async createNote(note: Omit<WorkspaceNote, 'id' | 'createdAt' | 'updatedAt'>, teamId: string, userId: string): Promise<WorkspaceNote> {
-    const { data, error } = await supabase
-      .from('workspace_notes')
-      .insert({
-        title: note.title,
-        content: note.content,
-        tags: note.tags,
-        visibility: note.visibility,
-        author: note.author,
-        project_id: note.projectId,
-        due_date: note.dueDate?.toISOString(),
-        reminder_date: note.reminderDate?.toISOString(),
-        created_by: userId,
-        team_id: teamId,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return {
-      ...data,
-      id: data.id,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
-      dueDate: data.due_date ? new Date(data.due_date) : undefined,
-      reminderDate: data.reminder_date ? new Date(data.reminder_date) : undefined,
+    // Always create in localStorage first for immediate response
+    const newNote = {
+      id: `note_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      ...note,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
+    
+    const savedNotes = localStorage.getItem('builtInNotes');
+    const notes = savedNotes ? JSON.parse(savedNotes) : [];
+    notes.unshift(newNote);
+    localStorage.setItem('builtInNotes', JSON.stringify(notes));
+    console.log('✅ Note saved to localStorage');
+
+    // Try to save to database in background
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .insert({
+          title: note.title,
+          content: note.content,
+          tags: note.tags,
+          project_id: note.projectId,
+          created_by: userId,
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        // Update localStorage with database ID
+        const updatedNotes = notes.map(n => 
+          n.id === newNote.id 
+            ? { ...n, id: data.id, createdAt: new Date(data.created_at), updatedAt: new Date(data.updated_at) }
+            : n
+        );
+        localStorage.setItem('builtInNotes', JSON.stringify(updatedNotes));
+        console.log('✅ Note synced to database');
+        
+        return {
+          id: data.id,
+          title: data.title,
+          content: data.content || '',
+          tags: data.tags || [],
+          visibility: 'team' as const,
+          author: data.created_by,
+          projectId: data.project_id,
+          createdAt: new Date(data.created_at),
+          updatedAt: new Date(data.updated_at),
+        };
+      }
+    } catch (dbError) {
+      console.warn('Database save failed, using localStorage only:', dbError);
+    }
+
+    return newNote;
   }
 
   static async updateNote(id: string, updates: Partial<WorkspaceNote>): Promise<WorkspaceNote> {
+    try {
     const { data, error } = await supabase
-      .from('workspace_notes')
+        .from('notes')
       .update({
         title: updates.title,
         content: updates.content,
         tags: updates.tags,
-        visibility: updates.visibility,
-        due_date: updates.dueDate?.toISOString(),
-        reminder_date: updates.reminderDate?.toISOString(),
       })
       .eq('id', id)
       .select()
       .single();
 
-    if (error) throw error;
+      if (error) {
+        console.error('Error updating note:', error);
+        throw error;
+      }
 
     return {
-      ...data,
       id: data.id,
+        title: data.title,
+        content: data.content || '',
+        tags: data.tags || [],
+        visibility: 'team' as const,
+        author: data.created_by,
+        projectId: data.project_id,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
-      dueDate: data.due_date ? new Date(data.due_date) : undefined,
-      reminderDate: data.reminder_date ? new Date(data.reminder_date) : undefined,
     };
+    } catch (error) {
+      console.error('Error in updateNote:', error);
+      throw error;
+    }
   }
 
   static async deleteNote(id: string): Promise<void> {
+    try {
     const { error } = await supabase
-      .from('workspace_notes')
+        .from('notes')
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+      if (error) {
+        console.error('Error deleting note:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error in deleteNote:', error);
+      throw error;
+    }
   }
 }
 
@@ -197,105 +266,185 @@ export class WorkspaceNotesService {
 
 export class WorkspaceTasksService {
   static async getTasks(teamId: string, projectId?: string): Promise<WorkspaceTask[]> {
-    let query = supabase
-      .from('workspace_tasks')
-      .select('*')
-      .eq('team_id', teamId)
-      .order('created_at', { ascending: false });
-
-    if (projectId) {
-      query = query.eq('project_id', projectId);
+    // Return immediately from localStorage (no async delay)
+    const savedTasks = localStorage.getItem('viewableTasks');
+    let localTasks: WorkspaceTask[] = [];
+    if (savedTasks) {
+      localTasks = JSON.parse(savedTasks);
+      console.log('📝 Loaded tasks from localStorage:', localTasks.length);
     }
 
-    const { data, error } = await query;
-    if (error) throw error;
+    // Try database in background (don't wait for it)
+    setTimeout(async () => {
+      try {
+        let query = supabase
+          .from('tasks')
+          .select('*')
+          .eq('created_by', teamId)
+          .order('created_at', { ascending: false });
 
-    return data?.map(task => ({
-      ...task,
-      id: task.id,
-      createdAt: new Date(task.created_at),
-      updatedAt: new Date(task.updated_at),
-      dueDate: task.due_date ? new Date(task.due_date) : undefined,
-      startDate: task.start_date ? new Date(task.start_date) : undefined,
-      subtasks: task.subtasks || [],
-    })) || [];
+        if (projectId) {
+          query = query.eq('project_id', projectId);
+        }
+
+        const { data, error } = await query;
+        if (!error && data) {
+          const dbTasks = data.map(task => ({
+            id: task.id,
+            title: task.title,
+            description: task.description || '',
+            status: task.status as WorkspaceTask['status'],
+            priority: task.priority as WorkspaceTask['priority'],
+            assignee: task.assigned_to || 'Unassigned',
+            assigneeAvatar: undefined,
+            dueDate: task.due_date ? new Date(task.due_date) : undefined,
+            startDate: undefined,
+            tags: [],
+            projectId: task.project_id,
+            visibility: 'team' as const,
+            subtasks: [],
+            createdAt: new Date(task.created_at),
+            updatedAt: new Date(task.updated_at),
+          }));
+          
+          // Update localStorage with database data
+          localStorage.setItem('viewableTasks', JSON.stringify(dbTasks));
+          console.log('✅ Synced tasks from database to localStorage');
+        }
+      } catch (dbError) {
+        console.warn('Database not available, using localStorage:', dbError);
+      }
+    }, 0);
+
+    return localTasks;
   }
 
   static async createTask(task: Omit<WorkspaceTask, 'id' | 'createdAt' | 'updatedAt'>, teamId: string, userId: string): Promise<WorkspaceTask> {
-    const { data, error } = await supabase
-      .from('workspace_tasks')
-      .insert({
-        title: task.title,
-        description: task.description,
-        status: task.status,
-        priority: task.priority,
-        assignee: task.assignee,
-        assignee_avatar: task.assigneeAvatar,
-        due_date: task.dueDate?.toISOString(),
-        start_date: task.startDate?.toISOString(),
-        tags: task.tags,
-        project_id: task.projectId,
-        visibility: task.visibility,
-        subtasks: task.subtasks || [],
-        created_by: userId,
-        team_id: teamId,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return {
-      ...data,
-      id: data.id,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
-      dueDate: data.due_date ? new Date(data.due_date) : undefined,
-      startDate: data.start_date ? new Date(data.start_date) : undefined,
-      subtasks: data.subtasks || [],
+    // Always create in localStorage first for immediate response
+    const newTask = {
+      id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      ...task,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
+    
+    const savedTasks = localStorage.getItem('viewableTasks');
+    const tasks = savedTasks ? JSON.parse(savedTasks) : [];
+    tasks.unshift(newTask);
+    localStorage.setItem('viewableTasks', JSON.stringify(tasks));
+    console.log('✅ Task saved to localStorage');
+
+    // Try to save to database in background
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          assigned_to: task.assignee,
+          due_date: task.dueDate?.toISOString(),
+          project_id: task.projectId,
+          created_by: userId,
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        // Update localStorage with database ID
+        const updatedTasks = tasks.map(t => 
+          t.id === newTask.id 
+            ? { ...t, id: data.id, createdAt: new Date(data.created_at), updatedAt: new Date(data.updated_at) }
+            : t
+        );
+        localStorage.setItem('viewableTasks', JSON.stringify(updatedTasks));
+        console.log('✅ Task synced to database');
+        
+        return {
+          id: data.id,
+          title: data.title,
+          description: data.description || '',
+          status: data.status as WorkspaceTask['status'],
+          priority: data.priority as WorkspaceTask['priority'],
+          assignee: data.assigned_to || 'Unassigned',
+          assigneeAvatar: undefined,
+          dueDate: data.due_date ? new Date(data.due_date) : undefined,
+          startDate: undefined,
+          tags: [],
+          projectId: data.project_id,
+          visibility: 'team' as const,
+          subtasks: [],
+          createdAt: new Date(data.created_at),
+          updatedAt: new Date(data.updated_at),
+        };
+      }
+    } catch (dbError) {
+      console.warn('Database save failed, using localStorage only:', dbError);
+    }
+
+    return newTask;
   }
 
   static async updateTask(id: string, updates: Partial<WorkspaceTask>): Promise<WorkspaceTask> {
+    try {
     const { data, error } = await supabase
-      .from('workspace_tasks')
+        .from('tasks')
       .update({
         title: updates.title,
         description: updates.description,
         status: updates.status,
         priority: updates.priority,
-        assignee: updates.assignee,
-        assignee_avatar: updates.assigneeAvatar,
+          assigned_to: updates.assignee,
         due_date: updates.dueDate?.toISOString(),
-        start_date: updates.startDate?.toISOString(),
-        tags: updates.tags,
-        visibility: updates.visibility,
-        subtasks: updates.subtasks,
       })
       .eq('id', id)
       .select()
       .single();
 
-    if (error) throw error;
+      if (error) {
+        console.error('Error updating task:', error);
+        throw error;
+      }
 
     return {
-      ...data,
       id: data.id,
+        title: data.title,
+        description: data.description || '',
+        status: data.status as WorkspaceTask['status'],
+        priority: data.priority as WorkspaceTask['priority'],
+        assignee: data.assigned_to || 'Unassigned',
+        assigneeAvatar: undefined,
+        dueDate: data.due_date ? new Date(data.due_date) : undefined,
+        startDate: undefined,
+        tags: [],
+        projectId: data.project_id,
+        visibility: 'team' as const,
+        subtasks: [],
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
-      dueDate: data.due_date ? new Date(data.due_date) : undefined,
-      startDate: data.start_date ? new Date(data.start_date) : undefined,
-      subtasks: data.subtasks || [],
     };
+    } catch (error) {
+      console.error('Error in updateTask:', error);
+      throw error;
+    }
   }
 
   static async deleteTask(id: string): Promise<void> {
+    try {
     const { error } = await supabase
-      .from('workspace_tasks')
+        .from('tasks')
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+      if (error) {
+        console.error('Error deleting task:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error in deleteTask:', error);
+      throw error;
+    }
   }
 }
 

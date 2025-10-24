@@ -58,31 +58,25 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
     startDate: ""
   });
 
-  // Load tasks from Supabase database
+  // Load tasks from database
   useEffect(() => {
     const loadTasks = async () => {
       if (!user) return;
       
       try {
         setIsLoading(true);
-        console.log('📝 Loading tasks from Supabase...');
+        console.log('📝 Loading tasks...');
         
-        // Use user ID as team ID for now
         const currentTeamId = teamId || user.id;
         
-        // Load from Supabase database
-        const dbTasks = await WorkspaceTasksService.getTasks(currentTeamId, projectId);
-        setTasks(dbTasks);
-        console.log('✅ Tasks loaded from Supabase:', dbTasks.length);
+        // The service now returns immediately from localStorage
+        const tasks = await WorkspaceTasksService.getTasks(currentTeamId, projectId);
+        setTasks(tasks);
+        console.log('✅ Tasks loaded:', tasks.length);
         
       } catch (error) {
-        console.error('❌ Error loading tasks from Supabase:', error);
+        console.error('Error loading tasks:', error);
         setTasks([]);
-        toast({
-          title: "Database Error",
-          description: "Failed to load tasks from database. Please check your connection.",
-          variant: "destructive",
-        });
       } finally {
         setIsLoading(false);
       }
@@ -199,7 +193,6 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
     try {
       const currentTeamId = teamId || user.id;
       
-      // Create task in Supabase database
       const task = await WorkspaceTasksService.createTask({
         title: newTask.title,
         description: newTask.description,
@@ -215,7 +208,7 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
       }, currentTeamId, user.id);
 
       setTasks(prev => [task, ...prev]);
-      console.log('✅ Task created in Supabase database');
+      console.log('✅ Task created successfully');
 
       setNewTask({ 
         title: "", 
@@ -234,10 +227,10 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
         description: "Task created successfully!",
       });
     } catch (error) {
-      console.error('❌ Error creating task in Supabase:', error);
+      console.error('Error creating task:', error);
       toast({
-        title: "Database Error",
-        description: "Failed to create task in database. Please check your connection.",
+        title: "Error",
+        description: "Failed to create task. Please try again.",
         variant: "destructive",
       });
     }

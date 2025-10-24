@@ -55,40 +55,17 @@ export default function BuiltInNotes({ projectId, currentUser = "Current User", 
       
       try {
         setIsLoading(true);
-        console.log('📝 Loading notes from database...');
+        console.log('📝 Loading notes...');
         
-        // Use user ID as team ID for now
         const currentTeamId = teamId || user.id;
         
-        // Try to load from database first
-        try {
-          const dbNotes = await WorkspaceNotesService.getNotes(currentTeamId, projectId);
-          setNotes(dbNotes);
-          console.log('✅ Notes loaded from database:', dbNotes.length);
-        } catch (dbError) {
-          console.warn('Database load failed, trying localStorage:', dbError);
-          // Fallback to localStorage if database fails
-          const savedNotes = localStorage.getItem('builtInNotes');
-          if (savedNotes) {
-            const notes = JSON.parse(savedNotes);
-            setNotes(notes);
-            console.log('✅ Notes loaded from localStorage:', notes.length);
-          } else {
-            setNotes([]);
-            console.log('✅ No notes found');
-          }
-        }
-        
-        // Try to migrate localStorage data in background
-        try {
-          await MigrationService.migrateLocalStorageNotes(currentTeamId, user.id);
-        } catch (migrationError) {
-          console.warn('Migration failed:', migrationError);
-        }
+        // The service now returns immediately from localStorage
+        const notes = await WorkspaceNotesService.getNotes(currentTeamId, projectId);
+        setNotes(notes);
+        console.log('✅ Notes loaded:', notes.length);
         
       } catch (error) {
         console.error('Error loading notes:', error);
-        // Don't show error toast, just load empty state
         setNotes([]);
       } finally {
         setIsLoading(false);
@@ -133,48 +110,20 @@ export default function BuiltInNotes({ projectId, currentUser = "Current User", 
     if (!newNote.title.trim() || !user) return;
 
     try {
-      // Try database first
-      try {
-        const currentTeamId = teamId || user.id;
-        const note = await WorkspaceNotesService.createNote({
-          title: newNote.title,
-          content: newNote.content,
-          tags: newNote.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-          visibility: newNote.visibility,
-          author: currentUser,
-          projectId: projectId || undefined,
-          dueDate: newNote.dueDate ? new Date(newNote.dueDate) : undefined,
-          reminderDate: newNote.reminderDate ? new Date(newNote.reminderDate) : undefined
-        }, currentTeamId, user.id);
+      const currentTeamId = teamId || user.id;
+      const note = await WorkspaceNotesService.createNote({
+        title: newNote.title,
+        content: newNote.content,
+        tags: newNote.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        visibility: newNote.visibility,
+        author: currentUser,
+        projectId: projectId || undefined,
+        dueDate: newNote.dueDate ? new Date(newNote.dueDate) : undefined,
+        reminderDate: newNote.reminderDate ? new Date(newNote.reminderDate) : undefined
+      }, currentTeamId, user.id);
 
-        setNotes(prev => [note, ...prev]);
-        console.log('✅ Note created in database');
-      } catch (dbError) {
-        console.warn('Database creation failed, using localStorage:', dbError);
-        // Fallback to localStorage
-        const newNote = {
-          id: `note_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          title: newNote.title,
-          content: newNote.content,
-          tags: newNote.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-          visibility: newNote.visibility,
-          author: currentUser,
-          projectId: projectId || undefined,
-          dueDate: newNote.dueDate ? new Date(newNote.dueDate) : undefined,
-          reminderDate: newNote.reminderDate ? new Date(newNote.reminderDate) : undefined,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        
-        setNotes(prev => [newNote, ...prev]);
-        
-        // Save to localStorage
-        const savedNotes = localStorage.getItem('builtInNotes');
-        const notes = savedNotes ? JSON.parse(savedNotes) : [];
-        notes.unshift(newNote);
-        localStorage.setItem('builtInNotes', JSON.stringify(notes));
-        console.log('✅ Note saved to localStorage');
-      }
+      setNotes(prev => [note, ...prev]);
+      console.log('✅ Note created successfully');
 
       setNewNote({ title: "", content: "", tags: "", visibility: "team", dueDate: "", reminderDate: "" });
       setIsCreating(false);
