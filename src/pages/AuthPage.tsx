@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SignInForm from '@/components/auth/SignInForm'
 import SignUpForm from '@/components/auth/SignUpForm'
+import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm'
 
 type AuthMode = 'signin' | 'signup' | 'forgot'
 
@@ -52,17 +53,9 @@ export default function AuthPage() {
         )}
 
         {mode === 'forgot' && (
-          <div className="text-center">
-            <p className="text-muted-foreground mb-4">
-              Password reset functionality will be implemented with Supabase Auth.
-            </p>
-            <button
-              onClick={() => setMode('signin')}
-              className="text-primary hover:underline"
-            >
-              Back to Sign In
-            </button>
-          </div>
+          <ForgotPasswordForm
+            onBackToSignIn={() => setMode('signin')}
+          />
         )}
 
         <div className="mt-8 text-center">

@@ -16,6 +16,7 @@ import CRMDashboard from "./components/CRM/CRMDashboard";
 import EmailDashboard from "./components/Email/EmailDashboard";
 import SettingsDashboard from "./components/Settings/SettingsDashboard";
 import GmailCallback from "./pages/GmailCallback";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PublicBookingPage from "./components/PublicBookingPage";
 import { ReminderSystem } from "./lib/reminder-system";
 import { initializeMobileApp } from "./lib/mobile-config";
@@ -78,6 +79,7 @@ const App = () => {
           </ProtectedRoute>
         } />
         <Route path="/auth/gmail/callback" element={<GmailCallback />} />
+        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="/book/:templateId" element={<PublicBookingPage />} />
             <Route path="/demo" element={<DemoWorkspace />} />
             <Route path="/nexus-demo" element={<NexusDemo />} />

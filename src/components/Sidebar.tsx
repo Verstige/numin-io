@@ -361,8 +361,8 @@ export default function Sidebar({
 
       {/* Sign Out Button */}
       <div className="mt-auto pt-4 border-t border-sidebar-border">
-        <Button
-          variant="ghost"
+        <Button 
+          variant="ghost" 
           size="sm"
           onClick={async () => {
             console.log('🔴 Sign out button clicked');
