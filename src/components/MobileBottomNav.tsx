@@ -1,11 +1,10 @@
 import React from 'react';
-import { Map, CheckSquare, StickyNote, Clock, Calendar, Plus } from 'lucide-react';
+import { Map, CheckSquare, StickyNote, Clock, Calendar } from 'lucide-react';
 import { type WorkspaceTab } from './WorkspaceTabs';
 
 interface MobileBottomNavProps {
   currentTab: WorkspaceTab;
   onTabChange: (tab: WorkspaceTab) => void;
-  onQuickAdd: () => void;
   onSearch: () => void;
   onMenu: () => void;
 }
@@ -13,7 +12,6 @@ interface MobileBottomNavProps {
 const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ 
   currentTab, 
   onTabChange, 
-  onQuickAdd, 
   onSearch, 
   onMenu 
 }) => {
@@ -46,15 +44,6 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             </button>
           );
         })}
-        
-        {/* Quick Add Button */}
-        <button
-          onClick={onQuickAdd}
-          className="flex flex-col items-center gap-1 p-2 rounded-lg text-primary hover:bg-primary/10 transition-all touch-manipulation active:scale-95"
-        >
-          <Plus className="w-5 h-5" />
-          <span className="text-xs font-medium">Add</span>
-        </button>
       </div>
     </div>
   );

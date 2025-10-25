@@ -21,6 +21,7 @@ import TimeTracker from "@/components/TimeTracker";
 import NovaChatInterface from "@/components/NovaChatInterface";
 import WorkspaceCalendar from "@/components/WorkspaceCalendar";
 import MobileLayout from "@/components/MobileLayout";
+import FloatingAppDrawer from "@/components/FloatingAppDrawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -1247,6 +1248,12 @@ export default function Index() {
           onCreateBusiness={handleCreateBusiness}
           businesses={businesses}
           selectedBusiness={activeBusiness}
+        />
+
+        {/* Floating App Drawer */}
+        <FloatingAppDrawer
+          onNavigateToTab={(tab) => setCurrentTab(tab as WorkspaceTab)}
+          onAppLibrary={() => setCurrentTab('mindmap')}
         />
       </div>
     </MobileLayout>

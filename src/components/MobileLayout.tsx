@@ -56,9 +56,6 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
     setIsElementCreatorOpen(false);
   };
 
-  const handleQuickAdd = () => {
-    setIsElementPaletteOpen(true);
-  };
 
   const handleVoiceInput = () => {
     // TODO: Implement voice input
@@ -135,7 +132,6 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
           <MobileBottomNav 
             currentTab={currentTab}
             onTabChange={onTabChange}
-            onQuickAdd={handleQuickAdd}
             onSearch={handleSearch}
             onMenu={() => {
               // TODO: Implement mobile menu

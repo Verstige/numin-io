@@ -36,6 +36,7 @@ import {
   Users2,
   Plus,
   Minus,
+  X,
   Maximize,
   Edit,
   FolderOpen,
@@ -59,7 +60,6 @@ import {
   Share2,
   MoreHorizontal,
   Minimize2,
-  X,
   ChevronUp,
   ChevronDown,
   Package
@@ -329,50 +329,127 @@ const edgeTypes: EdgeTypes = {
   default: CustomEdge,
 };
 
-const PROJECT_NODE_TEMPLATES = [
+// Helper function to get icon component from string name
+const getIconComponent = (iconName: string) => {
+  const iconMap: { [key: string]: any } = {
+    'Building2': Building2,
+    'FolderOpen': FolderOpen,
+    'CheckSquare': CheckSquare,
+    'Flag': Flag,
+    'Users': Users,
+    'Users2': Users2,
+  };
+  const IconComponent = iconMap[iconName] || Building2;
+  return <IconComponent className="w-4 h-4" />;
+};
+
+const getProjectNodeTemplates = () => [
   {
     type: 'business',
     label: 'Business',
-    icon: <Building2 className="w-4 h-4" />,
+    icon: 'Building2',
     color: 'blue',
     description: 'Main business entity'
   },
   {
     type: 'subproject',
     label: 'Project',
-    icon: <FolderOpen className="w-4 h-4" />,
+    icon: 'FolderOpen',
     color: 'red',
     description: 'Sub-project or component'
   },
   {
     type: 'task',
     label: 'Task',
-    icon: <CheckSquare className="w-4 h-4" />,
+    icon: 'CheckSquare',
     color: 'green',
     description: 'Actionable task or deliverable'
   },
   {
     type: 'milestone',
     label: 'Milestone',
-    icon: <Flag className="w-4 h-4" />,
+    icon: 'Flag',
     color: 'purple',
     description: 'Key project milestone'
   },
   {
     type: 'resource',
     label: 'Resource',
-    icon: <Users className="w-4 h-4" />,
+    icon: 'Users',
     color: 'orange',
     description: 'Team member or resource'
   },
   {
     type: 'team',
     label: 'Team',
-    icon: <Users2 className="w-4 h-4" />,
+    icon: 'Users2',
     color: 'orange',
     description: 'Team or department'
   }
 ];
+
+// Floating Add Button Component with Expandable Element Selection
+const FloatingAddButton = ({ 
+  isExpanded, 
+  onToggle, 
+  onAddNode 
+}: { 
+  isExpanded: boolean; 
+  onToggle: () => void; 
+  onAddNode: (type: string) => void; 
+}) => {
+  return (
+    <div className="absolute bottom-4 right-4 z-20">
+      {/* Expanded State - Show all element templates */}
+      {isExpanded && (
+        <div className="mb-3 bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-lg p-3 max-w-xs">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-foreground">Add Elements</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggle}
+              className="h-6 w-6 p-0"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            {getProjectNodeTemplates().map((template) => (
+              <Button
+                key={template.type}
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onAddNode(template.type);
+                  onToggle();
+                }}
+                className="flex flex-col items-center gap-1 h-auto py-2 px-3 text-xs"
+              >
+                {getIconComponent(template.icon)}
+                <span>{template.label}</span>
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Main Add Button */}
+      <Button
+        onClick={onToggle}
+        className="h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 transition-all duration-200"
+        size="icon"
+      >
+        {isExpanded ? (
+          <X className="w-5 h-5" />
+        ) : (
+          <Plus className="w-5 h-5" />
+        )}
+      </Button>
+    </div>
+  );
+};
 
 interface EnhancedProjectMapProps {
   onProjectSelect?: (projectId: string) => void;
@@ -406,6 +483,7 @@ function EnhancedProjectMapContent({
   const [isEcosystemMinimized, setIsEcosystemMinimized] = useState(false);
   const [isEcosystemClosed, setIsEcosystemClosed] = useState(false);
   const [isLayouting, setIsLayouting] = useState(false);
+  const [isAddButtonExpanded, setIsAddButtonExpanded] = useState(false);
 
   // Get user ID for localStorage keys
   const userId = 'current-user'; // You can get this from auth context if needed
@@ -949,6 +1027,7 @@ function EnhancedProjectMapContent({
 
   // Always show the project map system, even when no projects exist
 
+
   return (
     <div className="space-y-4">
       {/* View Mode Toggle - Outside business map for more space */}
@@ -1034,7 +1113,7 @@ function EnhancedProjectMapContent({
         <div className="flex-1 p-4 overflow-y-auto scrollbar-hide">
           <h3 className="text-sm font-medium text-muted-foreground mb-3">Add Elements</h3>
           <div className="space-y-2 hidden xl:block">
-            {PROJECT_NODE_TEMPLATES.map((template) => (
+            {getProjectNodeTemplates().map((template) => (
               <div
                 key={template.type}
                 className="p-3 border border-border rounded-lg cursor-pointer hover:bg-background/50 transition-colors"
@@ -1047,7 +1126,7 @@ function EnhancedProjectMapContent({
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary`}>
-                    {template.icon}
+                    {getIconComponent(template.icon)}
                   </div>
                   <div>
                     <div className="font-medium text-sm text-foreground">{template.label}</div>
@@ -1126,6 +1205,19 @@ function EnhancedProjectMapContent({
           />
           
         </ReactFlow>
+        )}
+        
+        {/* Floating Add Button - Only show in overview mode */}
+        {viewMode === 'overview' && (
+          <FloatingAddButton 
+            isExpanded={isAddButtonExpanded}
+            onToggle={() => setIsAddButtonExpanded(!isAddButtonExpanded)}
+            onAddNode={(type) => {
+              addNode(type).catch(error => {
+                console.error('Error adding node:', error);
+              });
+            }}
+          />
         )}
 
         {viewMode === 'timeline' && (
