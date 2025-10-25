@@ -24,7 +24,7 @@ const MobileMindmapControls: React.FC<MobileMindmapControlsProps> = ({
   isLayouting = false
 }) => {
   return (
-    <div className="fixed top-4 right-4 z-30 md:hidden">
+    <div className="fixed top-4 right-4 z-30 xl:hidden">
       <div className="flex flex-col gap-2">
         {/* Zoom Level Display */}
         <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg px-3 py-1 text-xs text-muted-foreground">

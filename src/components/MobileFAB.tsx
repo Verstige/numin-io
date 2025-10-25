@@ -41,7 +41,7 @@ const MobileFAB: React.FC<MobileFABProps> = ({
   ];
 
   return (
-    <div className="fixed bottom-20 right-4 z-40 md:hidden">
+    <div className="fixed bottom-20 right-4 z-40 xl:hidden">
       {/* Expanded Menu */}
       {isExpanded && (
         <div className="absolute bottom-16 right-0 space-y-3 mb-4">

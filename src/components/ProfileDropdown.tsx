@@ -28,7 +28,7 @@ interface ProfileDropdownProps {
 export default function ProfileDropdown({ className = "" }: ProfileDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
-  const { profile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -50,34 +50,34 @@ export default function ProfileDropdown({ className = "" }: ProfileDropdownProps
     setIsOpen(false);
   };
 
-  // Get user initials from profile name or email
+  // Get user initials from user name or email
   const getUserInitials = () => {
-    if (profile?.full_name) {
-      return profile.full_name
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name
         .split(' ')
         .map(name => name[0])
         .join('')
         .toUpperCase()
         .slice(0, 2);
     }
-    if (profile?.email) {
-      return profile.email.slice(0, 2).toUpperCase();
+    if (user?.email) {
+      return user.email.slice(0, 2).toUpperCase();
     }
     return 'U';
   };
 
   const getUserDisplayName = () => {
-    if (profile?.full_name) {
-      return profile.full_name;
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name;
     }
-    if (profile?.email) {
-      return profile.email.split('@')[0];
+    if (user?.email) {
+      return user.email.split('@')[0];
     }
     return 'User';
   };
 
   const getUserEmail = () => {
-    return profile?.email || 'user@example.com';
+    return user?.email || 'user@example.com';
   };
 
   return (
@@ -88,7 +88,7 @@ export default function ProfileDropdown({ className = "" }: ProfileDropdownProps
           className={`relative h-10 w-10 rounded-full hover:bg-background/50 ${className}`}
         >
           <Avatar className="h-8 w-8">
-            <AvatarImage src={profile?.avatar_url || undefined} alt={getUserDisplayName()} />
+            <AvatarImage src={user?.user_metadata?.avatar_url || undefined} alt={getUserDisplayName()} />
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-semibold">
               {getUserInitials()}
             </AvatarFallback>

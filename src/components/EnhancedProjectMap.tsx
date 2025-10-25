@@ -950,31 +950,56 @@ function EnhancedProjectMapContent({
   // Always show the project map system, even when no projects exist
 
   return (
-    <div className="flex flex-col h-[700px] sm:h-[600px] lg:h-[600px] bg-chatgpt-card rounded-2xl sm:rounded-3xl shadow-glass border border-border mobile-mindmap">
+    <div className="space-y-4">
+      {/* View Mode Toggle - Outside business map for more space */}
+      <div className="flex justify-center gap-2">
+        <Button
+          size="sm"
+          variant={viewMode === 'overview' ? 'default' : 'outline'}
+          onClick={() => setViewMode('overview')}
+          className="border-border hover:bg-background/50"
+        >
+          Overview
+        </Button>
+        <Button
+          size="sm"
+          variant={viewMode === 'timeline' ? 'default' : 'outline'}
+          onClick={() => setViewMode('timeline')}
+          className="border-border hover:bg-background/50"
+        >
+          Timeline
+        </Button>
+        <Button
+          size="sm"
+          variant={viewMode === 'resources' ? 'default' : 'outline'}
+          onClick={() => setViewMode('resources')}
+          className="border-border hover:bg-background/50"
+        >
+          Resources
+        </Button>
+      </div>
+
+      <div className="flex flex-col h-[700px] sm:h-[600px] lg:h-[600px] bg-chatgpt-card rounded-2xl sm:rounded-3xl shadow-glass border border-border mobile-mindmap">
       {/* Mobile Header */}
       <MobileMindmapHeader
-        onAddElement={() => {
-          // Trigger the mobile add button
-          const addButton = document.querySelector('[data-mobile-add-button]') as HTMLButtonElement;
-          if (addButton) addButton.click();
-        }}
         onSearch={() => {
           // Focus on search input
-          const searchInput = document.querySelector('input[placeholder="Search projects..."]') as HTMLInputElement;
+          const searchInput = document.querySelector('input[placeholder="Search elements..."]') as HTMLInputElement;
           if (searchInput) searchInput.focus();
         }}
         onFilter={() => {
-          // Toggle filter dropdown
-          console.log('Filter clicked');
+          // Filter button clicked - handled by MobileMindmapHeader
         }}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        filterStatus={filterStatus}
+        onFilterChange={setFilterStatus}
       />
       
-      <div className="flex flex-col lg:flex-row flex-1">
-      {/* Sidebar - Only show in overview mode */}
+      <div className="flex flex-col xl:flex-row flex-1">
+      {/* Sidebar - Only show in overview mode and on desktop */}
       {viewMode === 'overview' && (
-      <div className="w-full lg:w-80 bg-background/80 backdrop-blur-sm border-r-0 lg:border-r border-b lg:border-b-0 border-border flex flex-col max-h-[200px] sm:max-h-[250px] lg:max-h-none overflow-hidden">
+      <div className="hidden xl:flex w-80 bg-background/80 backdrop-blur-sm border-r border-border flex-col overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-border">
           <h2 className="text-lg font-semibold mb-3 text-foreground">Business Map</h2>
@@ -1008,7 +1033,7 @@ function EnhancedProjectMapContent({
         {/* Node Templates - Hide on mobile since we have mobile navigation */}
         <div className="flex-1 p-4 overflow-y-auto scrollbar-hide">
           <h3 className="text-sm font-medium text-muted-foreground mb-3">Add Elements</h3>
-          <div className="space-y-2 hidden md:block">
+          <div className="space-y-2 hidden xl:block">
             {PROJECT_NODE_TEMPLATES.map((template) => (
               <div
                 key={template.type}
@@ -1100,33 +1125,6 @@ function EnhancedProjectMapContent({
             color="rgba(255, 255, 255, 0.1)"
           />
           
-          {/* Custom Zoom Controls */}
-          <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => reactFlowInstance?.zoomIn()}
-              className="w-8 h-8 p-0 bg-background/80 border-border hover:bg-background"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => reactFlowInstance?.zoomOut()}
-              className="w-8 h-8 p-0 bg-background/80 border-border hover:bg-background"
-            >
-              <Minus className="w-4 h-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => reactFlowInstance?.fitView()}
-              className="w-8 h-8 p-0 bg-background/80 border-border hover:bg-background"
-            >
-              <Maximize className="w-4 h-4" />
-            </Button>
-          </div>
         </ReactFlow>
         )}
 
@@ -1362,33 +1360,6 @@ function EnhancedProjectMapContent({
         </div>
         )}
 
-        {/* View Mode Toggle */}
-        <div className="absolute top-4 right-4 flex gap-2">
-          <Button
-            size="sm"
-            variant={viewMode === 'overview' ? 'default' : 'outline'}
-            onClick={() => setViewMode('overview')}
-            className="border-border hover:bg-background/50"
-          >
-            Overview
-          </Button>
-          <Button
-            size="sm"
-            variant={viewMode === 'timeline' ? 'default' : 'outline'}
-            onClick={() => setViewMode('timeline')}
-            className="border-border hover:bg-background/50"
-          >
-            Timeline
-          </Button>
-          <Button
-            size="sm"
-            variant={viewMode === 'resources' ? 'default' : 'outline'}
-            onClick={() => setViewMode('resources')}
-            className="border-border hover:bg-background/50"
-          >
-            Resources
-          </Button>
-        </div>
 
         {/* Enhanced Business Ecosystem Overview - Only show in overview mode */}
         {viewMode === 'overview' && !isEcosystemClosed && (
@@ -1540,6 +1511,7 @@ function EnhancedProjectMapContent({
       </Dialog>
 
       </div>
+    </div>
     </div>
   );
 }

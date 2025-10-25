@@ -63,7 +63,7 @@ const MobileMindmapAddButton: React.FC<MobileMindmapAddButtonProps> = ({ onEleme
   return (
     <>
       {/* Floating Add Button */}
-      <div className="fixed bottom-24 right-4 z-40 md:hidden">
+      <div className="fixed bottom-24 right-4 z-40 xl:hidden">
         <Button
           data-mobile-add-button
           onClick={() => setIsOpen(true)}

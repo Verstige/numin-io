@@ -283,7 +283,7 @@ export default function DemoWorkspace() {
       </div>
 
       {/* Right Panel */}
-      <div className="hidden lg:flex w-[420px] h-screen p-6 animate-slide-in gap-4 pt-12">
+      <div className="hidden xl:flex w-[420px] h-screen p-6 animate-slide-in gap-4 pt-12">
         {/* Project Context Panel */}
         {activeProject && (
           <div className="w-[200px] overflow-y-auto">

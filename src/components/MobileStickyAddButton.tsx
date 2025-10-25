@@ -63,7 +63,7 @@ const MobileStickyAddButton: React.FC<MobileStickyAddButtonProps> = ({ onElement
   return (
     <>
       {/* Sticky Add Button - Always visible at bottom */}
-      <div className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
+      <div className="fixed bottom-4 left-4 right-4 z-50 xl:hidden">
         <div className="bg-background/95 backdrop-blur-sm border border-border rounded-full shadow-lg">
           <Button
             data-mobile-add-button

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type WorkspaceTab = "mindmap" | "notes" | "tasks" | "team" | "timer" | "crm" | "email" | "calendar" | "bookings" | "booking-demo";
+export type WorkspaceTab = "mindmap" | "notes" | "tasks" | "team" | "timer" | "crm" | "email" | "calendar" | "bookings";
 
 interface WorkspaceTabsProps {
   activeTab: WorkspaceTab;
@@ -34,7 +34,6 @@ interface WorkspaceTabsProps {
   emailContent: React.ReactNode;
   calendarContent: React.ReactNode;
   bookingsContent: React.ReactNode;
-  bookingDemoContent: React.ReactNode;
   // Notification counts
   taskNotifications?: number;
   teamNotifications?: number;
@@ -96,12 +95,6 @@ const tabConfig = [
     label: "Bookings",
     icon: CalendarDays,
     description: "Appointment booking management"
-  },
-  {
-    id: "booking-demo" as WorkspaceTab,
-    label: "Booking Demo",
-    icon: Calendar,
-    description: "Test the booking system"
   }
 ];
 
@@ -120,7 +113,6 @@ export default function WorkspaceTabs({
   emailContent,
   calendarContent,
   bookingsContent,
-  bookingDemoContent,
   taskNotifications = 0,
   teamNotifications = 0,
   timerNotifications = 0,
@@ -318,11 +310,6 @@ export default function WorkspaceTabs({
             </div>
           )}
           
-          {activeTab === "booking-demo" && (
-            <div className="animate-fade-in">
-              {bookingDemoContent}
-            </div>
-          )}
         </div>
       </div>
 
