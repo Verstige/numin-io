@@ -416,7 +416,7 @@ function EnhancedProjectMapContent({
         type: nodeType,
         position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 },
         data: {
-          title: nodeType === 'project' ? 'New Project' : `New ${nodeType}`,
+          title: nodeType === 'project' ? 'New Business' : `New ${nodeType}`,
           description: `Description for new ${nodeType}`,
           status: nodeType === 'project' ? 'planning' : nodeType === 'task' ? 'todo' : 'pending',
           priority: 'medium',

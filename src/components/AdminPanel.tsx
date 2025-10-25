@@ -182,7 +182,7 @@ export default function AdminPanel() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Projects</p>
+                <p className="text-sm text-muted-foreground">Total Businesses</p>
                 <p className="text-2xl font-bold">{stats.totalProjects}</p>
                 <p className="text-xs text-blue-600 flex items-center mt-1">
                   <TrendingUp className="w-3 h-3 mr-1" />

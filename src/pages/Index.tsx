@@ -39,7 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Target, Menu, X, LogOut, Plus, Bot, Map, LayoutDashboard, Settings, Users, Calendar, CheckSquare, Mail, StickyNote, Clock, Sparkles } from "lucide-react";
 import * as ProjectsService from "@/lib/projects-service";
 
-interface Project {
+interface Business {
   id: string;
   name: string;
   description: string;
@@ -59,6 +59,25 @@ interface Project {
   phone?: string;
   socialMedia?: string;
   additionalNotes?: string;
+  // Business-specific fields
+  businessType?: string;
+  legalStructure?: string;
+  taxId?: string;
+  registrationNumber?: string;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  status: string;
+  priority: "low" | "medium" | "high";
+  businessId?: string; // Link to parent business (optional for backward compatibility)
+  // Project-specific fields
+  startDate?: string;
+  endDate?: string;
+  budget?: string;
+  teamSize?: number;
 }
 
 // Mock data removed - users start with empty workspace
@@ -366,8 +385,10 @@ const mindmapEdges = [
 
 export default function Index() {
   const { user, signOut } = useAuth();
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [filteredBusinesses, setFilteredBusinesses] = useState<Business[]>([]);
+  const [activeBusiness, setActiveBusiness] = useState<Business | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [selectedProjectFromMap, setSelectedProjectFromMap] = useState<Project | null>(null);
@@ -540,7 +561,7 @@ export default function Index() {
           console.log(`✅ Loaded ${localProjects.length} projects from Supabase`);
           
           setProjects(localProjects);
-          setFilteredProjects(localProjects);
+          setFilteredBusinesses(localProjects);
           setHasEverCreatedProject(localProjects.length > 0);
           
           // Load mindmap nodes from localStorage (will be migrated to Supabase later)
@@ -571,11 +592,11 @@ export default function Index() {
             console.log('⚠️ Falling back to localStorage projects');
             const projects = JSON.parse(savedProjects);
             setProjects(projects);
-            setFilteredProjects(projects);
+            setFilteredBusinesses(projects);
             setHasEverCreatedProject(projects.length > 0);
           } else {
             setProjects([]);
-            setFilteredProjects([]);
+            setFilteredBusinesses([]);
             setHasEverCreatedProject(false);
           }
           
@@ -677,35 +698,37 @@ export default function Index() {
     }
   };
 
-  // Function to refresh projects from database
-  const refreshProjects = async () => {
+  // Function to refresh businesses from database
+  const refreshBusinesses = async () => {
     try {
-      console.log('🔄 Refreshing projects from database...');
-      const userProjects = await getUserProjects();
-      setProjects(userProjects);
-      setFilteredProjects(userProjects);
-      console.log('✅ Projects refreshed:', userProjects.length);
-      return userProjects;
+      console.log('🔄 Refreshing businesses from database...');
+      const userBusinesses = await getUserProjects(); // This will need to be updated to getBusinesses
+      setBusinesses(userBusinesses);
+      setFilteredBusinesses(userBusinesses);
+      console.log('✅ Businesses refreshed:', userBusinesses.length);
+      return userBusinesses;
     } catch (error) {
-      console.error('❌ Error refreshing projects:', error);
+      console.error('❌ Error refreshing businesses:', error);
       return [];
     }
   };
 
-  const handleProjectMapSelect = async (projectId: string) => {
-    console.log('🎯 Project selected from map:', projectId);
+  const handleBusinessMapSelect = async (businessId: string) => {
+    console.log('🎯 Business selected from map:', businessId);
     
-    // 🔥 Refresh projects first to get the latest data
-    const refreshedProjects = await refreshProjects();
-    console.log('📊 Available projects after refresh:', refreshedProjects.length);
+    // 🔥 Refresh businesses first to get the latest data
+    const refreshedBusinesses = await refreshBusinesses();
+    console.log('📊 Available businesses after refresh:', refreshedBusinesses.length);
     
-    const project = refreshedProjects.find(p => p.id === projectId);
-    if (project) {
-      console.log('✅ Project found:', project.name);
-      setSelectedProjectFromMap(project);
-      setActiveProject(project); // Also set as active project
+    const business = refreshedBusinesses.find(b => b.id === businessId);
+    if (business) {
+      console.log('✅ Business found:', business.name);
+      setActiveBusiness(business);
+      // Load projects for this business
+      const businessProjects = projects.filter(p => p.businessId === businessId);
+      setProjects(businessProjects);
     } else {
-      console.log('❌ Project not found with ID:', projectId);
+      console.log('❌ Business not found with ID:', businessId);
     }
   };
 
@@ -722,29 +745,29 @@ export default function Index() {
     setIsQuickSwitcherOpen(false);
   };
 
-  const handleUpdateProject = async (updatedProject: Project) => {
+  const handleUpdateBusiness = async (updatedBusiness: Business) => {
     try {
-      console.log('📝 Updating project in Supabase:', updatedProject.id);
+      console.log('📝 Updating business in Supabase:', updatedBusiness.id);
       
-      // Update project in Supabase
-      const result = await ProjectsService.updateProject(updatedProject.id, {
-        name: updatedProject.name,
-        description: updatedProject.description,
-        status: updatedProject.status,
-        priority: updatedProject.priority,
-        location: updatedProject.location,
-        website: updatedProject.website,
-        industry: updatedProject.industry,
-        products: updatedProject.products,
-        target_audience: updatedProject.targetAudience,
-        business_stage: updatedProject.businessStage,
-        revenue: updatedProject.revenue,
-        employees: updatedProject.employees,
-        founded: updatedProject.founded,
-        contact_email: updatedProject.contactEmail,
-        phone: updatedProject.phone,
-        social_media: updatedProject.socialMedia,
-        additional_notes: updatedProject.additionalNotes,
+      // Update business in Supabase
+      const result = await ProjectsService.updateProject(updatedBusiness.id, {
+        name: updatedBusiness.name,
+        description: updatedBusiness.description,
+        status: updatedBusiness.status,
+        priority: updatedBusiness.priority,
+        location: updatedBusiness.location,
+        website: updatedBusiness.website,
+        industry: updatedBusiness.industry,
+        products: updatedBusiness.products,
+        target_audience: updatedBusiness.targetAudience,
+        business_stage: updatedBusiness.businessStage,
+        revenue: updatedBusiness.revenue,
+        employees: updatedBusiness.employees,
+        founded: updatedBusiness.founded,
+        contact_email: updatedBusiness.contactEmail,
+        phone: updatedBusiness.phone,
+        social_media: updatedBusiness.socialMedia,
+        additional_notes: updatedBusiness.additionalNotes,
       });
       
       if (!result) {
@@ -752,18 +775,18 @@ export default function Index() {
         return;
       }
       
-      console.log('✅ Project updated in Supabase');
+      console.log('✅ Business updated in Supabase');
       
-      const updatedProjects = projects.map(p => 
-        p.id === updatedProject.id ? updatedProject : p
+      const updatedBusinesses = businesses.map(b => 
+        b.id === updatedBusiness.id ? updatedBusiness : b
       );
-      setProjects(updatedProjects);
-      setFilteredProjects(updatedProjects);
-      setActiveProject(updatedProject);
+      setBusinesses(updatedBusinesses);
+      setFilteredBusinesses(updatedBusinesses);
+      setActiveBusiness(updatedBusiness);
       
       // Also save to localStorage as backup
       const userId = user?.id || 'anonymous';
-      localStorage.setItem(`userProjects_${userId}`, JSON.stringify(updatedProjects));
+      localStorage.setItem(`userBusinesses_${userId}`, JSON.stringify(updatedBusinesses));
     } catch (error) {
       console.error('❌ Error updating project:', error);
       // TODO: Show error toast to user
@@ -788,7 +811,7 @@ export default function Index() {
       
       const updatedProjects = projects.filter(p => p.id !== projectId);
       setProjects(updatedProjects);
-      setFilteredProjects(updatedProjects);
+      setFilteredBusinesses(updatedProjects);
       
       // Clear active project if it was deleted
       if (activeProject?.id === projectId) {
@@ -853,7 +876,7 @@ export default function Index() {
     localStorage.removeItem(`activeProjectId_${userId}`);
     localStorage.removeItem(`hasEverCreatedProject_${userId}`);
     setProjects([]);
-    setFilteredProjects([]);
+    setFilteredBusinesses([]);
     setDynamicMindmapNodes([]);
     setActiveProject(null);
     setHasEverCreatedProject(false);
@@ -864,7 +887,7 @@ export default function Index() {
     console.log('=== Loading State Debug ===');
     console.log('isLoading:', isLoading);
     console.log('projects.length:', projects.length);
-    console.log('filteredProjects.length:', filteredProjects.length);
+    console.log('filteredBusinesses.length:', filteredBusinesses.length);
     console.log('dynamicMindmapNodes.length:', dynamicMindmapNodes.length);
     console.log('activeProject:', activeProject);
     const userId = user?.id || 'anonymous';
@@ -1145,15 +1168,15 @@ export default function Index() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto mb-6 sm:mb-8 px-4">
                   <div className="bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 sm:p-6">
                     <div className="text-2xl sm:text-3xl font-bold text-blue-400 mb-2">
-                      {projects.length}
+                      {businesses.length}
                     </div>
                     <div className="text-xs sm:text-sm text-muted-foreground">
-                      Total Projects
+                      Total Businesses
                     </div>
                   </div>
                   <div className="bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 sm:p-6">
                     <div className="text-2xl sm:text-3xl font-bold text-green-400 mb-2">
-                      {projects.filter(p => p.status === "Active").length}
+                      {businesses.filter(b => b.status === "Active").length}
                     </div>
                     <div className="text-xs sm:text-sm text-muted-foreground">
                       Active Projects
@@ -1203,7 +1226,7 @@ export default function Index() {
             <NovaChatInterface 
               userName={getUserDisplayName(user)}
               workspaceContext={{
-                projects: filteredProjects.map(p => ({
+                projects: filteredBusinesses.map(p => ({
                   id: p.id,
                   name: p.name,
                   description: p.description || '',
@@ -1254,10 +1277,10 @@ export default function Index() {
                 <MindmapSkeleton />
               ) : (
                 <EnhancedProjectMap
-                  onProjectSelect={handleProjectMapSelect}
-                  selectedProjectId={selectedProjectFromMap?.id}
-                  projects={projects}
-                  onProjectCreated={refreshProjects}
+                  onProjectSelect={handleBusinessMapSelect}
+                  selectedProjectId={activeBusiness?.id}
+                  projects={businesses}
+                  onProjectCreated={refreshBusinesses}
                 />
               )
             }
@@ -1322,7 +1345,7 @@ export default function Index() {
                 </div>
                 <EnhancedProjectOverview 
                   selectedProject={selectedProjectFromMap} 
-                  onUpdateProject={handleUpdateProject}
+                  onUpdateProject={handleUpdateBusiness}
                   onDeleteProject={handleDeleteProject}
                 />
               </div>

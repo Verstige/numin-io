@@ -123,7 +123,7 @@ const BusinessIntelligencePanel: React.FC<BusinessIntelligencePanelProps> = ({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-400">{businessMetrics.totalProjects}</div>
-              <div className="text-sm text-gray-400">Total Projects</div>
+              <div className="text-sm text-gray-400">Total Businesses</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-400">{businessMetrics.activeProjects}</div>

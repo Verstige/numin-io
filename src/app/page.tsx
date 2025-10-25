@@ -279,11 +279,11 @@ export default function Index() {
                     <div className="w-16 h-16 bg-gradient-to-r from-primary to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                       <Sparkles className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Create Your First Project</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Create Your First Business</h3>
                     <p className="text-muted-foreground mb-4">Start building your business ecosystem by creating your first project</p>
                     <Button onClick={() => setIsNewProjectOpen(true)} className="mt-4">
                       <Plus className="w-4 h-4 mr-2" />
-                      Create Project
+                      Create Business
                     </Button>
                   </div>
                 )
@@ -346,11 +346,11 @@ export default function Index() {
                     <div className="w-16 h-16 bg-gradient-to-r from-primary to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                       <Sparkles className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Create Your First Project</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Create Your First Business</h3>
                     <p className="text-muted-foreground mb-4">Start building your business ecosystem by creating your first project</p>
                     <Button onClick={() => setIsNewProjectOpen(true)} className="mt-4">
                       <Plus className="w-4 h-4 mr-2" />
-                      Create Project
+                      Create Business
                     </Button>
                   </div>
                 </div>
@@ -425,19 +425,19 @@ export default function Index() {
       <Dialog open={isNewProjectOpen} onOpenChange={setIsNewProjectOpen}>
         <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Create Your First Brand</DialogTitle>
+            <DialogTitle>Create Your First Business</DialogTitle>
             <DialogDescription>
-              Start building your next big brand
+              Start building your business ecosystem by creating your first business
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div>
-              <Label htmlFor="name">Brand Name</Label>
+              <Label htmlFor="name">Business Name</Label>
               <Input
                 id="name"
                 value={newProject.name}
                 onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                placeholder="e.g., My Brand"
+                placeholder="e.g., My Business"
                 className="bg-secondary border-border mt-1"
               />
             </div>
@@ -447,7 +447,7 @@ export default function Index() {
                 id="description"
                 value={newProject.description}
                 onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                placeholder="Brief overview of your brand..."
+                placeholder="Brief overview of your business..."
                 className="bg-secondary border-border mt-1"
               />
             </div>
@@ -471,7 +471,7 @@ export default function Index() {
               onClick={handleCreateProject} 
               className="w-full gradient-primary text-white shadow-primary"
             >
-              Create Brand
+              Create Business
             </Button>
           </div>
         </DialogContent>

@@ -541,7 +541,7 @@ Always focus on brand growth and marketing effectiveness.`;
     return `You are Titan, an AI Operations Manager with full workspace oversight.
 
 WORKSPACE CONTEXT:
-- Total Projects: ${userData.projects.length}
+- Total Businesses: ${userData.projects.length}
 - Active Tasks: ${userData.tasks.filter(t => t.status === 'in-progress').length}
 - Team Members: ${userData.teamMembers.length}
 - Completed Work: ${userData.tasks.filter(t => t.status === 'completed').length}
