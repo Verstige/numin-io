@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { type WorkspaceTab } from './WorkspaceTabs';
 import MobileBottomNav from './MobileBottomNav';
-import MobileFAB from './MobileFAB';
-import MobileMindmapControls from './MobileMindmapControls';
 import MobileElementCreator from './MobileElementCreator';
 import MobileElementPalette from './MobileElementPalette';
 import { useMobileInteractions } from '@/hooks/useMobileInteractions';
@@ -147,29 +145,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({
         </div>
       )}
 
-      {/* Floating Action Button */}
-      {isMobile && (
-        <MobileFAB
-          onQuickAdd={handleQuickAdd}
-          onVoiceInput={handleVoiceInput}
-          onCameraInput={handleCameraInput}
-          onDocumentScan={handleDocumentScan}
-        />
-      )}
 
-      {/* Mobile Mindmap Controls */}
-      {isMobile && (currentTab === 'mindmap') && (
-        <MobileMindmapControls
-          onZoomIn={onZoomIn || (() => {})}
-          onZoomOut={onZoomOut || (() => {})}
-          onReset={onReset || (() => {})}
-          onLayout={onLayout || (() => {})}
-          onSearch={handleSearch}
-          onFullscreen={onFullscreen || (() => {})}
-          zoomLevel={zoomLevel}
-          isLayouting={isLayouting}
-        />
-      )}
 
       {/* Mobile Element Creator */}
       <MobileElementCreator

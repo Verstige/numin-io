@@ -259,7 +259,7 @@ export default function WorkspaceTabs({
       </div>
 
       {/* Tab Content with Smooth Transitions */}
-      <div className="w-full min-h-[300px] sm:min-h-[400px] lg:min-h-[600px]">
+      <div className="w-full min-h-[700px] sm:min-h-[400px] lg:min-h-[600px] mb-6">
         <div className={cn(
           "transition-all duration-300 ease-in-out",
           "opacity-100 transform translate-y-0"

@@ -5,7 +5,6 @@ import EnhancedProjectMap from "@/components/EnhancedProjectMap";
 import ProjectCard from "@/components/ProjectCard";
 import ChatInterface from "@/components/ChatInterface";
 import ProjectContextPanel from "@/components/ProjectContextPanel";
-import EnhancedProjectOverview from "@/components/EnhancedProjectOverview";
 import QuickSwitcher from "@/components/QuickSwitcher";
 import EmptyState from "@/components/EmptyState";
 import CRMDashboard from "@/components/CRM/CRMDashboard";
@@ -13,7 +12,6 @@ import EmailDashboard from "@/components/Email/EmailDashboard";
 import SettingsDashboard from "@/components/Settings/SettingsDashboard";
 import ProfileDropdown from "@/components/ProfileDropdown";
 import { ProjectCardSkeleton, MindmapSkeleton, SidebarStatsSkeleton } from "@/components/LoadingSkeleton";
-import ActivityFeed from "@/components/ActivityFeed";
 import WorkspaceTabs, { type WorkspaceTab } from "@/components/WorkspaceTabs";
 import BuiltInNotes from "@/components/BuiltInNotes";
 import ViewableTasks from "@/components/ViewableTasks";
@@ -23,10 +21,8 @@ import TeamManagement from "@/components/TeamManagement";
 import TimeTracker from "@/components/TimeTracker";
 import NovaChatInterface from "@/components/NovaChatInterface";
 import WorkspaceCalendar from "@/components/WorkspaceCalendar";
-import ResourcesSection from "@/components/ResourcesSection";
 import MobileLayout from "@/components/MobileLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { type TeamMember, type ActivityItem } from "@/lib/collaboration";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { getUserDisplayName, getUserFirstName } from "@/lib/user-utils";
@@ -398,10 +394,8 @@ export default function Index() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<any[]>([]);
-  const [selectedProjectFromMap, setSelectedProjectFromMap] = useState<Project | null>(null);
   const [isQuickSwitcherOpen, setIsQuickSwitcherOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [teamMembers] = useState<TeamMember[]>([]);
 
   // Initialize AI Agent Integration
   const {
@@ -411,7 +405,6 @@ export default function Index() {
     notifyCRMChange,
     getSyncStats
   } = useAIAgentIntegration({ autoSync: true });
-  const [activityFeed] = useState<ActivityItem[]>([]);
   const [currentTab, setCurrentTab] = useState<WorkspaceTab>("mindmap");
   const [currentUserRole] = useState<"owner" | "admin" | "member" | "viewer">("admin");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -940,7 +933,6 @@ export default function Index() {
       // Clear active project if it was deleted
       if (activeProject?.id === projectId) {
         setActiveProject(null);
-        setSelectedProjectFromMap(null);
       }
       
       // Notify AI agents of deleted project
@@ -1318,12 +1310,7 @@ export default function Index() {
                   additionalNotes: p.additionalNotes
                 })),
                 tasks: [], // TODO: Add tasks from ViewableTasks component
-                teamMembers: teamMembers.map(m => ({
-                  id: m.id,
-                  name: m.name,
-                  role: m.role,
-                  status: m.status
-                })),
+                teamMembers: [],
                 notes: [], // TODO: Add notes from BuiltInNotes component
                 currentUser: {
                   name: getUserDisplayName(user),
@@ -1409,49 +1396,6 @@ export default function Index() {
             bookingsNotifications={0}
           />
 
-          {/* Enhanced Project Overview Panel */}
-          <div className="mt-8 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-            <div className="max-w-6xl mx-auto">
-              <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl p-6 border border-primary/20 shadow-glass">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-3 h-3 bg-primary rounded-full animate-pulse" />
-                  <h2 className="text-xl font-bold text-primary">Business Ecosystem Overview</h2>
-                  {selectedProjectFromMap && (
-                    <Badge variant="outline" className="ml-auto">
-                      {selectedProjectFromMap.name}
-                    </Badge>
-                  )}
-                </div>
-                <EnhancedProjectOverview 
-                  selectedProject={selectedProjectFromMap} 
-                  onUpdateProject={handleUpdateBusiness}
-                  onDeleteProject={handleDeleteProject}
-                />
-              </div>
-        </div>
-      </div>
-
-          {/* Resources Section - below the project overview */}
-          <div className="mt-8 animate-fade-in" style={{ animationDelay: "0.35s" }}>
-            <div className="max-w-4xl mx-auto">
-              <ResourcesSection 
-                projectId={activeProject?.id} 
-                projectName={activeProject?.name}
-              />
-            </div>
-          </div>
-
-          {/* Activity Feed - below the resources */}
-          <div className="mt-8 animate-fade-in" style={{ animationDelay: "0.4s" }}>
-            <div className="max-w-4xl mx-auto">
-            <ActivityFeed 
-              activities={activityFeed}
-              teamMembers={teamMembers}
-                maxHeight="400px"
-                showFilters={true}
-              />
-            </div>
-            </div>
 
             </>
           </div>
@@ -1461,36 +1405,36 @@ export default function Index() {
 
 
 
-      {/* Quick Switcher */}
-      <QuickSwitcher
-        isOpen={isQuickSwitcherOpen}
-        onClose={() => setIsQuickSwitcherOpen(false)}
-        projects={projects}
-        onSelectProject={handleQuickSwitcherSelect}
-      />
+          {/* Quick Switcher */}
+          <QuickSwitcher
+            isOpen={isQuickSwitcherOpen}
+            onClose={() => setIsQuickSwitcherOpen(false)}
+            projects={projects}
+            onSelectProject={handleQuickSwitcherSelect}
+          />
 
-            {/* Dashboard Directory */}
-            {showDashboard && (
-              <DashboardDirectory
-                onSelectTab={(tab) => {
-                  setCurrentTab(tab as WorkspaceTab);
-                  setShowDashboard(false);
-                }}
-                onClose={() => setShowDashboard(false)}
-              />
-            )}
+          {/* Dashboard Directory */}
+          {showDashboard && (
+            <DashboardDirectory
+              onSelectTab={(tab) => {
+                setCurrentTab(tab as WorkspaceTab);
+                setShowDashboard(false);
+              }}
+              onClose={() => setShowDashboard(false)}
+            />
+          )}
         </>
-      </div>
+        </div>
 
-      {/* Business Selector */}
-      <BusinessSelector
-        isOpen={isBusinessSelectorOpen}
-        onClose={() => setIsBusinessSelectorOpen(false)}
-        onSelectBusiness={handleSelectBusiness}
-        onCreateBusiness={handleCreateBusiness}
-        businesses={businesses}
-        selectedBusiness={activeBusiness}
-      />
+        {/* Business Selector */}
+        <BusinessSelector
+          isOpen={isBusinessSelectorOpen}
+          onClose={() => setIsBusinessSelectorOpen(false)}
+          onSelectBusiness={handleSelectBusiness}
+          onCreateBusiness={handleCreateBusiness}
+          businesses={businesses}
+          selectedBusiness={activeBusiness}
+        />
       </div>
     </MobileLayout>
   );

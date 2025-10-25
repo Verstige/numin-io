@@ -18,9 +18,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { createProject, updateProject, deleteProject, getUserProjects } from '@/lib/projects-service';
-import MobileMindmapAddButton from './MobileMindmapAddButton';
 import MobileMindmapHeader from './MobileMindmapHeader';
-import MobileStickyAddButton from './MobileStickyAddButton';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -952,7 +950,7 @@ function EnhancedProjectMapContent({
   // Always show the project map system, even when no projects exist
 
   return (
-    <div className="flex flex-col h-[500px] sm:h-[600px] lg:h-[600px] bg-chatgpt-card rounded-2xl sm:rounded-3xl shadow-glass border border-border">
+    <div className="flex flex-col h-[700px] sm:h-[600px] lg:h-[600px] bg-chatgpt-card rounded-2xl sm:rounded-3xl shadow-glass border border-border mobile-mindmap">
       {/* Mobile Header */}
       <MobileMindmapHeader
         onAddElement={() => {
@@ -1007,10 +1005,10 @@ function EnhancedProjectMapContent({
           </Select>
         </div>
 
-        {/* Node Templates */}
+        {/* Node Templates - Hide on mobile since we have mobile navigation */}
         <div className="flex-1 p-4 overflow-y-auto scrollbar-hide">
           <h3 className="text-sm font-medium text-muted-foreground mb-3">Add Elements</h3>
-          <div className="space-y-2">
+          <div className="space-y-2 hidden md:block">
             {PROJECT_NODE_TEMPLATES.map((template) => (
               <div
                 key={template.type}
@@ -1071,7 +1069,7 @@ function EnhancedProjectMapContent({
       )}
 
       {/* Main Canvas */}
-      <div className="flex-1 relative min-h-[300px] sm:min-h-[400px] lg:min-h-0">
+      <div className="flex-1 relative min-h-[500px] sm:min-h-[400px] lg:min-h-0">
         {viewMode === 'overview' && (
         <ReactFlow
           nodes={filteredNodes}
@@ -1093,6 +1091,7 @@ function EnhancedProjectMapContent({
           elementsSelectable={true}
           edgesUpdatable={true}
           edgesFocusable={true}
+          className="mobile-mindmap"
         >
           <Background 
             variant={BackgroundVariant.Dots} 
@@ -1540,8 +1539,6 @@ function EnhancedProjectMapContent({
         </DialogContent>
       </Dialog>
 
-      {/* Mobile Add Button */}
-      <MobileStickyAddButton onElementAdd={addNode} />
       </div>
     </div>
   );
