@@ -81,6 +81,18 @@ const ProjectNode = ({ data, selected }: { data: any; selected: boolean }) => {
         iconColor: 'text-blue-500'
       };
     }
+    if (data.nodeType === 'system') {
+      return {
+        borderColor: selected ? 'border-indigo-500' : 'border-border',
+        iconColor: 'text-indigo-500'
+      };
+    }
+    if (data.nodeType === 'process') {
+      return {
+        borderColor: selected ? 'border-pink-500' : 'border-border',
+        iconColor: 'text-pink-500'
+      };
+    }
     return {
       borderColor: selected ? 'border-primary' : 'border-border',
       iconColor: 'text-primary'
@@ -319,6 +331,8 @@ const nodeTypes: NodeTypes = {
   project: ProjectNode,
   subproject: ProjectNode, // Use ProjectNode for subprojects
   business: ProjectNode, // Use ProjectNode for businesses
+  system: ProjectNode, // Use ProjectNode for systems
+  process: ProjectNode, // Use ProjectNode for processes
   task: TaskNode,
   milestone: MilestoneNode,
   resource: ResourceNode,
@@ -338,6 +352,8 @@ const getIconComponent = (iconName: string) => {
     'Flag': Flag,
     'Users': Users,
     'Users2': Users2,
+    'Settings': Settings,
+    'Zap': Zap,
   };
   const IconComponent = iconMap[iconName] || Building2;
   return <IconComponent className="w-4 h-4" />;
@@ -364,6 +380,20 @@ const getProjectNodeTemplates = () => [
     icon: 'CheckSquare',
     color: 'green',
     description: 'Actionable task or deliverable'
+  },
+  {
+    type: 'system',
+    label: 'System',
+    icon: 'Settings',
+    color: 'indigo',
+    description: 'Technology, platform, or infrastructure'
+  },
+  {
+    type: 'process',
+    label: 'Process',
+    icon: 'Zap',
+    color: 'pink',
+    description: 'Workflow or standard operating procedure'
   },
   {
     type: 'milestone',
@@ -634,6 +664,8 @@ function EnhancedProjectMapContent({
         // Determine color based on source node type
         if (sourceNode.data?.nodeType === 'subproject') edgeColor = '#ef4444'; // Red
         else if (sourceNode.data?.nodeType === 'business') edgeColor = '#3b82f6'; // Blue
+        else if (sourceNode.data?.nodeType === 'system') edgeColor = '#6366f1'; // Indigo
+        else if (sourceNode.data?.nodeType === 'process') edgeColor = '#ec4899'; // Pink
         else if (sourceNode.type === 'task') edgeColor = '#10b981'; // Green
         else if (sourceNode.type === 'milestone') edgeColor = '#8b5cf6'; // Purple
         else if (sourceNode.type === 'resource') edgeColor = '#f59e0b'; // Orange
@@ -660,14 +692,30 @@ function EnhancedProjectMapContent({
 
   const addNode = useCallback(
     async (nodeType: string, elementData?: any) => {
+      const getDefaultTitle = () => {
+        if (nodeType === 'business') return 'New Business';
+        if (nodeType === 'subproject') return 'New Project';
+        if (nodeType === 'system') return 'New System';
+        if (nodeType === 'process') return 'New Process';
+        if (nodeType === 'task') return 'New Task';
+        return `New ${nodeType}`;
+      };
+
+      const getDefaultStatus = () => {
+        if (nodeType === 'business' || nodeType === 'subproject') return 'planning';
+        if (nodeType === 'system' || nodeType === 'process') return 'active';
+        if (nodeType === 'task') return 'todo';
+        return 'pending';
+      };
+
       const newNode: Node = {
         id: `${nodeType}_${Date.now()}`,
         type: nodeType,
         position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 },
         data: {
-          title: elementData?.title || (nodeType === 'project' ? 'New Project' : nodeType === 'subproject' ? 'New Project' : nodeType === 'business' ? 'New Business' : `New ${nodeType}`),
+          title: elementData?.title || getDefaultTitle(),
           description: elementData?.description || `Description for new ${nodeType}`,
-          status: elementData?.status || (nodeType === 'project' ? 'planning' : nodeType === 'subproject' ? 'planning' : nodeType === 'business' ? 'planning' : nodeType === 'task' ? 'todo' : 'pending'),
+          status: elementData?.status || getDefaultStatus(),
           priority: elementData?.priority || 'medium',
           category: 'business',
           progress: 0,
@@ -917,7 +965,7 @@ function EnhancedProjectMapContent({
     
     // Improved hierarchical layout algorithm
     const layoutedNodes = [...nodes];
-    const nodeTypes = ['project', 'team', 'resource', 'milestone', 'task'];
+    const nodeTypes = ['project', 'business', 'team', 'resource', 'milestone', 'task', 'system', 'process'];
     
     // Group nodes by type for better organization
     const nodesByType = nodeTypes.reduce((acc, type) => {
@@ -997,6 +1045,36 @@ function EnhancedProjectMapContent({
         position: {
           x: 100 + col * 200,
           y: 100 + 4 * spacingY + row * 150
+        }
+      };
+    });
+    
+    // Layout systems (below tasks, left side)
+    currentX = 100;
+    currentY = 100 + 5 * spacingY + 100;
+    nodesByType.system.forEach((node, index) => {
+      const row = Math.floor(index / 4);
+      const col = index % 4;
+      layoutedNodes[layoutedNodes.indexOf(node)] = {
+        ...node,
+        position: {
+          x: currentX + col * spacingX,
+          y: currentY + row * spacingY
+        }
+      };
+    });
+    
+    // Layout processes (below tasks, right side)
+    currentX = 100 + 4 * spacingX + 100;
+    currentY = 100 + 5 * spacingY + 100;
+    nodesByType.process.forEach((node, index) => {
+      const row = Math.floor(index / 4);
+      const col = index % 4;
+      layoutedNodes[layoutedNodes.indexOf(node)] = {
+        ...node,
+        position: {
+          x: currentX + col * spacingX,
+          y: currentY + row * spacingY
         }
       };
     });
