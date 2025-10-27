@@ -19,6 +19,14 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { createProject, updateProject, deleteProject, getUserProjects } from '@/lib/projects-service';
 import MobileMindmapHeader from './MobileMindmapHeader';
+import { 
+  BusinessMapNodesService, 
+  BusinessMapEdgesService, 
+  BusinessMapLayoutService,
+  BusinessMapNode,
+  BusinessMapEdge 
+} from '@/lib/firebase-business-map';
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -515,50 +523,105 @@ function EnhancedProjectMapContent({
   const [isLayouting, setIsLayouting] = useState(false);
   const [isAddButtonExpanded, setIsAddButtonExpanded] = useState(false);
 
-  // Get user ID for localStorage keys
-  const userId = 'current-user'; // You can get this from auth context if needed
+  // Get Firebase auth context
+  const { user } = useFirebaseAuth();
+  const userId = user?.uid || 'anonymous';
+  const teamId = 'default-team'; // You can make this dynamic based on user's team
 
-  // Load saved nodes and edges from localStorage on mount
+  // Load saved nodes and edges from Firebase on mount
   useEffect(() => {
-    const savedNodes = localStorage.getItem(`reactflow_nodes_${userId}`);
-    const savedEdges = localStorage.getItem(`reactflow_edges_${userId}`);
-    
-    if (savedNodes) {
+    if (!user) return;
+
+    const loadFirebaseData = async () => {
       try {
-        const parsedNodes = JSON.parse(savedNodes);
-        console.log('🔄 Loading saved nodes from localStorage:', parsedNodes.length);
-        setNodes(parsedNodes);
-      } catch (error) {
-        console.error('❌ Error parsing saved nodes:', error);
-      }
-    }
-    
-    if (savedEdges) {
-      try {
-        const parsedEdges = JSON.parse(savedEdges);
-        console.log('🔄 Loading saved edges from localStorage:', parsedEdges.length);
-        setEdges(parsedEdges);
-      } catch (error) {
-        console.error('❌ Error parsing saved edges:', error);
-      }
-    }
-  }, []); // Only run on mount
+        // Load nodes from Firebase
+        const firebaseNodes = await BusinessMapNodesService.getNodes(userId, teamId);
+        const reactFlowNodes = firebaseNodes.map(node => ({
+          id: node.nodeId,
+          type: node.nodeType,
+          position: node.position,
+          data: {
+            label: node.data.title,
+            description: node.data.description,
+            status: node.data.status,
+            priority: node.data.priority,
+            color: node.data.color,
+            icon: node.data.icon,
+            ...node.data.metadata
+          }
+        }));
+        
+        console.log('🔄 Loading nodes from Firebase:', reactFlowNodes.length);
+        setNodes(reactFlowNodes);
 
-  // Save nodes to localStorage whenever they change
-  useEffect(() => {
-    if (nodes.length > 0) {
-      console.log('💾 Saving nodes to localStorage:', nodes.length);
-      localStorage.setItem(`reactflow_nodes_${userId}`, JSON.stringify(nodes));
-    }
-  }, [nodes]);
+        // Load edges from Firebase
+        const firebaseEdges = await BusinessMapEdgesService.getEdges(userId, teamId);
+        const reactFlowEdges = firebaseEdges.map(edge => ({
+          id: edge.id,
+          source: edge.sourceNodeId,
+          target: edge.targetNodeId,
+          type: 'smoothstep',
+          animated: false,
+          style: { stroke: '#64748b', strokeWidth: 2 }
+        }));
+        
+        console.log('🔄 Loading edges from Firebase:', reactFlowEdges.length);
+        setEdges(reactFlowEdges);
+      } catch (error) {
+        console.error('❌ Error loading Firebase data:', error);
+      }
+    };
 
-  // Save edges to localStorage whenever they change
+    loadFirebaseData();
+  }, [user, userId, teamId]);
+
+  // Subscribe to real-time updates for nodes
   useEffect(() => {
-    if (edges.length > 0) {
-      console.log('💾 Saving edges to localStorage:', edges.length);
-      localStorage.setItem(`reactflow_edges_${userId}`, JSON.stringify(edges));
-    }
-  }, [edges]);
+    if (!user) return;
+
+    const unsubscribeNodes = BusinessMapNodesService.subscribeToNodes(
+      userId, 
+      teamId, 
+      (firebaseNodes) => {
+        const reactFlowNodes = firebaseNodes.map(node => ({
+          id: node.nodeId,
+          type: node.nodeType,
+          position: node.position,
+          data: {
+            label: node.data.title,
+            description: node.data.description,
+            status: node.data.status,
+            priority: node.data.priority,
+            color: node.data.color,
+            icon: node.data.icon,
+            ...node.data.metadata
+          }
+        }));
+        setNodes(reactFlowNodes);
+      }
+    );
+
+    const unsubscribeEdges = BusinessMapEdgesService.subscribeToEdges(
+      userId, 
+      teamId, 
+      (firebaseEdges) => {
+        const reactFlowEdges = firebaseEdges.map(edge => ({
+          id: edge.id,
+          source: edge.sourceNodeId,
+          target: edge.targetNodeId,
+          type: 'smoothstep',
+          animated: false,
+          style: { stroke: '#64748b', strokeWidth: 2 }
+        }));
+        setEdges(reactFlowEdges);
+      }
+    );
+
+    return () => {
+      unsubscribeNodes();
+      unsubscribeEdges();
+    };
+  }, [user, userId, teamId]);
 
   // Initialize with projects from props or database (only if no saved nodes exist)
   useEffect(() => {
@@ -655,31 +718,53 @@ function EnhancedProjectMapContent({
   }, [projects]);
 
   const onConnect = useCallback(
-    (params: Connection) => {
+    async (params: Connection) => {
+      if (!user) {
+        console.error('❌ User not authenticated');
+        return;
+      }
+
       // Find the source node to determine its color
       const sourceNode = nodes.find(node => node.id === params.source);
       let edgeColor = '#6b7280'; // Default gray
       
       if (sourceNode) {
         // Determine color based on source node type
-        if (sourceNode.data?.nodeType === 'subproject') edgeColor = '#ef4444'; // Red
+        if (sourceNode.data?.nodeType === 'project') edgeColor = '#ef4444'; // Red
         else if (sourceNode.data?.nodeType === 'business') edgeColor = '#3b82f6'; // Blue
-        else if (sourceNode.data?.nodeType === 'system') edgeColor = '#6366f1'; // Indigo
-        else if (sourceNode.data?.nodeType === 'process') edgeColor = '#ec4899'; // Pink
         else if (sourceNode.type === 'task') edgeColor = '#10b981'; // Green
         else if (sourceNode.type === 'milestone') edgeColor = '#8b5cf6'; // Purple
         else if (sourceNode.type === 'resource') edgeColor = '#f59e0b'; // Orange
         else if (sourceNode.type === 'team') edgeColor = '#f59e0b'; // Orange
       }
       
-      setEdges((eds) => addEdge({
-      ...params,
+      const newEdge = {
+        ...params,
         type: 'smoothstep', // Use curved edges
-      animated: true,
+        animated: true,
         style: { stroke: edgeColor, strokeWidth: 2 }
-      }, eds));
+      };
+
+      try {
+        // Save edge to Firebase
+        await BusinessMapEdgesService.createEdge(userId, teamId, {
+          userId,
+          teamId,
+          sourceNodeId: params.source!,
+          targetNodeId: params.target!
+        });
+        
+        // Add to local state (will be updated by real-time subscription)
+        setEdges((eds) => addEdge(newEdge, eds));
+        
+        console.log('✅ Edge saved to Firebase:', params.source, '->', params.target);
+      } catch (error) {
+        console.error('❌ Error saving edge to Firebase:', error);
+        // Still add to local state for immediate feedback
+        setEdges((eds) => addEdge(newEdge, eds));
+      }
     },
-    [setEdges, nodes]
+    [setEdges, nodes, user, userId, teamId]
   );
 
   // Handle mobile element creation
@@ -690,29 +775,64 @@ function EnhancedProjectMapContent({
     addNode(element.type, element);
   }, [onMobileElementCreate]);
 
+  // Helper functions for node styling
+  const getNodeColor = (nodeType: string): string => {
+    switch (nodeType) {
+      case 'business': return '#3b82f6'; // Blue
+      case 'project': return '#ef4444'; // Red
+      case 'task': return '#10b981'; // Green
+      case 'milestone': return '#8b5cf6'; // Purple
+      case 'resource': return '#f59e0b'; // Orange
+      case 'team': return '#f59e0b'; // Orange
+      default: return '#6b7280'; // Gray
+    }
+  };
+
+  const getNodeIcon = (nodeType: string): string => {
+    switch (nodeType) {
+      case 'business': return 'Building2';
+      case 'project': return 'FolderOpen';
+      case 'task': return 'CheckSquare';
+      case 'milestone': return 'Flag';
+      case 'resource': return 'Users';
+      case 'team': return 'Users2';
+      default: return 'Circle';
+    }
+  };
+
   const addNode = useCallback(
     async (nodeType: string, elementData?: any) => {
+      if (!user) {
+        console.error('❌ User not authenticated');
+        return;
+      }
+
       const getDefaultTitle = () => {
         if (nodeType === 'business') return 'New Business';
-        if (nodeType === 'subproject') return 'New Project';
-        if (nodeType === 'system') return 'New System';
-        if (nodeType === 'process') return 'New Process';
+        if (nodeType === 'project') return 'New Project';
         if (nodeType === 'task') return 'New Task';
+        if (nodeType === 'milestone') return 'New Milestone';
+        if (nodeType === 'resource') return 'New Resource';
+        if (nodeType === 'team') return 'New Team';
         return `New ${nodeType}`;
       };
 
       const getDefaultStatus = () => {
-        if (nodeType === 'business' || nodeType === 'subproject') return 'planning';
-        if (nodeType === 'system' || nodeType === 'process') return 'active';
+        if (nodeType === 'business' || nodeType === 'project') return 'planning';
         if (nodeType === 'task') return 'todo';
+        if (nodeType === 'milestone') return 'pending';
+        if (nodeType === 'resource') return 'available';
+        if (nodeType === 'team') return 'active';
         return 'pending';
       };
 
+      const nodeId = `${nodeType}_${Date.now()}`;
       const newNode: Node = {
-        id: `${nodeType}_${Date.now()}`,
+        id: nodeId,
         type: nodeType,
         position: { x: Math.random() * 400 + 100, y: Math.random() * 300 + 100 },
         data: {
+          label: elementData?.title || getDefaultTitle(),
           title: elementData?.title || getDefaultTitle(),
           description: elementData?.description || `Description for new ${nodeType}`,
           status: elementData?.status || getDefaultStatus(),
@@ -725,63 +845,79 @@ function EnhancedProjectMapContent({
         },
       };
 
-      // Always create the node first (like other elements)
-      setNodes((nds) => [...nds, newNode]);
-
-      // Then optionally save to database for business/project types
-      if (nodeType === 'project' || nodeType === 'subproject' || nodeType === 'business') {
-        try {
-          const projectData = {
-            name: newNode.data.title,
+      try {
+        // Save to Firebase first
+        const firebaseNodeData = {
+          userId,
+          teamId,
+          nodeId,
+          nodeType: nodeType as any,
+          position: newNode.position,
+          data: {
+            title: newNode.data.title,
             description: newNode.data.description,
             status: newNode.data.status,
             priority: newNode.data.priority,
-            location: '',
-            website: '',
-            industry: '',
-            products: '',
-            targetAudience: '',
-            businessStage: '',
-            revenue: '',
-            employees: '',
-            founded: '',
-            contactEmail: '',
-            phone: '',
-            socialMedia: '',
-            additionalNotes: ''
-          };
-          
-          const savedProject = await createProject(projectData);
-          
-          if (savedProject) {
-            // Update the node with the database ID
-            setNodes((nds) => nds.map(n => 
-              n.id === newNode.id ? { ...n, id: savedProject.id } : n
-            ));
-            console.log('✅ Project saved to database:', savedProject.id);
-            
-            // 🔥 Notify parent component that a new project was created
-            if (onProjectCreated) {
-              onProjectCreated();
+            color: getNodeColor(nodeType),
+            icon: getNodeIcon(nodeType),
+            metadata: {
+              category: newNode.data.category,
+              progress: newNode.data.progress,
+              team: newNode.data.team,
+              tags: newNode.data.tags,
+              nodeType: newNode.data.nodeType
             }
           }
-        } catch (error) {
-          console.error('❌ Error saving project to database:', error);
-          // Node still exists locally even if database save fails
+        };
+
+        await BusinessMapNodesService.createNode(userId, teamId, firebaseNodeData);
+        
+        // Add to local state (will be updated by real-time subscription)
+        setNodes((nds) => [...nds, newNode]);
+        
+        console.log('✅ Node saved to Firebase:', nodeId);
+        
+        // Notify parent component if needed
+        if (onProjectCreated) {
+          onProjectCreated();
         }
+      } catch (error) {
+        console.error('❌ Error saving node to Firebase:', error);
+        // Still add to local state for immediate feedback
+        setNodes((nds) => [...nds, newNode]);
       }
     },
     [setNodes, onProjectCreated]
   );
 
   // Function to clear saved nodes and edges (for debugging/reset)
-  const clearSavedData = useCallback(() => {
-    localStorage.removeItem(`reactflow_nodes_${userId}`);
-    localStorage.removeItem(`reactflow_edges_${userId}`);
-    setNodes([]);
-    setEdges([]);
-    console.log('🗑️ Cleared saved nodes and edges');
-  }, [setNodes, setEdges]);
+  const clearSavedData = useCallback(async () => {
+    if (!user) {
+      console.error('❌ User not authenticated');
+      return;
+    }
+
+    try {
+      // Clear all nodes from Firebase
+      const firebaseNodes = await BusinessMapNodesService.getNodes(userId, teamId);
+      for (const node of firebaseNodes) {
+        await BusinessMapNodesService.deleteNode(userId, teamId, node.id);
+      }
+
+      // Clear all edges from Firebase
+      const firebaseEdges = await BusinessMapEdgesService.getEdges(userId, teamId);
+      for (const edge of firebaseEdges) {
+        await BusinessMapEdgesService.deleteEdge(userId, teamId, edge.id);
+      }
+
+      // Clear local state
+      setNodes([]);
+      setEdges([]);
+      console.log('🗑️ Cleared all saved nodes and edges from Firebase');
+    } catch (error) {
+      console.error('❌ Error clearing Firebase data:', error);
+    }
+  }, [user, userId, teamId, setNodes, setEdges]);
 
   // Make clear function available globally for debugging
   useEffect(() => {
