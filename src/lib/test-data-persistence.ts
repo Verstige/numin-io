@@ -14,6 +14,7 @@ export const testDataPersistence = async (user: any) => {
 
   console.log('🧪 Testing data persistence for user:', user.email);
   console.log('👤 User ID:', user.uid);
+  console.log('🔐 User authenticated:', !!user);
 
   const userId = user.uid;
   const teamId = 'default-team';
@@ -44,6 +45,7 @@ export const testDataPersistence = async (user: any) => {
     };
 
     console.log('🔄 Creating test node...');
+    console.log('📝 Test node data:', testNode);
     const createdNode = await BusinessMapNodesService.createNode(userId, teamId, testNode);
     console.log('✅ Test node created:', createdNode.id);
 
@@ -77,6 +79,11 @@ export const testDataPersistence = async (user: any) => {
 
   } catch (error) {
     console.error('❌ Data persistence test failed:', error);
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
     return {
       success: false,
       error: error.message,

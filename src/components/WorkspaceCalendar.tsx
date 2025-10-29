@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarEventsService, type CalendarEvent } from '@/lib/workspace-persistence';
+import { FirebaseCalendarEventsService, type CalendarEvent } from '@/lib/firebase-calendar';
 import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext';
 import { 
   Calendar as CalendarIcon, 
@@ -68,15 +68,16 @@ export default function WorkspaceCalendar({ tasks = [], onEventClick }: Workspac
       
       try {
         setIsLoading(true);
-        console.log('📅 Loading calendar events...');
+        console.log('📅 Loading calendar events from Firebase...');
         
-        const teamId = user.id; // Use user ID as team ID for now
+        const userId = user.uid;
+        const teamId = 'default-team'; // Use default team for now
         const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
         
-        const calendarEvents = await CalendarEventsService.getEvents(teamId, startDate, endDate);
+        const calendarEvents = await FirebaseCalendarEventsService.getEvents(userId, teamId, startDate, endDate);
         setEvents(calendarEvents);
-        console.log('✅ Calendar events loaded:', calendarEvents.length);
+        console.log('✅ Calendar events loaded from Firebase:', calendarEvents.length);
         
       } catch (error) {
         console.error('Error loading calendar events:', error);
@@ -205,9 +206,11 @@ export default function WorkspaceCalendar({ tasks = [], onEventClick }: Workspac
   };
 
   const getEventsForDate = (date: Date) => {
-    return events.filter(event => 
-      event.eventDate.toDateString() === date.toDateString()
-    );
+    return events.filter(event => {
+      // Ensure eventDate is a Date object
+      const eventDate = event.eventDate instanceof Date ? event.eventDate : new Date(event.eventDate);
+      return eventDate.toDateString() === date.toDateString();
+    });
   };
 
   const getEventTypeColor = (eventType: string) => {
@@ -246,26 +249,37 @@ export default function WorkspaceCalendar({ tasks = [], onEventClick }: Workspac
 
     try {
       setIsLoading(true);
+      console.log('🔄 Creating calendar event in Firebase...');
+      
+      const userId = user.uid;
+      const teamId = 'default-team';
+      
+      // Create the event date by combining date and time
+      const eventDateTime = new Date(newEvent.date);
+      if (newEvent.time) {
+        const [hours, minutes] = newEvent.time.split(':').map(Number);
+        eventDateTime.setHours(hours, minutes, 0, 0);
+      }
       
       const eventData = {
         title: newEvent.title,
-        description: newEvent.description,
-        eventDate: newEvent.date,
-        eventTime: newEvent.time,
-        durationMinutes: newEvent.duration,
-        eventType: newEvent.type,
-        priority: newEvent.priority,
+        description: newEvent.description || '',
+        eventDate: eventDateTime,
+        startTime: newEvent.time || '',
+        endTime: newEvent.time ? 
+          new Date(eventDateTime.getTime() + (newEvent.duration * 60000)).toTimeString().slice(0, 5) : '',
+        location: newEvent.location || '',
         attendees: newEvent.attendees ? newEvent.attendees.split(',').map(email => email.trim()) : [],
-        location: newEvent.location,
-        teamId: user.id,
-        createdBy: user.id,
-        visibility: 'team' as const,
-        isRecurring: false,
-        reminderMinutes: [],
-        status: 'scheduled' as const
+        reminder: false,
+        color: '#3b82f6', // Default blue color
+        status: 'scheduled' as const,
+        priority: newEvent.priority || 'medium' as const,
+        category: newEvent.type || 'general'
       };
 
-      const createdEvent = await CalendarEventsService.createEvent(eventData, user.id, user.id);
+      console.log('🔄 Event data to save:', eventData);
+      const createdEvent = await FirebaseCalendarEventsService.createEvent(userId, teamId, eventData);
+      console.log('✅ Calendar event created successfully:', createdEvent.id);
       
       setEvents(prev => [...prev, createdEvent]);
       setIsAddEventOpen(false);
@@ -294,7 +308,14 @@ export default function WorkspaceCalendar({ tasks = [], onEventClick }: Workspac
     if (window.confirm('Are you sure you want to delete this event?')) {
       try {
         setIsLoading(true);
-        await CalendarEventsService.deleteEvent(eventId, user.id);
+        console.log('🔄 Deleting calendar event from Firebase...');
+        
+        const userId = user.uid;
+        const teamId = 'default-team';
+        
+        await FirebaseCalendarEventsService.deleteEvent(userId, teamId, eventId);
+        console.log('✅ Calendar event deleted successfully');
+        
         setEvents(prev => prev.filter(event => event.id !== eventId));
         setIsViewEventOpen(false);
       } catch (error) {

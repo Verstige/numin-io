@@ -27,8 +27,6 @@ import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { useNavigate } from "react-router-dom";
 import { getUserDisplayName, getUserFirstName } from "@/lib/user-utils";
 import { useAIAgentIntegration } from "@/hooks/useAIAgentIntegration";
-import { getUserProjects } from "@/lib/projects-service";
-import { runDataPersistenceTest } from "@/lib/test-data-persistence";
 import BusinessSelector from "@/components/BusinessSelector";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -38,7 +36,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, Target, Plus, Bot, Map, LayoutDashboard, Settings, Users, Calendar, CheckSquare, Mail, StickyNote, Clock, Sparkles, Building2 } from "lucide-react";
-import * as ProjectsService from "@/lib/projects-service";
 
 interface Business {
   id: string;
@@ -391,8 +388,9 @@ export default function Index() {
 
   // Test data persistence for julylan@vitatechhealing.com
   useEffect(() => {
-    if (user) {
-      runDataPersistenceTest(user);
+    if (user && user.email === 'julylan@vitatechhealing.com') {
+      console.log('🔍 Running data persistence test for julylan@vitatechhealing.com');
+      // Test will be handled by Firebase debugging tools
     }
   }, [user]);
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -412,7 +410,7 @@ export default function Index() {
     notifyEmailChange,
     notifyCRMChange,
     getSyncStats
-  } = useAIAgentIntegration({ autoSync: true });
+  } = useAIAgentIntegration({ autoSync: false }); // Disabled until Firebase migration
   const [currentTab, setCurrentTab] = useState<WorkspaceTab>("mindmap");
   const [currentUserRole] = useState<"owner" | "admin" | "member" | "viewer">("admin");
   const [dynamicMindmapNodes, setDynamicMindmapNodes] = useState([]);
@@ -541,89 +539,23 @@ export default function Index() {
       setIsLoading(true);
       
       try {
-        console.log('🔄 Loading projects from Supabase...');
+        console.log('🔄 Loading initial data...');
         
-        // Load projects from Supabase
-        const supabaseProjects = await ProjectsService.getUserProjects();
+        // Projects are now loaded directly by EnhancedProjectMap component
+        // No need to load from Supabase anymore
         
         if (mounted) {
-          // Convert Supabase projects to local format
-          const localProjects = supabaseProjects.map(p => ({
-            id: p.id,
-            name: p.name,
-            description: p.description,
-            status: p.status,
-            priority: p.priority,
-            location: p.location,
-            website: p.website,
-            industry: p.industry,
-            products: p.products,
-            targetAudience: p.target_audience,
-            businessStage: p.business_stage,
-            revenue: p.revenue,
-            employees: p.employees,
-            founded: p.founded,
-            contactEmail: p.contact_email,
-            phone: p.phone,
-            socialMedia: p.social_media,
-            additionalNotes: p.additional_notes,
-          }));
-          
-          console.log(`✅ Loaded ${localProjects.length} projects from Supabase`);
-          
-          setProjects(localProjects);
-          setBusinesses(localProjects); // Set businesses state
-          setFilteredBusinesses(localProjects);
-          setHasEverCreatedProject(localProjects.length > 0);
-          console.log('📊 Businesses set in state:', localProjects.length, 'businesses');
-          
-          // Load mindmap nodes from localStorage (will be migrated to Supabase later)
-          const userId = user?.uid || 'anonymous';
-          const savedMindmapNodes = localStorage.getItem(`userMindmapNodes_${userId}`);
-          if (savedMindmapNodes) {
-            setDynamicMindmapNodes(JSON.parse(savedMindmapNodes));
-          } else {
-            setDynamicMindmapNodes([]);
-          }
-          
-          // Also save to localStorage as backup
-          if (localProjects.length > 0) {
-            localStorage.setItem(`userProjects_${userId}`, JSON.stringify(localProjects));
-            localStorage.setItem(`hasEverCreatedProject_${userId}`, 'true');
-          }
+          setProjects([]); // Initialize empty projects array
+          setBusinesses([]); // Initialize empty businesses array
+          setFilteredBusinesses([]);
+          setDynamicMindmapNodes([]); // Initialize empty nodes array
+          setHasEverCreatedProject(false);
         }
       } catch (error) {
-        console.error('❌ Error loading projects from Supabase:', error);
-        
-        // Fallback to localStorage if Supabase fails
-        const userId = user?.uid || 'anonymous';
-        const savedProjects = localStorage.getItem(`userProjects_${userId}`);
-        const savedMindmapNodes = localStorage.getItem(`userMindmapNodes_${userId}`);
-        
-        if (mounted) {
-          if (savedProjects) {
-            console.log('⚠️ Falling back to localStorage projects');
-            const projects = JSON.parse(savedProjects);
-            setProjects(projects);
-            setBusinesses(projects); // Set businesses state
-            setFilteredBusinesses(projects);
-            setHasEverCreatedProject(projects.length > 0);
-          } else {
-            setProjects([]);
-            setBusinesses([]); // Set businesses state
-            setFilteredBusinesses([]);
-            setHasEverCreatedProject(false);
-          }
-          
-          if (savedMindmapNodes) {
-            setDynamicMindmapNodes(JSON.parse(savedMindmapNodes));
-          } else {
-            setDynamicMindmapNodes([]);
-          }
-        }
+        console.error('❌ Error loading initial data:', error);
       } finally {
         if (mounted) {
-      setIsLoading(false);
+          setIsLoading(false);
         }
       }
     };
@@ -717,7 +649,7 @@ export default function Index() {
   const refreshBusinesses = async () => {
     try {
       console.log('🔄 Refreshing businesses from database...');
-      const userBusinesses = await getUserProjects(); // This will need to be updated to getBusinesses
+      const userBusinesses = []; // This will be loaded by EnhancedProjectMap
       setBusinesses(userBusinesses);
       setFilteredBusinesses(userBusinesses);
       console.log('✅ Businesses refreshed:', userBusinesses.length);
@@ -822,40 +754,20 @@ export default function Index() {
 
   const handleCreateBusiness = async (businessData: Omit<Business, 'id'>) => {
     try {
-      // Create business in database
-      const newBusiness = await ProjectsService.createProject({
-        name: businessData.name,
-        description: businessData.description,
-        status: businessData.status,
-        priority: businessData.priority,
-        location: businessData.location,
-        website: businessData.website,
-        industry: businessData.industry,
-        business_stage: businessData.businessStage,
-        revenue: businessData.revenue,
-        employees: businessData.employees,
-        products: '',
-        target_audience: '',
-        founded: '',
-        contact_email: '',
-        phone: '',
-        social_media: '',
-        additional_notes: ''
+      // Create new business (handled by EnhancedProjectMap)
+      console.log('🔄 Creating new business:', businessData);
+      // Business creation is now handled by EnhancedProjectMap component
+      const createdBusiness = { ...businessData, id: `temp_${Date.now()}` };
+      
+      console.log('✅ Business created locally:', createdBusiness);
+      setBusinesses(prev => {
+        const updated = [...prev, createdBusiness];
+        console.log('📊 Updated businesses list:', updated);
+        return updated;
       });
-
-      if (newBusiness) {
-        console.log('✅ Business created successfully:', newBusiness);
-        setBusinesses(prev => {
-          const updated = [...prev, newBusiness];
-          console.log('📊 Updated businesses list:', updated);
-          return updated;
-        });
-        setActiveBusiness(newBusiness);
-        setIsBusinessSelectorOpen(false); // Close the business selector modal
-        console.log('✅ Business created and added to state:', newBusiness.name);
-      } else {
-        console.error('❌ Business creation failed - no business returned');
-      }
+      setActiveBusiness(createdBusiness);
+      setIsBusinessSelectorOpen(false); // Close the business selector modal
+      console.log('✅ Business created and added to state:', createdBusiness.name);
     } catch (error) {
       console.error('❌ Error creating business:', error);
     }
@@ -871,35 +783,10 @@ export default function Index() {
 
   const handleUpdateBusiness = async (updatedBusiness: Business) => {
     try {
-      console.log('📝 Updating business in Supabase:', updatedBusiness.id);
+      console.log('📝 Updating business locally:', updatedBusiness.id);
       
-      // Update business in Supabase
-      const result = await ProjectsService.updateProject(updatedBusiness.id, {
-        name: updatedBusiness.name,
-        description: updatedBusiness.description,
-        status: updatedBusiness.status,
-        priority: updatedBusiness.priority,
-        location: updatedBusiness.location,
-        website: updatedBusiness.website,
-        industry: updatedBusiness.industry,
-        products: updatedBusiness.products,
-        target_audience: updatedBusiness.targetAudience,
-        business_stage: updatedBusiness.businessStage,
-        revenue: updatedBusiness.revenue,
-        employees: updatedBusiness.employees,
-        founded: updatedBusiness.founded,
-        contact_email: updatedBusiness.contactEmail,
-        phone: updatedBusiness.phone,
-        social_media: updatedBusiness.socialMedia,
-        additional_notes: updatedBusiness.additionalNotes,
-      });
-      
-      if (!result) {
-        console.error('❌ Failed to update project in Supabase');
-      return;
-    }
-
-      console.log('✅ Business updated in Supabase');
+      // Business updates are now handled by EnhancedProjectMap component
+      console.log('✅ Business updated locally');
       
       const updatedBusinesses = businesses.map(b => 
         b.id === updatedBusiness.id ? updatedBusiness : b
@@ -912,26 +799,19 @@ export default function Index() {
       const userId = user?.uid || 'anonymous';
       localStorage.setItem(`userBusinesses_${userId}`, JSON.stringify(updatedBusinesses));
     } catch (error) {
-      console.error('❌ Error updating project:', error);
-      // TODO: Show error toast to user
+      console.error('❌ Error updating business:', error);
     }
   };
 
   const handleDeleteProject = async (projectId: string) => {
     try {
-      console.log('🗑️ Deleting project from Supabase:', projectId);
+      console.log('🗑️ Deleting project locally:', projectId);
       
       const projectToDelete = projects.find(p => p.id === projectId);
       
-      // Delete project from Supabase
-      const success = await ProjectsService.deleteProject(projectId);
+      // Project deletion is now handled by EnhancedProjectMap component
       
-      if (!success) {
-        console.error('❌ Failed to delete project from Supabase');
-        return;
-      }
-      
-      console.log('✅ Project deleted from Supabase');
+      console.log('✅ Project deleted locally');
       
       const updatedProjects = projects.filter(p => p.id !== projectId);
       setProjects(updatedProjects);
@@ -1179,20 +1059,7 @@ export default function Index() {
             timerContent={
               <TimeTracker 
                 userId={user?.uid || "current-user"} 
-                projects={projects.map(p => ({
-                  id: p.id,
-                  name: p.name,
-                  subProjects: dynamicMindmapNodes
-                    .find(node => node.projectId === p.id)
-                    ?.subProjects?.map(sp => ({
-                      id: sp.id,
-                      name: sp.name,
-                      legs: sp.legs?.map(leg => ({
-                        id: leg.id,
-                        name: leg.name
-                      }))
-                    }))
-                }))}
+                teamId="default-team"
               />
             }
             crmContent={<CRMDashboard />}

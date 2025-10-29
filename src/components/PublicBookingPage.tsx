@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,10 +24,28 @@ import {
 import { toast } from '@/hooks/use-toast';
 import type { BookingTemplate, Booking } from '@/types/booking';
 import { ReminderSystem } from '@/lib/reminder-system';
+import { 
+  FirebaseBookingTemplatesService, 
+  FirebaseBookingsService, 
+  FirebaseBookingSettingsService 
+} from '@/lib/firebase-booking';
+import { testFirebaseConnection } from '@/lib/firebase-connection-test';
 
 export default function PublicBookingPage() {
   const { templateId } = useParams<{ templateId: string }>();
-  const { profile } = useAuth();
+  const { user } = useFirebaseAuth();
+  
+  // Add error boundary for debugging
+  if (!templateId) {
+    console.error('No templateId provided to PublicBookingPage');
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-2xl font-bold text-red-600">Error</h1>
+        <p className="text-gray-600">No template ID provided</p>
+        <p className="text-sm text-gray-500 mt-2">Please check the URL and try again</p>
+      </div>
+    );
+  }
   const [template, setTemplate] = useState<BookingTemplate | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string>('');
@@ -45,155 +63,181 @@ export default function PublicBookingPage() {
   const [settings, setSettings] = useState<any>(null);
 
   useEffect(() => {
-    console.log('=== Template Loading DEBUG ===');
-    console.log('Template ID:', templateId);
-    
-    // Search for template across all users' localStorage keys
-    let foundTemplate: BookingTemplate | null = null;
-    
-    // First try the current user's templates
-    const userId = profile?.id || 'anonymous';
-    const userTemplates = JSON.parse(localStorage.getItem(`bookingTemplates_${userId}`) || '[]');
-    console.log('User templates:', userTemplates);
-    foundTemplate = userTemplates.find((t: BookingTemplate) => t.id === templateId);
-    
-    // If not found in current user's templates, search all localStorage keys
-    if (!foundTemplate) {
-      console.log('Template not found in user templates, searching all keys...');
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('bookingTemplates_')) {
-          const templates = JSON.parse(localStorage.getItem(key) || '[]');
-          foundTemplate = templates.find((t: BookingTemplate) => t.id === templateId);
+    const loadTemplate = async () => {
+      console.log('=== Template Loading DEBUG ===');
+      console.log('Template ID:', templateId);
+      
+      if (!templateId) {
+        console.log('No template ID provided');
+        return;
+      }
+
+      try {
+        // Try Firebase first
+        try {
+          console.log('🔄 Loading template from Firebase...');
+          const userId = user?.uid || 'anonymous';
+          const teamId = 'default-team';
+          const templates = await FirebaseBookingTemplatesService.getTemplates(userId, teamId);
+          const foundTemplate = templates.find(t => t.id === templateId);
+          
           if (foundTemplate) {
-            console.log(`Found template in key: ${key}`);
-            break;
+            console.log('✅ Found template in Firebase:', foundTemplate);
+            setTemplate(foundTemplate);
+            return;
+          }
+        } catch (firebaseError) {
+          console.warn('⚠️ Firebase failed, trying localStorage:', firebaseError);
+        }
+
+        // Fallback to localStorage
+        console.log('🔄 Searching localStorage for template...');
+        let foundTemplate: BookingTemplate | null = null;
+        
+        // First try the current user's templates
+        const userId = user?.uid || 'anonymous';
+        const userTemplates = JSON.parse(localStorage.getItem(`bookingTemplates_${userId}`) || '[]');
+        console.log('User templates:', userTemplates);
+        foundTemplate = userTemplates.find((t: BookingTemplate) => t.id === templateId);
+        
+        // If not found in current user's templates, search all localStorage keys
+        if (!foundTemplate) {
+          console.log('Template not found in user templates, searching all keys...');
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('bookingTemplates_')) {
+              const templates = JSON.parse(localStorage.getItem(key) || '[]');
+              foundTemplate = templates.find((t: BookingTemplate) => t.id === templateId);
+              if (foundTemplate) {
+                console.log(`Found template in key: ${key}`);
+                break;
+              }
+            }
           }
         }
-      }
-    }
-    
-    console.log('Found template:', foundTemplate);
-    
-    if (foundTemplate) {
-      const loadedTemplate = {
-        ...foundTemplate,
-        createdAt: new Date(foundTemplate.createdAt),
-        updatedAt: new Date(foundTemplate.updatedAt)
-      };
-      console.log('Setting template:', loadedTemplate);
-      setTemplate(loadedTemplate);
-    } else {
-      // If no template found, create a default one for testing
-      console.log('No template found, creating default');
-      const defaultTemplate: BookingTemplate = {
-        id: templateId || 'default_template',
-        userId: 'current-user',
-        name: 'Consultation Call',
-        description: 'A consultation to discuss your needs and how we can help.',
-        duration: 60,
-        bufferTime: 15,
-        meetingType: 'video-call',
-        videoLink: 'https://zoom.us/j/123456789',
-        instructions: 'Please have your questions ready and ensure you have a stable internet connection.',
-        price: 150,
-        currency: 'USD',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      console.log('Created default template:', defaultTemplate);
-      setTemplate(defaultTemplate);
-    }
-
-    // Search for bookings across all users' localStorage keys
-    let bookings = JSON.parse(localStorage.getItem(`bookings_${userId}`) || '[]');
-    
-    // If not found in current user's bookings, search all localStorage keys
-    if (bookings.length === 0) {
-      console.log('No bookings found in user bookings, searching all keys...');
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('bookings_')) {
-          const userBookings = JSON.parse(localStorage.getItem(key) || '[]');
-          bookings = [...bookings, ...userBookings];
+        
+        console.log('Found template in localStorage:', foundTemplate);
+        
+        if (foundTemplate) {
+          const loadedTemplate = {
+            ...foundTemplate,
+            createdAt: new Date(foundTemplate.createdAt),
+            updatedAt: new Date(foundTemplate.updatedAt)
+          };
+          console.log('Setting template from localStorage:', loadedTemplate);
+          setTemplate(loadedTemplate);
+        } else {
+          // If no template found, create a default one for testing
+          console.log('No template found, creating default');
+          const defaultTemplate: BookingTemplate = {
+            id: templateId || 'default_template',
+            userId: 'current-user',
+            name: 'Consultation Call',
+            description: 'A consultation to discuss your needs and how we can help.',
+            duration: 60,
+            bufferTime: 15,
+            meetingType: 'video-call',
+            videoLink: 'https://zoom.us/j/123456789',
+            instructions: 'Please have your questions ready and ensure you have a stable internet connection.',
+            price: 150,
+            currency: 'USD',
+            isActive: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+          console.log('Created default template:', defaultTemplate);
+          setTemplate(defaultTemplate);
         }
+      } catch (error) {
+        console.error('Error loading template:', error);
+        // Create a fallback template
+        const fallbackTemplate: BookingTemplate = {
+          id: templateId || 'fallback_template',
+          userId: 'fallback-user',
+          name: 'Consultation Call',
+          description: 'A consultation to discuss your needs and how we can help.',
+          duration: 60,
+          bufferTime: 15,
+          meetingType: 'video-call',
+          videoLink: 'https://zoom.us/j/123456789',
+          instructions: 'Please have your questions ready and ensure you have a stable internet connection.',
+          price: 150,
+          currency: 'USD',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        setTemplate(fallbackTemplate);
       }
-    }
-    setExistingBookings(bookings.map((b: any) => ({
-      ...b,
-      startTime: new Date(b.startTime),
-      endTime: new Date(b.endTime),
-      createdAt: new Date(b.createdAt),
-      updatedAt: new Date(b.updatedAt),
-      cancelledAt: b.cancelledAt ? new Date(b.cancelledAt) : undefined
-    })));
+    };
 
-    // Search for settings across all users' localStorage keys
-    let savedSettings = localStorage.getItem(`bookingSettings_${userId}`);
-    console.log('User settings:', savedSettings);
-    
-    // If not found in current user's settings, search all localStorage keys
-    if (!savedSettings) {
-      console.log('Settings not found in user settings, searching all keys...');
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('bookingSettings_')) {
-          savedSettings = localStorage.getItem(key);
-          if (savedSettings) {
-            console.log(`Found settings in key: ${key}`);
-            break;
+    loadTemplate();
+  }, [templateId, user?.uid]);
+
+  // Load settings and bookings
+  useEffect(() => {
+    const loadSettingsAndBookings = () => {
+      const userId = user?.uid || 'anonymous';
+      
+      // Load settings
+      const savedSettings = localStorage.getItem(`bookingSettings_${userId}`);
+      if (savedSettings) {
+        setSettings(JSON.parse(savedSettings));
+      } else {
+        // Create default settings
+        const defaultSettings = {
+          userId: 'current-user',
+          timezone: 'America/New_York',
+          workingHours: {
+            monday: { start: '09:00', end: '17:00', enabled: true },
+            tuesday: { start: '09:00', end: '17:00', enabled: true },
+            wednesday: { start: '09:00', end: '17:00', enabled: true },
+            thursday: { start: '09:00', end: '17:00', enabled: true },
+            friday: { start: '09:00', end: '17:00', enabled: true },
+            saturday: { start: '10:00', end: '16:00', enabled: false },
+            sunday: { start: '10:00', end: '16:00', enabled: false }
+          },
+          advanceBookingDays: 30,
+          minNoticeHours: 2,
+          maxBookingsPerDay: 8,
+          allowWeekendBookings: false,
+          allowHolidayBookings: false,
+          autoConfirmBookings: true,
+          requirePayment: false,
+          emailReminders: true,
+          smsReminders: false,
+          reminderTimings: {
+            email24h: true,
+            email1h: true,
+            sms24h: false,
+            sms1h: false
+          },
+          cancellationPolicy: {
+            allowCancellation: true,
+            minHoursNotice: 24,
+            refundPercentage: 100
           }
-        }
+        };
+        setSettings(defaultSettings);
       }
-    }
-    
-    console.log('Final settings:', savedSettings);
-    if (savedSettings) {
-      const parsedSettings = JSON.parse(savedSettings);
-      console.log('Parsed settings:', parsedSettings);
-      setSettings(parsedSettings);
-    } else {
-      // Create default settings if none exist
-      console.log('No settings found, creating default');
-      const defaultSettings = {
-        userId: 'current-user',
-        timezone: 'America/New_York',
-        workingHours: {
-          monday: { start: '09:00', end: '17:00', enabled: true },
-          tuesday: { start: '09:00', end: '17:00', enabled: true },
-          wednesday: { start: '09:00', end: '17:00', enabled: true },
-          thursday: { start: '09:00', end: '17:00', enabled: true },
-          friday: { start: '09:00', end: '17:00', enabled: true },
-          saturday: { start: '10:00', end: '16:00', enabled: false },
-          sunday: { start: '10:00', end: '16:00', enabled: false }
-        },
-        advanceBookingDays: 30,
-        minNoticeHours: 2,
-        maxBookingsPerDay: 8,
-        allowWeekendBookings: false,
-        allowHolidayBookings: false,
-        autoConfirmBookings: true,
-        requirePayment: false,
-        emailReminders: true,
-        smsReminders: false,
-        reminderTimings: {
-          email24h: true,
-          email1h: true,
-          sms24h: false,
-          sms1h: false
-        },
-        cancellationPolicy: {
-          allowCancellation: true,
-          minHoursNotice: 24,
-          refundPercentage: 100
-        }
-      };
-      console.log('Created default settings:', defaultSettings);
-      setSettings(defaultSettings);
-      localStorage.setItem(`bookingSettings_${userId}`, JSON.stringify(defaultSettings));
-    }
-  }, [templateId, profile?.id]);
+
+      // Load bookings
+      const savedBookings = localStorage.getItem(`bookings_${userId}`);
+      if (savedBookings) {
+        const bookings = JSON.parse(savedBookings).map((b: any) => ({
+          ...b,
+          startTime: new Date(b.startTime),
+          endTime: new Date(b.endTime),
+          createdAt: new Date(b.createdAt),
+          updatedAt: new Date(b.updatedAt),
+          cancelledAt: b.cancelledAt ? new Date(b.cancelledAt) : undefined
+        }));
+        setExistingBookings(bookings);
+      }
+    };
+
+    loadSettingsAndBookings();
+  }, [user?.uid]);
 
   const generateTimeSlots = useCallback((date: Date) => {
     console.log('=== generateTimeSlots DEBUG ===');
@@ -310,7 +354,7 @@ export default function PublicBookingPage() {
   useEffect(() => {
     const handleSettingsChange = () => {
       // Search for settings across all users' localStorage keys (same logic as initial load)
-      let savedSettings = localStorage.getItem(`bookingSettings_${profile?.id || 'anonymous'}`);
+      let savedSettings = localStorage.getItem(`bookingSettings_${user?.uid || 'anonymous'}`);
       console.log('Current user settings:', savedSettings);
       
       // If not found in current user's settings, search all localStorage keys
@@ -364,7 +408,7 @@ export default function PublicBookingPage() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('bookingSettingsUpdated', handleCustomSettingsUpdate);
     };
-  }, [selectedDate, generateTimeSlots, profile?.id]);
+  }, [selectedDate, generateTimeSlots, user?.uid]);
 
   const handleDateSelect = (date: Date | undefined) => {
     console.log('=== handleDateSelect DEBUG ===');
@@ -436,46 +480,102 @@ export default function PublicBookingPage() {
       const generatedCode = generateBookingCode();
       setBookingCode(generatedCode);
       
-      const booking: Booking = {
-        id: `booking_${Date.now()}`,
+      // Declare userId and teamId before using them
+      const userId = user?.uid || 'anonymous';
+      const teamId = 'default-team';
+      
+      const bookingData = {
+        userId: userId,
         bookingCode: generatedCode,
         templateId: template.id,
         customerName: customerInfo.name,
         customerEmail: customerInfo.email,
-        customerPhone: customerInfo.phone,
+        customerPhone: customerInfo.phone || '',
         startTime: startDateTime,
         endTime: endDateTime,
         duration: template.duration,
         status: settings?.autoConfirmBookings ? 'confirmed' : 'pending',
-        location: template.location,
+        location: template.location || '',
         meetingType: template.meetingType,
-        videoLink: template.videoLink,
-        phoneNumber: template.phoneNumber,
-        notes: customerInfo.notes,
-        price: template.price,
-        currency: template.currency,
+        videoLink: template.videoLink || '',
+        phoneNumber: template.phoneNumber || '',
+        notes: customerInfo.notes || '',
+        price: template.price || 0,
+        currency: template.currency || 'USD',
         remindersSent: {
           email24h: false,
           email1h: false,
           sms24h: false,
           sms1h: false
-        },
-        createdAt: new Date(),
-        updatedAt: new Date()
+        }
       };
 
-      // Save booking with user-specific key
-      const userId = profile?.id || 'anonymous';
-      const existingBookings = JSON.parse(localStorage.getItem(`bookings_${userId}`) || '[]');
-      localStorage.setItem(`bookings_${userId}`, JSON.stringify([...existingBookings, booking]));
+      // Save booking to Firebase and localStorage
+      let createdBooking: Booking | null = null;
+      
+      // Validate booking data before saving
+      console.log('🔍 Validating booking data...');
+      if (!bookingData.customerName || !bookingData.customerEmail) {
+        throw new Error('Customer name and email are required');
+      }
+      if (!bookingData.templateId) {
+        throw new Error('Template ID is required');
+      }
+      if (!bookingData.startTime || !bookingData.endTime) {
+        throw new Error('Start and end times are required');
+      }
+      console.log('✅ Booking data validation passed');
+      
+      try {
+        // Force Firebase usage - no localStorage fallback
+        console.log('🔄 Saving booking to Firebase...');
+        console.log('🔄 Booking data:', bookingData);
+        console.log('🔄 User ID:', userId, 'Team ID:', teamId);
+        console.log('🔄 Firebase configuration check...');
+        
+        // Test Firebase connection first
+        const connectionTest = await testFirebaseConnection();
+        if (!connectionTest.success) {
+          throw new Error(`Firebase connection failed: ${connectionTest.error}`);
+        }
+        console.log('✅ Firebase connection verified');
+        
+        createdBooking = await FirebaseBookingsService.createBooking(userId, teamId, bookingData);
+        console.log('✅ Booking saved to Firebase successfully:', createdBooking.id);
+        
+        // Verify the booking was actually saved
+        console.log('🔍 Verifying booking was saved to Firebase...');
+        const verifyBookings = await FirebaseBookingsService.getBookings(userId, teamId);
+        const foundBooking = verifyBookings.find(b => b.id === createdBooking.id);
+        if (foundBooking) {
+          console.log('✅ Booking verification successful - found in Firebase');
+        } else {
+          console.error('❌ Booking verification failed - not found in Firebase');
+          throw new Error('Booking was not properly saved to Firebase');
+        }
+        
+      } catch (firebaseError: any) {
+        console.error('❌ Firebase booking creation failed:', firebaseError);
+        console.error('❌ Error details:', {
+          code: firebaseError.code,
+          message: firebaseError.message,
+          stack: firebaseError.stack
+        });
+        
+        // Don't fall back to localStorage - throw the error
+        throw new Error(`Firebase booking failed: ${firebaseError.message}`);
+      }
       
       // Dispatch custom event to notify other components
       window.dispatchEvent(new CustomEvent('bookingsUpdated'));
       
       // Send confirmation email and schedule reminders
-      const reminderSystem = ReminderSystem.getInstance();
-      const emailSent = await reminderSystem.sendBookingConfirmation(booking, template);
-      reminderSystem.scheduleReminders(booking, settings);
+      let emailSent = false;
+      if (createdBooking) {
+        const reminderSystem = ReminderSystem.getInstance();
+        emailSent = await reminderSystem.sendBookingConfirmation(createdBooking, template);
+        reminderSystem.scheduleReminders(createdBooking, settings);
+      }
       
       if (emailSent) {
         toast({
@@ -491,11 +591,32 @@ export default function PublicBookingPage() {
       }
       
       setBookingStep('confirmation');
-    } catch (error) {
-      console.error('Booking error:', error);
+    } catch (error: any) {
+      console.error('❌ Booking submission error:', error);
+      console.error('❌ Error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      });
+      
+      // Provide more specific error messages based on the error type
+      let errorMessage = "There was an error creating your booking. Please try again.";
+      
+      if (error.message.includes('Permission denied')) {
+        errorMessage = "Permission denied. Please check your account permissions.";
+      } else if (error.message.includes('Firebase service is currently unavailable')) {
+        errorMessage = "Service temporarily unavailable. Please try again in a few moments.";
+      } else if (error.message.includes('Invalid data structure')) {
+        errorMessage = "Invalid booking data. Please check all fields and try again.";
+      } else if (error.message.includes('Database precondition failed')) {
+        errorMessage = "Database configuration error. Please contact support.";
+      } else if (error.code) {
+        errorMessage = `Booking failed with error code: ${error.code}. Please try again.`;
+      }
+      
       toast({
         title: "Booking Failed",
-        description: "There was an error creating your booking. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -503,30 +624,14 @@ export default function PublicBookingPage() {
     }
   };
 
+  // Show loading state while template is being loaded
   if (!template) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="bg-chatgpt-card border-border shadow-sm max-w-md mx-4">
-          <CardContent className="p-8 text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">Template Not Found</h2>
-            <p className="text-muted-foreground">The booking template you're looking for doesn't exist or has been deactivated.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!template.isActive) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="bg-chatgpt-card border-border shadow-sm max-w-md mx-4">
-          <CardContent className="p-8 text-center">
-            <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">Booking Unavailable</h2>
-            <p className="text-muted-foreground">This booking template is currently not accepting new appointments.</p>
-          </CardContent>
-        </Card>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading booking form...</p>
+        </div>
       </div>
     );
   }

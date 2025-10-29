@@ -276,7 +276,10 @@ export default function DemoWorkspace() {
 
           {currentTab === "timer" && (
             <div className="animate-fade-in">
-              <TimeTracker />
+              <TimeTracker 
+                userId="demo-user" 
+                teamId="default-team"
+              />
             </div>
           )}
         </div>

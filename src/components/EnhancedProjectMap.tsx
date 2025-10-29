@@ -34,7 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { 
   Target, 
@@ -70,7 +70,24 @@ import {
   Minimize2,
   ChevronUp,
   ChevronDown,
-  Package
+  Package,
+  ExternalLink,
+  Globe,
+  Link,
+  Bookmark,
+  Star,
+  Heart,
+  Shield,
+  Hammer,
+  Wrench,
+  Cog,
+  Database,
+  Server,
+  Cloud,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Laptop
 } from 'lucide-react';
 
 // Custom Node Components
@@ -228,34 +245,84 @@ const MilestoneNode = ({ data, selected }: { data: any; selected: boolean }) => 
   </div>
 );
 
-const ResourceNode = ({ data, selected }: { data: any; selected: boolean }) => (
-  <div className={`px-3 py-2 shadow-md rounded-lg bg-background border-2 min-w-[160px] ${
-    selected ? 'border-orange-500' : 'border-border'
-  }`}>
-    <Handle type="target" position={Position.Top} className="w-3 h-3" />
-    <div className="flex items-center gap-2 mb-1">
-      <Users className="w-4 h-4 text-orange-500" />
-      <div className="font-semibold text-sm text-foreground">{data.title}</div>
-      <div className={`w-2 h-2 rounded-full ${
-        data.available ? 'bg-green-500' : 'bg-red-500'
-      }`} />
-    </div>
-    
-    <div className="text-xs text-muted-foreground mb-2">
-      {data.role}
-    </div>
-    
-    <div className="flex items-center justify-between">
-      <Badge variant="outline" className="text-xs border-border text-muted-foreground">
-        {data.skills?.join(', ')}
-      </Badge>
-      <div className="text-xs text-muted-foreground">
-        {data.workload || 0}% busy
+const ResourceNode = ({ data, selected }: { data: any; selected: boolean }) => {
+  // Icon mapping for resources
+  const getResourceIcon = (iconName: string) => {
+    const iconMap: { [key: string]: any } = {
+      'Package': Package,
+      'Globe': Globe,
+      'Link': Link,
+      'ExternalLink': ExternalLink,
+      'Bookmark': Bookmark,
+      'Star': Star,
+      'Heart': Heart,
+      'Zap': Zap,
+      'Shield': Shield,
+      'Settings': Settings,
+      'Tool': Hammer,
+      'Wrench': Wrench,
+      'Cog': Cog,
+      'Database': Database,
+      'Server': Server,
+      'Cloud': Cloud,
+      'Monitor': Monitor,
+      'Smartphone': Smartphone,
+      'Tablet': Tablet,
+      'Laptop': Laptop,
+    };
+    return iconMap[iconName] || Package;
+  };
+
+  const IconComponent = getResourceIcon(data.icon || 'Package');
+
+  return (
+    <div className={`px-3 py-2 shadow-md rounded-lg bg-background border-2 min-w-[160px] ${
+      selected ? 'border-orange-500' : 'border-border'
+    }`}>
+      <Handle type="target" position={Position.Top} className="w-3 h-3" />
+      <div className="flex items-center gap-2 mb-1">
+        <IconComponent className="w-4 h-4 text-orange-500" />
+        <div className="font-semibold text-sm text-foreground">{data.title}</div>
+        <div className={`w-2 h-2 rounded-full ${
+          data.available ? 'bg-green-500' : 'bg-red-500'
+        }`} />
       </div>
+      
+      <div className="text-xs text-muted-foreground mb-2">
+        {data.role || data.description}
+      </div>
+      
+      <div className="flex items-center justify-between mb-2">
+        <Badge variant="outline" className="text-xs border-border text-muted-foreground">
+          {data.skills?.join(', ') || data.status}
+        </Badge>
+        <div className="text-xs text-muted-foreground">
+          {data.workload || 0}% busy
+        </div>
+      </div>
+
+      {/* Link button for resources with URLs */}
+      {data.url && (
+        <div className="flex justify-center">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open(data.url, '_blank');
+            }}
+            className="h-6 text-xs px-2"
+          >
+            <ExternalLink className="w-3 h-3 mr-1" />
+            Open Link
+          </Button>
+        </div>
+      )}
+      
+      <Handle type="source" position={Position.Bottom} className="w-3 h-3" />
     </div>
-    <Handle type="source" position={Position.Bottom} className="w-3 h-3" />
-  </div>
-);
+  );
+};
 
 const TeamNode = ({ data, selected }: { data: any; selected: boolean }) => (
   <div className={`px-3 py-2 shadow-md rounded-lg bg-background border-2 min-w-[160px] ${
@@ -437,7 +504,20 @@ const FloatingAddButton = ({
   onAddNode: (type: string) => void; 
 }) => {
   return (
-    <div className="absolute bottom-4 right-4 z-20">
+    <div className="absolute top-4 right-4 z-20 flex flex-col-reverse">
+      {/* Main Add Button */}
+      <Button
+        onClick={onToggle}
+        className="h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 transition-all duration-200"
+        size="icon"
+      >
+        {isExpanded ? (
+          <X className="w-5 h-5" />
+        ) : (
+          <Plus className="w-5 h-5" />
+        )}
+      </Button>
+      
       {/* Expanded State - Show all element templates */}
       {isExpanded && (
         <div className="mb-3 bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-lg p-3 max-w-xs">
@@ -472,19 +552,6 @@ const FloatingAddButton = ({
           </div>
         </div>
       )}
-      
-      {/* Main Add Button */}
-      <Button
-        onClick={onToggle}
-        className="h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 transition-all duration-200"
-        size="icon"
-      >
-        {isExpanded ? (
-          <X className="w-5 h-5" />
-        ) : (
-          <Plus className="w-5 h-5" />
-        )}
-      </Button>
     </div>
   );
 };
@@ -510,23 +577,83 @@ function EnhancedProjectMapContent({
   onProjectCreated,
   onMobileElementCreate
 }: EnhancedProjectMapProps) {
+  
+  // Helper function to get edge color based on source node
+  const getEdgeColorFromSourceNode = (sourceNode: Node | undefined) => {
+    if (!sourceNode) return '#6b7280'; // Default gray
+    
+    // Get the node type from either node.type or node.data.nodeType
+    const nodeType = sourceNode.type || sourceNode.data?.nodeType;
+    
+    // Determine color based on source node type
+    switch (nodeType) {
+      case 'business':
+        return '#3b82f6'; // Blue
+      case 'project':
+      case 'subproject':
+        return '#ef4444'; // Red
+      case 'task':
+        return '#10b981'; // Green
+      case 'milestone':
+        return '#8b5cf6'; // Purple
+      case 'resource':
+      case 'team':
+        return '#f59e0b'; // Orange
+      case 'system':
+        return '#6366f1'; // Indigo
+      case 'process':
+        return '#ec4899'; // Pink
+      default:
+        return '#6b7280'; // Default gray
+    }
+  };
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isNodeConfigOpen, setIsNodeConfigOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'overview' | 'timeline' | 'resources' | 'kanban'>('overview');
+  const [viewMode, setViewMode] = useState<'overview' | 'timeline' | 'resources' | 'kanban' | 'ecosystem'>('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isEcosystemMinimized, setIsEcosystemMinimized] = useState(false);
   const [isEcosystemClosed, setIsEcosystemClosed] = useState(false);
   const [isLayouting, setIsLayouting] = useState(false);
   const [isAddButtonExpanded, setIsAddButtonExpanded] = useState(false);
+  const [isAddResourceDialogOpen, setIsAddResourceDialogOpen] = useState(false);
+  const [isEditResourceDialogOpen, setIsEditResourceDialogOpen] = useState(false);
+  const [editingResource, setEditingResource] = useState<any>(null);
+  const [newResourceName, setNewResourceName] = useState('');
+  const [newResourceUrl, setNewResourceUrl] = useState('');
+  const [newResourceError, setNewResourceError] = useState<string | null>(null);
+  const [editResourceName, setEditResourceName] = useState('');
+  const [editResourceUrl, setEditResourceUrl] = useState('');
+  const [editResourceIcon, setEditResourceIcon] = useState('');
+  const [editResourceError, setEditResourceError] = useState<string | null>(null);
 
   // Get Firebase auth context
   const { user } = useFirebaseAuth();
   const userId = user?.uid || 'anonymous';
   const teamId = 'default-team'; // You can make this dynamic based on user's team
+
+  // Persist node position to Firebase
+  const handleNodeDragStop = useCallback(async (_: any, node: Node) => {
+    try {
+      if (!user) return;
+      // Find the Firebase document by nodeId
+      const firebaseNodes = await BusinessMapNodesService.getNodes(userId, teamId);
+      const firebaseNode = firebaseNodes.find((n) => n.nodeId === node.id);
+      if (!firebaseNode) return;
+
+      await BusinessMapNodesService.updateNode(userId, teamId, firebaseNode.id, {
+        position: { x: node.position.x, y: node.position.y },
+      } as Partial<BusinessMapNode>);
+      // Optimistically update local state
+      setNodes((nds) => nds.map((n) => (n.id === node.id ? { ...n, position: node.position } : n)));
+    } catch (err) {
+      console.error('Error persisting node position:', err);
+    }
+  }, [user, userId, teamId, setNodes]);
+
 
   // Load saved nodes and edges from Firebase on mount
   useEffect(() => {
@@ -541,12 +668,16 @@ function EnhancedProjectMapContent({
           type: node.nodeType,
           position: node.position,
           data: {
-            label: node.data.title,
+            title: node.data.title,
+            label: node.data.title, // Keep both for compatibility
             description: node.data.description,
             status: node.data.status,
             priority: node.data.priority,
+            progress: node.data.progress || 0,
             color: node.data.color,
             icon: node.data.icon,
+            url: node.data.url || null,
+            isCustom: node.data.isCustom || false,
             ...node.data.metadata
           }
         }));
@@ -556,14 +687,20 @@ function EnhancedProjectMapContent({
 
         // Load edges from Firebase
         const firebaseEdges = await BusinessMapEdgesService.getEdges(userId, teamId);
-        const reactFlowEdges = firebaseEdges.map(edge => ({
-          id: edge.id,
-          source: edge.sourceNodeId,
-          target: edge.targetNodeId,
-          type: 'smoothstep',
-          animated: false,
-          style: { stroke: '#64748b', strokeWidth: 2 }
-        }));
+        const reactFlowEdges = firebaseEdges.map(edge => {
+          // Find the source node to get its color
+          const sourceNode = reactFlowNodes.find(node => node.id === edge.sourceNodeId);
+          const edgeColor = getEdgeColorFromSourceNode(sourceNode);
+          
+          return {
+            id: edge.id,
+            source: edge.sourceNodeId,
+            target: edge.targetNodeId,
+            type: 'smoothstep',
+            animated: false,
+            style: { stroke: edgeColor, strokeWidth: 2 }
+          };
+        });
         
         console.log('🔄 Loading edges from Firebase:', reactFlowEdges.length);
         setEdges(reactFlowEdges);
@@ -588,12 +725,16 @@ function EnhancedProjectMapContent({
           type: node.nodeType,
           position: node.position,
           data: {
-            label: node.data.title,
+            title: node.data.title,
+            label: node.data.title, // Keep both for compatibility
             description: node.data.description,
             status: node.data.status,
             priority: node.data.priority,
+            progress: node.data.progress || 0,
             color: node.data.color,
             icon: node.data.icon,
+            url: node.data.url || null,
+            isCustom: node.data.isCustom || false,
             ...node.data.metadata
           }
         }));
@@ -605,14 +746,20 @@ function EnhancedProjectMapContent({
       userId, 
       teamId, 
       (firebaseEdges) => {
-        const reactFlowEdges = firebaseEdges.map(edge => ({
-          id: edge.id,
-          source: edge.sourceNodeId,
-          target: edge.targetNodeId,
-          type: 'smoothstep',
-          animated: false,
-          style: { stroke: '#64748b', strokeWidth: 2 }
-        }));
+        const reactFlowEdges = firebaseEdges.map(edge => {
+          // Find the source node to get its color
+          const sourceNode = nodes.find(node => node.id === edge.sourceNodeId);
+          const edgeColor = getEdgeColorFromSourceNode(sourceNode);
+          
+          return {
+            id: edge.id,
+            source: edge.sourceNodeId,
+            target: edge.targetNodeId,
+            type: 'smoothstep',
+            animated: false,
+            style: { stroke: edgeColor, strokeWidth: 2 }
+          };
+        });
         setEdges(reactFlowEdges);
       }
     );
@@ -623,7 +770,11 @@ function EnhancedProjectMapContent({
     };
   }, [user]);
 
+
   // Initialize with projects from props or database (only if no saved nodes exist)
+  // DISABLED: This useEffect was causing conflicts with Firebase loading
+  // All node loading is now handled by Firebase in the first useEffect
+  /*
   useEffect(() => {
     const loadProjects = async () => {
       try {
@@ -716,6 +867,7 @@ function EnhancedProjectMapContent({
     
     loadProjects();
   }, [projects]);
+  */
 
   const onConnect = useCallback(
     async (params: Connection) => {
@@ -726,22 +878,12 @@ function EnhancedProjectMapContent({
 
       // Find the source node to determine its color
       const sourceNode = nodes.find(node => node.id === params.source);
-      let edgeColor = '#6b7280'; // Default gray
-      
-      if (sourceNode) {
-        // Determine color based on source node type
-        if (sourceNode.data?.nodeType === 'project') edgeColor = '#ef4444'; // Red
-        else if (sourceNode.data?.nodeType === 'business') edgeColor = '#3b82f6'; // Blue
-        else if (sourceNode.type === 'task') edgeColor = '#10b981'; // Green
-        else if (sourceNode.type === 'milestone') edgeColor = '#8b5cf6'; // Purple
-        else if (sourceNode.type === 'resource') edgeColor = '#f59e0b'; // Orange
-        else if (sourceNode.type === 'team') edgeColor = '#f59e0b'; // Orange
-      }
+      const edgeColor = getEdgeColorFromSourceNode(sourceNode);
       
       const newEdge = {
-        ...params,
+      ...params,
         type: 'smoothstep', // Use curved edges
-        animated: true,
+      animated: true,
         style: { stroke: edgeColor, strokeWidth: 2 }
       };
 
@@ -802,8 +944,10 @@ function EnhancedProjectMapContent({
 
   const addNode = useCallback(
     async (nodeType: string, elementData?: any) => {
+      console.log('🔄 addNode called with:', { nodeType, elementData, user: user?.email, userId });
+      
       if (!user) {
-        console.error('❌ User not authenticated');
+        console.error('❌ No user authenticated - cannot save node');
         return;
       }
 
@@ -841,7 +985,11 @@ function EnhancedProjectMapContent({
           progress: 0,
           team: [],
           tags: [],
-          nodeType: nodeType
+          nodeType: nodeType,
+          // Set isCustom based on whether it was explicitly provided or default to false for system resources
+          isCustom: elementData?.isCustom !== undefined ? elementData.isCustom : false,
+          // Include URL if provided
+          url: elementData?.url || null
         },
       };
 
@@ -860,6 +1008,8 @@ function EnhancedProjectMapContent({
             priority: newNode.data.priority,
             color: getNodeColor(nodeType),
             icon: getNodeIcon(nodeType),
+            url: newNode.data.url,
+            isCustom: newNode.data.isCustom,
             metadata: {
               category: newNode.data.category,
               progress: newNode.data.progress,
@@ -870,25 +1020,124 @@ function EnhancedProjectMapContent({
           }
         };
 
+        console.log('🔄 Attempting to save node to Firebase:', firebaseNodeData);
         await BusinessMapNodesService.createNode(userId, teamId, firebaseNodeData);
-        
-        // Add to local state (will be updated by real-time subscription)
-        setNodes((nds) => [...nds, newNode]);
-        
+        console.log('✅ Node successfully saved to Firebase');
+        // Do not optimistically add to local state to avoid duplicate keys; rely on subscription
         console.log('✅ Node saved to Firebase:', nodeId);
         
         // Notify parent component if needed
         if (onProjectCreated) {
           onProjectCreated();
-        }
-      } catch (error) {
+          }
+        } catch (error) {
         console.error('❌ Error saving node to Firebase:', error);
-        // Still add to local state for immediate feedback
-        setNodes((nds) => [...nds, newNode]);
+        console.error('❌ Error details:', {
+          message: error.message,
+          code: error.code,
+          stack: error.stack,
+          userId,
+          teamId,
+          nodeType,
+          nodeId
+        });
+        
+        // Check if it's a permission error
+        if (error.code === 'permission-denied') {
+          console.error('🚨 PERMISSION DENIED: Check Firestore security rules!');
+          console.error('💡 Make sure authenticated users can write to businessMapNodes collection');
+        }
+        
+        // Check if it's a network error
+        if (error.code === 'unavailable') {
+          console.error('🚨 FIREBASE UNAVAILABLE: Check your internet connection and Firebase status');
+        }
+        
+        // Skip local optimistic add on error to avoid duplicate keys; surface error in console
       }
     },
-    [setNodes, onProjectCreated]
+    [setNodes, onProjectCreated, user, userId, teamId]
   );
+
+  // Create some default system resources with URLs for demonstration
+  const createDefaultSystemResources = useCallback(async () => {
+    if (!user) return;
+    
+    const defaultResources = [
+      {
+        title: 'GitHub',
+        description: 'Code repository and version control',
+        url: 'https://github.com',
+        status: 'available',
+        priority: 'high',
+        isCustom: false
+      },
+      {
+        title: 'Firebase Console',
+        description: 'Database and authentication management',
+        url: 'https://console.firebase.google.com',
+        status: 'available',
+        priority: 'high',
+        isCustom: false
+      },
+      {
+        title: 'Vercel Dashboard',
+        description: 'Deployment and hosting platform',
+        url: 'https://vercel.com/dashboard',
+        status: 'available',
+        priority: 'medium',
+        isCustom: false
+      },
+      {
+        title: 'Figma',
+        description: 'Design and prototyping tool',
+        url: 'https://figma.com',
+        status: 'available',
+        priority: 'medium',
+        isCustom: false
+      }
+    ];
+
+    try {
+      // Check if we already have system resources
+      const existingNodes = await BusinessMapNodesService.getNodes(userId, teamId);
+      const hasSystemResources = existingNodes.some(node => 
+        node.nodeType === 'resource' && node.data.isCustom === false
+      );
+      
+      if (!hasSystemResources) {
+        console.log('🔄 Creating default system resources...');
+        for (const resource of defaultResources) {
+          await addNode('resource', resource);
+        }
+        console.log('✅ Default system resources created');
+      }
+    } catch (error) {
+      console.error('❌ Error creating default system resources:', error);
+    }
+  }, [user, userId, teamId, addNode]);
+
+  // Handle opening edit resource dialog
+  const handleEditResource = useCallback((resource: any) => {
+    setEditingResource(resource);
+    setEditResourceName(resource.data.title || '');
+    setEditResourceUrl(resource.data.url || '');
+    setEditResourceIcon(resource.data.icon || 'Package');
+    setEditResourceError(null);
+    setIsEditResourceDialogOpen(true);
+  }, []);
+
+
+  // Create default system resources after nodes are loaded
+  useEffect(() => {
+    if (!user || nodes.length === 0) return;
+    
+    const createDefaults = async () => {
+      await createDefaultSystemResources();
+    };
+    
+    createDefaults();
+  }, [user, nodes.length, createDefaultSystemResources]);
 
   // Function to clear saved nodes and edges (for debugging/reset)
   const clearSavedData = useCallback(async () => {
@@ -1018,6 +1267,11 @@ function EnhancedProjectMapContent({
   }, [edges, setNodes]);
 
   const updateNodeData = useCallback(async (nodeId: string, newData: any) => {
+    if (!user) {
+      console.error('❌ No user authenticated - cannot update node');
+      return;
+    }
+
     setNodes(nds => {
       const updatedNodes = nds.map(n => 
         n.id === nodeId ? { ...n, data: { ...n.data, ...newData } } : n
@@ -1029,35 +1283,94 @@ function EnhancedProjectMapContent({
         // Use setTimeout to ensure state updates are processed
         setTimeout(() => syncRelatedElements(updatedNode), 0);
         
-        // If it's a project node, save updates to the database
-        if (updatedNode.type === 'project') {
+        // Save updates to Firebase for all node types
           setTimeout(async () => {
             try {
-              const projectUpdates = {
-                name: updatedNode.data.title,
-                description: updatedNode.data.description,
-                status: updatedNode.data.status,
-                priority: updatedNode.data.priority
+            console.log('🔄 Updating node in Firebase:', nodeId, newData);
+            
+            // Find the Firebase node document ID
+            const firebaseNodes = await BusinessMapNodesService.getNodes(userId, teamId);
+            const firebaseNode = firebaseNodes.find(n => n.nodeId === nodeId);
+            
+            if (firebaseNode) {
+              // Update the Firebase document
+              const updatedFirebaseData = {
+                ...firebaseNode,
+                data: {
+                  ...firebaseNode.data,
+                  title: updatedNode.data.title,
+                  description: updatedNode.data.description,
+                  status: updatedNode.data.status,
+                  priority: updatedNode.data.priority,
+                  progress: updatedNode.data.progress,
+                  url: updatedNode.data.url,
+                  isCustom: updatedNode.data.isCustom,
+                  icon: updatedNode.data.icon,
+                  metadata: {
+                    ...firebaseNode.data.metadata,
+                    ...updatedNode.data.metadata
+                  }
+                }
               };
               
-              const result = await updateProject(nodeId, projectUpdates);
-              if (result) {
-                console.log('✅ Project updated in database:', nodeId);
+              await BusinessMapNodesService.updateNode(userId, teamId, firebaseNode.id, updatedFirebaseData);
+              console.log('✅ Node updated in Firebase:', nodeId);
               } else {
-                console.error('❌ Failed to update project in database');
+              console.warn('⚠️ Firebase node not found for update:', nodeId);
               }
             } catch (error) {
-              console.error('❌ Error updating project in database:', error);
+            console.error('❌ Error updating node in Firebase:', error);
             }
           }, 100);
-        }
       }
       
       return updatedNodes;
     });
-  }, [setNodes, syncRelatedElements]);
+  }, [setNodes, syncRelatedElements, user, userId, teamId]);
+
+  // Handle saving edited resource
+  const handleSaveEditedResource = useCallback(async () => {
+    if (!editingResource) return;
+    
+    setEditResourceError(null);
+    
+    if (!editResourceName.trim()) {
+      setEditResourceError('Please enter a name');
+      return;
+    }
+    
+    if (!editResourceUrl.trim()) {
+      setEditResourceError('Please enter a URL');
+      return;
+    }
+    
+    try {
+      const validated = new URL(editResourceUrl);
+      const urlStr = validated.toString();
+      
+      await updateNodeData(editingResource.id, {
+        title: editResourceName.trim(),
+        url: urlStr,
+        description: `Custom resource: ${urlStr}`,
+        icon: editResourceIcon
+      });
+      
+      setIsEditResourceDialogOpen(false);
+      setEditingResource(null);
+      setEditResourceName('');
+      setEditResourceUrl('');
+      setEditResourceIcon('');
+    } catch (e) {
+      setEditResourceError('Invalid URL. Example: https://example.com');
+    }
+  }, [editingResource, editResourceName, editResourceUrl, editResourceIcon, updateNodeData]);
 
   const deleteNode = useCallback(async (nodeId: string) => {
+    if (!user) {
+      console.error('❌ No user authenticated - cannot delete node');
+      return;
+    }
+
     // Find the node to check if it's a project
     const nodeToDelete = nodes.find(n => n.id === nodeId);
     
@@ -1074,13 +1387,29 @@ function EnhancedProjectMapContent({
         console.error('❌ Error deleting project from database:', error);
       }
     }
+
+    // Delete from Firebase for all node types
+    try {
+      const firebaseNodes = await BusinessMapNodesService.getNodes(userId, teamId);
+      const firebaseNode = firebaseNodes.find(n => n.nodeId === nodeId);
+      
+      if (firebaseNode) {
+        await BusinessMapNodesService.deleteNode(userId, teamId, firebaseNode.id);
+        console.log('✅ Node deleted from Firebase:', nodeId);
+      }
+    } catch (error) {
+      console.error('❌ Error deleting node from Firebase:', error);
+    }
     
+    // Remove from local state
     setNodes(nds => nds.filter(n => n.id !== nodeId));
     setEdges(eds => eds.filter(e => e.source !== nodeId && e.target !== nodeId));
-  }, [setNodes, setEdges, nodes]);
+  }, [setNodes, setEdges, nodes, user, userId, teamId]);
 
   const filteredNodes = useMemo(() => {
-    let filtered = nodes;
+    // Deduplicate nodes by id to avoid React key collisions (subscription + local state races)
+    const uniqueNodes = Array.from(new Map(nodes.map((n) => [n.id, n])).values());
+    let filtered = uniqueNodes;
     
     if (searchQuery) {
       filtered = filtered.filter(node => 
@@ -1270,6 +1599,14 @@ function EnhancedProjectMapContent({
         >
           Resources
         </Button>
+        <Button
+          size="sm"
+          variant={viewMode === 'ecosystem' ? 'default' : 'outline'}
+          onClick={() => setViewMode('ecosystem')}
+          className="border-border hover:bg-background/50"
+        >
+          Ecosystem
+        </Button>
       </div>
 
       <div className="flex flex-col h-[700px] sm:h-[600px] lg:h-[600px] bg-chatgpt-card rounded-2xl sm:rounded-3xl shadow-glass border border-border mobile-mindmap">
@@ -1397,6 +1734,7 @@ function EnhancedProjectMapContent({
           onConnect={onConnect}
           onInit={setReactFlowInstance}
           onNodeClick={onNodeClick}
+          onNodeDragStop={handleNodeDragStop}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
@@ -1435,28 +1773,100 @@ function EnhancedProjectMapContent({
         )}
 
         {viewMode === 'timeline' && (
-          <div className="w-full h-full bg-background/50 rounded-lg border border-border p-6">
+          <div className="w-full h-full bg-background/50 rounded-lg border border-border p-4 sm:p-6 overflow-auto">
             <div className="mb-6">
               <h3 className="text-xl font-semibold text-foreground mb-2">Project Timeline</h3>
-              <p className="text-muted-foreground">Track project milestones and deadlines</p>
+              <p className="text-muted-foreground">Visual timeline of all projects and milestones</p>
             </div>
             
-            <div className="space-y-4">
-              {filteredNodes.filter(node => node.type === 'project').map((project, index) => (
-                <Card key={project.id} className="bg-background/80 border-border">
+            {/* Timeline Container */}
+            <div className="relative">
+              {/* Timeline Line */}
+              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-border"></div>
+              
+              {/* Timeline Items */}
+              <div className="space-y-8">
+                {filteredNodes
+                  .filter(node => node.type === 'business' || node.type === 'subproject' || node.type === 'project')
+                  .sort((a, b) => {
+                    // Sort by status: active first, then planning, then completed
+                    const statusOrder = { 'active': 0, 'planning': 1, 'completed': 2, 'paused': 3 };
+                    return (statusOrder[a.data.status] || 4) - (statusOrder[b.data.status] || 4);
+                  })
+                  .map((project, index) => {
+                    const connectedTasks = filteredNodes.filter(node => 
+                      node.type === 'task' && 
+                      edges.some(edge => 
+                        (edge.source === project.id && edge.target === node.id) ||
+                        (edge.target === project.id && edge.source === node.id)
+                      )
+                    );
+                    
+                    const connectedMilestones = filteredNodes.filter(node => 
+                      node.type === 'milestone' && 
+                      edges.some(edge => 
+                        (edge.source === project.id && edge.target === node.id) ||
+                        (edge.target === project.id && edge.source === node.id)
+                      )
+                    );
+
+                    return (
+                      <div key={project.id} className="relative flex items-start gap-6">
+                        {/* Timeline Dot */}
+                        <div className={`relative z-10 w-4 h-4 rounded-full border-2 ${
+                          project.data.status === 'active' ? 'bg-green-500 border-green-500' :
+                          project.data.status === 'completed' ? 'bg-blue-500 border-blue-500' :
+                          project.data.status === 'paused' ? 'bg-yellow-500 border-yellow-500' :
+                          'bg-gray-500 border-gray-500'
+                        }`}>
+                          <div className={`absolute inset-0 rounded-full ${
+                            project.data.status === 'active' ? 'bg-green-500 animate-pulse' : ''
+                          }`}></div>
+                        </div>
+                        
+                        {/* Project Card */}
+                        <Card className={`flex-1 bg-background/80 border-border hover:shadow-md transition-shadow ${
+                          project.data.status === 'active' ? 'ring-2 ring-green-500/20' : ''
+                        }`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-3 h-3 rounded-full ${
+                                  project.data.status === 'active' ? 'bg-green-500' :
+                                  project.data.status === 'completed' ? 'bg-blue-500' :
+                                  project.data.status === 'paused' ? 'bg-yellow-500' :
+                                  'bg-gray-500'
+                                }`}></div>
                       <CardTitle className="text-lg">{project.data.title}</CardTitle>
-                      <Badge variant={project.data.status === 'active' ? 'default' : 'secondary'}>
+                                <Badge variant={
+                                  project.data.status === 'active' ? 'default' :
+                                  project.data.status === 'completed' ? 'secondary' :
+                                  project.data.status === 'paused' ? 'destructive' :
+                                  'outline'
+                                }>
                         {project.data.status}
                       </Badge>
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {project.data.priority && (
+                                  <span className={`px-2 py-1 rounded text-xs ${
+                                    project.data.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                    project.data.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-green-100 text-green-800'
+                                  }`}>
+                                    {project.data.priority}
+                                  </span>
+                                )}
+                              </div>
                     </div>
                   </CardHeader>
+                          
                   <CardContent>
-                    <div className="space-y-3">
+                            <div className="space-y-4">
+                              {/* Progress Bar */}
                       {project.data.progress !== undefined && (
                         <div>
-                          <div className="flex justify-between text-sm mb-1">
+                                  <div className="flex justify-between text-sm mb-2">
                             <span className="text-muted-foreground">Progress</span>
                             <span className="text-foreground font-medium">{project.data.progress}%</span>
                           </div>
@@ -1464,59 +1874,426 @@ function EnhancedProjectMapContent({
                         </div>
                       )}
                       
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                              {/* Description */}
+                              {project.data.description && (
+                                <p className="text-sm text-muted-foreground line-clamp-2">
+                                  {project.data.description}
+                                </p>
+                              )}
+                              
+                              {/* Connected Elements */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="text-muted-foreground">Start Date:</span>
-                          <p className="text-foreground font-medium">
-                            {project.data.startDate || 'Not set'}
-                          </p>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <CheckSquare className="w-4 h-4 text-green-500" />
+                                    <span className="text-muted-foreground">Tasks</span>
+                                    <span className="text-foreground font-medium">
+                                      {connectedTasks.length}
+                                    </span>
                         </div>
-                        <div>
-                          <span className="text-muted-foreground">Deadline:</span>
-                          <p className="text-foreground font-medium">
-                            {project.data.deadline || 'Not set'}
-                          </p>
-                        </div>
+                                  {connectedTasks.length > 0 && (
+                                    <div className="space-y-1">
+                                      {connectedTasks.slice(0, 3).map((task, idx) => (
+                                        <div key={idx} className="flex items-center gap-2 text-xs">
+                                          <div className={`w-2 h-2 rounded-full ${
+                                            task.data.status === 'completed' ? 'bg-green-500' :
+                                            task.data.status === 'active' ? 'bg-blue-500' :
+                                            'bg-gray-400'
+                                          }`}></div>
+                                          <span className="text-foreground truncate">{task.data.title}</span>
+                                        </div>
+                                      ))}
+                                      {connectedTasks.length > 3 && (
+                                        <div className="text-xs text-muted-foreground">
+                                          +{connectedTasks.length - 3} more tasks
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                       </div>
                       
-                      {project.data.milestones && project.data.milestones.length > 0 && (
                         <div>
-                          <span className="text-sm text-muted-foreground">Milestones:</span>
-                          <div className="mt-2 space-y-1">
-                            {project.data.milestones.map((milestone: any, idx: number) => (
-                              <div key={idx} className="flex items-center gap-2 text-sm">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <span className="text-foreground">{milestone.name}</span>
-                                <span className="text-muted-foreground">- {milestone.date}</span>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Flag className="w-4 h-4 text-purple-500" />
+                                    <span className="text-muted-foreground">Milestones</span>
+                                    <span className="text-foreground font-medium">
+                                      {connectedMilestones.length}
+                                    </span>
+                                  </div>
+                                  {connectedMilestones.length > 0 && (
+                                    <div className="space-y-1">
+                                      {connectedMilestones.slice(0, 3).map((milestone, idx) => (
+                                        <div key={idx} className="flex items-center gap-2 text-xs">
+                                          <div className={`w-2 h-2 rounded-full ${
+                                            milestone.data.completed ? 'bg-green-500' :
+                                            'bg-purple-400'
+                                          }`}></div>
+                                          <span className="text-foreground truncate">{milestone.data.title}</span>
                               </div>
                             ))}
+                                      {connectedMilestones.length > 3 && (
+                                        <div className="text-xs text-muted-foreground">
+                                          +{connectedMilestones.length - 3} more milestones
                           </div>
+                                      )}
                         </div>
                       )}
+                                </div>
+                              </div>
+                              
+                              {/* Project Stats */}
+                              <div className="flex items-center justify-between pt-3 border-t border-border">
+                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                  <span>Created: {new Date().toLocaleDateString()}</span>
+                                  <span>Type: {project.type}</span>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {edges.filter(e => e.source === project.id || e.target === project.id).length} connections
+                                </div>
+                              </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                      </div>
+                    );
+                  })}
               
-              {filteredNodes.filter(node => node.type === 'project').length === 0 && (
+                {filteredNodes.filter(node => node.type === 'business' || node.type === 'subproject' || node.type === 'project').length === 0 && (
                 <div className="text-center py-12">
                   <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-foreground mb-2">No Projects Found</h3>
                   <p className="text-muted-foreground">Create a project to see it in the timeline view.</p>
                 </div>
               )}
+              </div>
             </div>
           </div>
         )}
 
         {viewMode === 'resources' && (
-          <div className="w-full h-full bg-background/50 rounded-lg border border-border p-6">
+          <div className="w-full h-full bg-background/50 rounded-lg border border-border p-4 sm:p-6 overflow-auto">
             <div className="mb-6">
               <h3 className="text-xl font-semibold text-foreground mb-2">Resource Management</h3>
-              <p className="text-muted-foreground">Manage team members, budgets, and project resources</p>
+              <p className="text-muted-foreground">Manage your custom bookmarks, team members, and project resources</p>
             </div>
             
+            <div className="space-y-6">
+              {/* Top Row - Custom Resources and Team Members */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Custom Bookmarks/Resources */}
+              <Card className="bg-background/80 border-border">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5" />
+                      Custom Resources
+                    </CardTitle>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setNewResourceName('');
+                        setNewResourceUrl('');
+                        setNewResourceError(null);
+                        setIsAddResourceDialogOpen(true);
+                      }}
+                      className="h-8"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add Resource
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {filteredNodes.filter(node => node.type === 'resource' && node.data.isCustom).map((resource) => (
+                      <div key={resource.id} className="flex items-center justify-between p-3 bg-background/50 rounded-lg border border-border hover:bg-background/70 transition-colors">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          {/* Favicon or default icon */}
+                          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                            {resource.data.url ? (
+                              <img 
+                                src={`https://www.google.com/s2/favicons?domain=${new URL(resource.data.url).hostname}&sz=32`}
+                                alt=""
+                                className="w-6 h-6 rounded"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                  const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                  if (nextElement) nextElement.style.display = 'block';
+                                }}
+                              />
+                            ) : null}
+                            <Package className={`w-4 h-4 text-primary ${resource.data.url ? 'hidden' : ''}`} />
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-foreground truncate">{resource.data.title}</p>
+                            <p className="text-sm text-muted-foreground truncate">{resource.data.url}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              if (resource.data.url) {
+                                window.open(resource.data.url, '_blank');
+                              }
+                            }}
+                            className="h-8 w-8 p-0"
+                            title="Open Link"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditResource(resource)}
+                            className="h-8 w-8 p-0"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={async () => {
+                                if (confirm('Are you sure you want to delete this resource?')) {
+                                  await deleteNode(resource.id);
+                                }
+                              }}
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {filteredNodes.filter(node => node.type === 'resource' && node.data.isCustom).length === 0 && (
+                      <div className="text-center py-8">
+                        <Package className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground mb-2">No custom resources yet</p>
+                        <p className="text-xs text-muted-foreground">Click "Add Resource" to create your first bookmark</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+              {/* Add Resource Dialog */}
+              <Dialog open={isAddResourceDialogOpen} onOpenChange={setIsAddResourceDialogOpen}>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Add Custom Resource</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Name</label>
+                      <Input
+                        value={newResourceName}
+                        onChange={(e) => setNewResourceName(e.target.value)}
+                        placeholder="e.g., GitHub"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">URL</label>
+                      <Input
+                        value={newResourceUrl}
+                        onChange={(e) => setNewResourceUrl(e.target.value)}
+                        placeholder="https://example.com"
+                      />
+                      {newResourceError && (
+                        <div className="text-xs text-red-500 mt-1">{newResourceError}</div>
+                      )}
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                      <Button variant="outline" onClick={() => setIsAddResourceDialogOpen(false)}>Cancel</Button>
+                      <Button
+                        onClick={async () => {
+                          setNewResourceError(null);
+                          if (!newResourceName.trim()) {
+                            setNewResourceError('Please enter a name');
+                            return;
+                          }
+                          if (!newResourceUrl.trim()) {
+                            setNewResourceError('Please enter a URL');
+                            return;
+                          }
+                          try {
+                            const validated = new URL(newResourceUrl);
+                            const urlStr = validated.toString();
+                            await addNode('resource', {
+                              title: newResourceName.trim(),
+                              description: `Custom resource: ${urlStr}`,
+                              url: urlStr,
+                              status: 'available',
+                              priority: 'medium',
+                              isCustom: true
+                            });
+                            setIsAddResourceDialogOpen(false);
+                            setNewResourceName('');
+                            setNewResourceUrl('');
+                          } catch (e) {
+                            setNewResourceError('Invalid URL. Example: https://example.com');
+                          }
+                        }}
+                      >
+                        Save Resource
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Edit Resource Dialog */}
+              <Dialog open={isEditResourceDialogOpen} onOpenChange={setIsEditResourceDialogOpen}>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Edit Custom Resource</DialogTitle>
+                    <DialogDescription>
+                      Update the name, URL, and icon for this custom resource.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Name</label>
+                      <Input
+                        value={editResourceName}
+                        onChange={(e) => setEditResourceName(e.target.value)}
+                        placeholder="e.g., My Website"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">URL</label>
+                      <Input
+                        value={editResourceUrl}
+                        onChange={(e) => setEditResourceUrl(e.target.value)}
+                        placeholder="https://example.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Icon</label>
+                      <Select value={editResourceIcon} onValueChange={setEditResourceIcon}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an icon" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Package">Package</SelectItem>
+                          <SelectItem value="Globe">Globe</SelectItem>
+                          <SelectItem value="Link">Link</SelectItem>
+                          <SelectItem value="ExternalLink">External Link</SelectItem>
+                          <SelectItem value="Bookmark">Bookmark</SelectItem>
+                          <SelectItem value="Star">Star</SelectItem>
+                          <SelectItem value="Heart">Heart</SelectItem>
+                          <SelectItem value="Zap">Zap</SelectItem>
+                          <SelectItem value="Shield">Shield</SelectItem>
+                          <SelectItem value="Settings">Settings</SelectItem>
+                          <SelectItem value="Tool">Tool</SelectItem>
+                          <SelectItem value="Wrench">Wrench</SelectItem>
+                          <SelectItem value="Cog">Cog</SelectItem>
+                          <SelectItem value="Database">Database</SelectItem>
+                          <SelectItem value="Server">Server</SelectItem>
+                          <SelectItem value="Cloud">Cloud</SelectItem>
+                          <SelectItem value="Monitor">Monitor</SelectItem>
+                          <SelectItem value="Smartphone">Smartphone</SelectItem>
+                          <SelectItem value="Tablet">Tablet</SelectItem>
+                          <SelectItem value="Laptop">Laptop</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {editResourceError && (
+                      <div className="text-xs text-red-500 mt-1">{editResourceError}</div>
+                    )}
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" onClick={() => setIsEditResourceDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSaveEditedResource}>
+                      Save Changes
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* System Resources */}
+              <Card className="bg-background/80 border-border">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="w-5 h-5" />
+                    System Resources
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {filteredNodes.filter(node => node.type === 'resource' && !node.data.isCustom).map((resource) => (
+                      <div key={resource.id} className="p-3 bg-background/50 rounded-lg border border-border text-center hover:bg-background/70 transition-colors group relative">
+                        {/* Favicon or default icon */}
+                        <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mx-auto mb-2">
+                          {resource.data.url ? (
+                            <img
+                              src={`https://www.google.com/s2/favicons?domain=${new URL(resource.data.url).hostname}&sz=32`}
+                              alt=""
+                              className="w-6 h-6 rounded"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (nextElement) nextElement.style.display = 'block';
+                              }}
+                            />
+                          ) : null}
+                          <Package className={`w-4 h-4 text-primary ${resource.data.url ? 'hidden' : ''}`} />
+                        </div>
+                        <p className="font-medium text-foreground text-sm truncate">{resource.data.title}</p>
+                        <p className="text-xs text-muted-foreground">{resource.data.status}</p>
+                        
+                        {/* Hover actions */}
+                        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-1">
+                            {resource.data.url && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (resource.data.url) {
+                                    window.open(resource.data.url, '_blank');
+                                  }
+                                }}
+                                className="h-6 w-6 p-0"
+                                title="Open Link"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={async () => {
+                                if (confirm('Are you sure you want to delete this resource?')) {
+                                  await deleteNode(resource.id);
+                                }
+                              }}
+                              className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {filteredNodes.filter(node => node.type === 'resource' && !node.data.isCustom).length === 0 && (
+                      <div className="col-span-full text-center py-8">
+                        <Settings className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">No system resources defined</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Team Resources */}
               <Card className="bg-background/80 border-border">
                 <CardHeader>
@@ -1548,7 +2325,10 @@ function EnhancedProjectMapContent({
                   </div>
                 </CardContent>
               </Card>
+              </div>
 
+              {/* Second Row - Budget & Resources */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Budget & Resources */}
               <Card className="bg-background/80 border-border">
                 <CardHeader>
@@ -1600,33 +2380,7 @@ function EnhancedProjectMapContent({
                 </CardContent>
               </Card>
 
-              {/* Resource Types */}
-              <Card className="bg-background/80 border-border lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Package className="w-5 h-5" />
-                    Resource Types
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {filteredNodes.filter(node => node.type === 'resource').map((resource) => (
-                      <div key={resource.id} className="p-3 bg-background/50 rounded-lg border border-border text-center">
-                        <Package className="w-6 h-6 text-primary mx-auto mb-2" />
-                        <p className="font-medium text-foreground text-sm">{resource.data.title}</p>
-                        <p className="text-xs text-muted-foreground">{resource.data.status}</p>
-                      </div>
-                    ))}
-                    
-                    {filteredNodes.filter(node => node.type === 'resource').length === 0 && (
-                      <div className="col-span-full text-center py-8">
-                        <Package className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-sm text-muted-foreground">No resources defined</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
             </div>
           </div>
         )}
@@ -1667,45 +2421,21 @@ function EnhancedProjectMapContent({
         )}
 
 
-        {/* Enhanced Business Ecosystem Overview - Only show in overview mode */}
-        {viewMode === 'overview' && !isEcosystemClosed && (
-          <div className={`absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-auto bg-background/90 backdrop-blur-sm rounded-lg shadow-lg border border-border max-w-sm transition-all duration-300 z-10 ${
-            isEcosystemMinimized ? 'p-2' : 'p-3 sm:p-4'
-          }`}>
-            <div className="flex items-center justify-between mb-3">
+        {/* Business Ecosystem moved into its own tab */}
+        {viewMode === 'ecosystem' && (
+          <div className="w-full h-full bg-background/50 rounded-lg border border-border p-4 sm:p-6 overflow-auto">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <div className="text-sm font-medium text-foreground">
-                  Business Ecosystem
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setIsEcosystemMinimized(!isEcosystemMinimized)}
-                  className="h-6 w-6 p-0 hover:bg-background/50"
-                >
-                  {isEcosystemMinimized ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setIsEcosystemClosed(true)}
-                  className="h-6 w-6 p-0 hover:bg-background/50"
-                >
-                  <X className="w-3 h-3" />
-                </Button>
+                <div className="text-base sm:text-lg font-semibold text-foreground">Business Ecosystem</div>
               </div>
             </div>
             
-            {!isEcosystemMinimized && (
-              <>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="space-y-1">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs sm:text-sm">
+              <div className="space-y-1 p-3 rounded-lg bg-background/60 border border-border">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Projects</span>
-                      <span className="text-foreground font-medium">{filteredNodes.filter(n => n.type === 'business' || n.type === 'subproject').length}</span>
+                  <span className="text-foreground font-medium">{filteredNodes.filter(n => n.type === 'business' || n.type === 'subproject').length}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Tasks</span>
@@ -1717,7 +2447,7 @@ function EnhancedProjectMapContent({
                     </div>
                   </div>
                   
-                  <div className="space-y-1">
+              <div className="space-y-1 p-3 rounded-lg bg-background/60 border border-border">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Resources</span>
                       <span className="text-foreground font-medium">{filteredNodes.filter(n => n.type === 'resource').length}</span>
@@ -1729,54 +2459,41 @@ function EnhancedProjectMapContent({
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Connections</span>
                       <span className="text-foreground font-medium">{edges.length}</span>
-                    </div>
                   </div>
                 </div>
                 
-                <div className="mt-3 pt-3 border-t border-border">
-                  <div className="flex items-center justify-between text-xs">
+              <div className="p-3 rounded-lg bg-background/60 border border-border">
+                <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Active Workflow</span>
                     <div className="flex items-center gap-1">
-                      <div className={`w-2 h-2 rounded-full ${
-                        filteredNodes.filter(n => n.data.status === 'active').length > 0 ? 'bg-green-500' : 'bg-gray-500'
-                      }`}></div>
-                      <span className="text-foreground font-medium">
-                        {filteredNodes.filter(n => n.data.status === 'active').length} active
-                      </span>
+                    <div className={`w-2 h-2 rounded-full ${filteredNodes.filter(n => n.data.status === 'active').length > 0 ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                    <span className="text-foreground font-medium">{filteredNodes.filter(n => n.data.status === 'active').length} active</span>
                     </div>
                   </div>
-                  
                   <div className="mt-2 text-xs text-muted-foreground">
                     {filteredNodes.filter(n => n.type === 'task' && n.data.status === 'completed').length} of {filteredNodes.filter(n => n.type === 'task').length} tasks completed
                   </div>
-                  
-                  {filteredNodes.filter(n => n.type === 'milestone' && n.data.completed).length > 0 && (
-                    <div className="mt-1 text-xs text-green-400">
-                      {filteredNodes.filter(n => n.type === 'milestone' && n.data.completed).length} milestones achieved
                     </div>
-                  )}
+            </div>
                   
                   {selectedNode && (
-                    <div className="mt-2 p-2 bg-primary/10 rounded border border-primary/20">
-                      <div className="text-xs font-medium text-primary mb-1">Selected: {selectedNode.data.title}</div>
-                      <div className="text-xs text-muted-foreground">
+              <div className="mt-4 p-3 sm:p-4 bg-primary/10 rounded border border-primary/20">
+                <div className="text-xs sm:text-sm font-medium text-primary mb-1">Selected: {selectedNode.data.title}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">
                         Type: {selectedNode.type} | Status: {selectedNode.data.status}
                         {selectedNode.data.progress !== undefined && ` | Progress: ${selectedNode.data.progress}%`}
                       </div>
                       {selectedNode.type === 'project' && (
-                        <div className="text-xs text-muted-foreground mt-1">
+                  <div className="text-xs sm:text-sm text-muted-foreground mt-1">
                           Connected: {edges.filter(e => e.source === selectedNode.id || e.target === selectedNode.id).length} elements
                         </div>
                       )}
                     </div>
                   )}
-                </div>
                 
-                <div className="mt-2 text-xs text-muted-foreground italic">
+            <div className="mt-4 text-xs sm:text-sm text-muted-foreground italic">
                   ✨ Enhanced drag-and-drop workflow with real-time status synchronization
                 </div>
-              </>
-            )}
           </div>
         )}
         

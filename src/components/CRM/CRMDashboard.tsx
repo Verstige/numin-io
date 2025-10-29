@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { FirebaseContactsService, type Contact } from '@/lib/firebase-contacts';
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext';
 import { 
   Users, 
   UserPlus, 
@@ -34,22 +36,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
-// Types
-interface Contact {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  position?: string;
-  status: 'lead' | 'prospect' | 'customer' | 'inactive';
-  source: string;
-  lastContact?: string;
-  notes?: string;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+// Types - Contact interface is now imported from firebase-contacts.ts
 
 interface Deal {
   id: string;
@@ -65,6 +52,7 @@ interface Deal {
 }
 
 export default function CRMDashboard() {
+  const { user } = useFirebaseAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -97,13 +85,35 @@ export default function CRMDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  // Initialize empty data - replace with actual API calls
+  // Load contacts from Firebase
   useEffect(() => {
-    // TODO: Replace with actual API calls to load contacts and deals
-    setContacts([]);
-    setDeals([]);
-    setIsLoading(false);
-  }, []);
+    const loadContacts = async () => {
+      if (!user) return;
+      
+      try {
+        setIsLoading(true);
+        console.log('🔄 Loading contacts from Firebase...');
+        
+        const userId = user.uid;
+        const teamId = 'default-team';
+        
+        const firebaseContacts = await FirebaseContactsService.getContacts(userId, teamId);
+        setContacts(firebaseContacts);
+        console.log('✅ Contacts loaded from Firebase:', firebaseContacts.length);
+        
+        // TODO: Load deals from Firebase when deals service is created
+        setDeals([]);
+      } catch (error) {
+        console.error('Error loading contacts:', error);
+        setContacts([]);
+        setDeals([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadContacts();
+  }, [user]);
 
   // Filter contacts
   const filteredContacts = contacts.filter(contact => {
@@ -144,41 +154,65 @@ export default function CRMDashboard() {
     }).format(amount);
   };
 
-  const handleAddContact = () => {
+  const handleAddContact = async () => {
     if (!newContact.name || !newContact.email) {
       alert('Please fill in at least name and email fields');
       return;
     }
 
-    const contact: Contact = {
-      id: Date.now().toString(),
-      name: newContact.name,
-      email: newContact.email,
-      phone: newContact.phone || undefined,
-      company: newContact.company || undefined,
-      position: newContact.position || undefined,
-      status: newContact.status,
-      source: newContact.source || 'Manual Entry',
-      lastContact: new Date().toISOString().split('T')[0],
-      notes: newContact.notes || undefined,
-      tags: newContact.tags,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    if (!user) {
+      alert('Please log in to add contacts');
+      return;
+    }
 
-    setContacts([...contacts, contact]);
-    setNewContact({
-      name: '',
-      email: '',
-      phone: '',
-      company: '',
-      position: '',
-      status: 'lead',
-      source: '',
-      notes: '',
-      tags: []
-    });
-    setIsAddContactOpen(false);
+    try {
+      setIsLoading(true);
+      console.log('🔄 Creating contact in Firebase...');
+      
+      const userId = user.uid;
+      const teamId = 'default-team';
+      
+      const contactData = {
+        name: newContact.name,
+        email: newContact.email,
+        phone: newContact.phone || undefined,
+        company: newContact.company || undefined,
+        position: newContact.position || undefined,
+        status: newContact.status,
+        source: newContact.source || 'Manual Entry',
+        lastContact: new Date().toISOString().split('T')[0],
+        notes: newContact.notes || undefined,
+        tags: newContact.tags
+      };
+
+      console.log('🔄 Contact data to save:', contactData);
+      const createdContact = await FirebaseContactsService.createContact(userId, teamId, contactData);
+      console.log('✅ Contact created successfully:', createdContact.id);
+      
+      // Update local state
+      setContacts(prev => [createdContact, ...prev]);
+      
+      // Reset form
+      setNewContact({
+        name: '',
+        email: '',
+        phone: '',
+        company: '',
+        position: '',
+        status: 'lead',
+        source: '',
+        notes: '',
+        tags: []
+      });
+      
+      setIsAddContactOpen(false);
+      alert('Contact added successfully!');
+    } catch (error) {
+      console.error('Error creating contact:', error);
+      alert('Failed to add contact. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -228,54 +262,103 @@ export default function CRMDashboard() {
     setIsEditContactOpen(true);
   };
 
-  const handleUpdateContact = () => {
+  const handleUpdateContact = async () => {
     if (!selectedContact || !newContact.name || !newContact.email) {
       alert('Please fill in at least name and email fields');
       return;
     }
 
-    const updatedContact: Contact = {
-      ...selectedContact,
-      ...newContact,
-      updatedAt: new Date().toISOString()
-    };
+    if (!user) {
+      alert('Please log in to update contacts');
+      return;
+    }
 
-    setContacts(prev => prev.map(contact => 
-      contact.id === selectedContact.id ? updatedContact : contact
-    ));
+    try {
+      setIsLoading(true);
+      console.log('🔄 Updating contact in Firebase...');
+      
+      const userId = user.uid;
+      const teamId = 'default-team';
+      
+      const updateData = {
+        name: newContact.name,
+        email: newContact.email,
+        phone: newContact.phone || undefined,
+        company: newContact.company || undefined,
+        position: newContact.position || undefined,
+        status: newContact.status,
+        source: newContact.source,
+        notes: newContact.notes || undefined,
+        tags: newContact.tags
+      };
 
-    // Save to localStorage
-    const updatedContacts = contacts.map(contact => 
-      contact.id === selectedContact.id ? updatedContact : contact
-    );
-    localStorage.setItem('crmContacts', JSON.stringify(updatedContacts));
+      console.log('🔄 Contact update data:', updateData);
+      await FirebaseContactsService.updateContact(userId, teamId, selectedContact.id, updateData);
+      console.log('✅ Contact updated successfully');
+      
+      // Update local state
+      const updatedContact: Contact = {
+        ...selectedContact,
+        ...updateData,
+        updatedAt: new Date()
+      };
 
-    setIsEditContactOpen(false);
-    setSelectedContact(null);
-    setNewContact({
-      name: '',
-      email: '',
-      phone: '',
-      company: '',
-      position: '',
-      status: 'lead',
-      source: '',
-      notes: '',
-      tags: []
-    });
+      setContacts(prev => prev.map(contact => 
+        contact.id === selectedContact.id ? updatedContact : contact
+      ));
 
-    alert('Contact updated successfully!');
+      setIsEditContactOpen(false);
+      setSelectedContact(null);
+      setNewContact({
+        name: '',
+        email: '',
+        phone: '',
+        company: '',
+        position: '',
+        status: 'lead',
+        source: '',
+        notes: '',
+        tags: []
+      });
+
+      alert('Contact updated successfully!');
+    } catch (error) {
+      console.error('Error updating contact:', error);
+      alert('Failed to update contact. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteContact = (contactId: string) => {
-    if (window.confirm('Are you sure you want to delete this contact?')) {
+  const handleDeleteContact = async (contactId: string) => {
+    if (!window.confirm('Are you sure you want to delete this contact?')) {
+      return;
+    }
+
+    if (!user) {
+      alert('Please log in to delete contacts');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      console.log('🔄 Deleting contact from Firebase...');
+      
+      const userId = user.uid;
+      const teamId = 'default-team';
+      
+      await FirebaseContactsService.deleteContact(userId, teamId, contactId);
+      console.log('✅ Contact deleted successfully');
+      
+      // Update local state
       setContacts(prev => prev.filter(contact => contact.id !== contactId));
       
-      // Save to localStorage
-      const updatedContacts = contacts.filter(contact => contact.id !== contactId);
-      localStorage.setItem('crmContacts', JSON.stringify(updatedContacts));
-      
       alert('Contact deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting contact:', error);
+      alert('Failed to delete contact. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -1,8 +1,13 @@
 export interface TimeEntry {
   id: string;
-  projectId: string;
-  subProjectId?: string;
-  legId?: string;
+  businessId?: string;
+  projectId?: string;
+  systemId?: string;
+  processId?: string;
+  taskId?: string;
+  milestoneId?: string;
+  resourceId?: string;
+  teamId?: string;
   userId: string;
   description: string;
   startTime: Date;

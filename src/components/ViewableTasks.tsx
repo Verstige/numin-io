@@ -25,7 +25,7 @@ import {
   X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { WorkspaceTasksService, MigrationService, type WorkspaceTask } from "@/lib/workspace-persistence";
+import { FirebaseWorkspaceTasksService, type FirebaseWorkspaceTask } from "@/lib/firebase-business-map";
 import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { toast } from "@/hooks/use-toast";
 
@@ -37,11 +37,11 @@ interface ViewableTasksProps {
 
 export default function ViewableTasks({ projectId, currentUser = "Current User", teamId }: ViewableTasksProps) {
   const { user } = useFirebaseAuth();
-  const [tasks, setTasks] = useState<WorkspaceTask[]>([]);
-  const [filteredTasks, setFilteredTasks] = useState<WorkspaceTask[]>([]);
+  const [tasks, setTasks] = useState<FirebaseWorkspaceTask[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<FirebaseWorkspaceTask[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | WorkspaceTask["status"]>("all");
-  const [priorityFilter, setPriorityFilter] = useState<"all" | WorkspaceTask["priority"]>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | FirebaseWorkspaceTask["status"]>("all");
+  const [priorityFilter, setPriorityFilter] = useState<"all" | FirebaseWorkspaceTask["priority"]>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
@@ -50,9 +50,9 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
-    priority: "medium" as WorkspaceTask["priority"],
+    priority: "medium" as FirebaseWorkspaceTask["priority"],
     assignee: currentUser,
-    visibility: "team" as WorkspaceTask["visibility"],
+    visibility: "team" as FirebaseWorkspaceTask["visibility"],
     tags: "",
     dueDate: "",
     startDate: ""
@@ -67,10 +67,10 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
         setIsLoading(true);
         console.log('📝 Loading tasks...');
         
-        const currentTeamId = teamId || user.id;
+        const currentTeamId = teamId || 'default-team';
         
         // The service now returns immediately from localStorage with user-specific keys
-        const tasks = await WorkspaceTasksService.getTasks(currentTeamId, projectId);
+        const tasks = await FirebaseWorkspaceTasksService.getTasks(user.uid, currentTeamId, projectId);
         setTasks(tasks);
         console.log('✅ Tasks loaded:', tasks.length);
         
@@ -135,7 +135,7 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
     setExpandedTasks(newExpanded);
   };
 
-  const getStatusColor = (status: WorkspaceTask["status"]) => {
+  const getStatusColor = (status: FirebaseWorkspaceTask["status"]) => {
     switch (status) {
       case "todo": return "bg-gray-100 text-gray-800";
       case "in-progress": return "bg-blue-100 text-blue-800";
@@ -144,7 +144,7 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
     }
   };
 
-  const getPriorityColor = (priority: WorkspaceTask["priority"]) => {
+  const getPriorityColor = (priority: FirebaseWorkspaceTask["priority"]) => {
     switch (priority) {
       case "low": return "bg-gray-100 text-gray-800";
       case "medium": return "bg-blue-100 text-blue-800";
@@ -153,7 +153,7 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
     }
   };
 
-  const getStatusIcon = (status: WorkspaceTask["status"]) => {
+  const getStatusIcon = (status: FirebaseWorkspaceTask["status"]) => {
     switch (status) {
       case "todo": return <Circle className="w-4 h-4" />;
       case "in-progress": return <Clock className="w-4 h-4" />;
@@ -178,7 +178,7 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
     return diffDays;
   };
 
-  const getTaskProgress = (task: WorkspaceTask) => {
+  const getTaskProgress = (task: FirebaseWorkspaceTask) => {
     if (!task.subtasks || task.subtasks.length === 0) {
       return task.status === "done" ? 100 : task.status === "in-progress" ? 50 : 0;
     }
@@ -191,9 +191,9 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
     if (!newTask.title.trim() || !user) return;
 
     try {
-      const currentTeamId = teamId || user.id;
+      const currentTeamId = teamId || 'default-team';
       
-      const task = await WorkspaceTasksService.createTask({
+      const task = await FirebaseWorkspaceTasksService.createTask({
         title: newTask.title,
         description: newTask.description,
         status: "todo",
@@ -205,7 +205,7 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
         dueDate: newTask.dueDate ? new Date(newTask.dueDate) : undefined,
         startDate: newTask.startDate ? new Date(newTask.startDate) : undefined,
         subtasks: []
-      }, currentTeamId, user.id);
+      }, user.uid, currentTeamId);
 
       setTasks(prev => [task, ...prev]);
       console.log('✅ Task created successfully');

@@ -29,36 +29,29 @@ import {
   TrendingUp
 } from "lucide-react";
 import { TimeEntry, TimeLog, ProjectTimeStats, UserTimeProfile, TimerState, TimeTrackingFilters } from "@/types/timeTracking";
+import { BusinessMapNodesService, BusinessMapNode } from "@/lib/firebase-business-map";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 
 interface TimeTrackerProps {
   userId: string;
-  projects: Array<{
-    id: string;
-    name: string;
-    subProjects?: Array<{
-      id: string;
-      name: string;
-      legs?: Array<{
-        id: string;
-        name: string;
-      }>;
-    }>;
-  }>;
+  teamId: string;
   onTimeEntryUpdate?: (entry: TimeEntry) => void;
 }
 
 const TimeTracker: React.FC<TimeTrackerProps> = ({ 
   userId, 
-  projects, 
+  teamId, 
   onTimeEntryUpdate 
 }) => {
+  const { user } = useFirebaseAuth();
   const [timerState, setTimerState] = useState<TimerState>({
     isRunning: false,
     elapsedTime: 0
   });
+  const [businessMapNodes, setBusinessMapNodes] = useState<BusinessMapNode[]>([]);
+  const [selectedBusiness, setSelectedBusiness] = useState<string>("");
   const [selectedProject, setSelectedProject] = useState<string>("");
-  const [selectedSubProject, setSelectedSubProject] = useState<string>("");
-  const [selectedLeg, setSelectedLeg] = useState<string>("");
+  const [selectedTask, setSelectedTask] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [tags, setTags] = useState<string>("");
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
@@ -74,11 +67,50 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Helper functions to filter nodes by type
+  const getBusinessNodes = () => businessMapNodes.filter(node => node.nodeType === 'business');
+  const getProjectNodes = () => businessMapNodes.filter(node => node.nodeType === 'subproject');
+  const getTaskNodes = () => businessMapNodes.filter(node => node.nodeType === 'task');
+
+  // Load business map nodes
+  const loadBusinessMapNodes = async () => {
+    if (!user || !userId || !teamId) return;
+    
+    try {
+      const nodes = await BusinessMapNodesService.getNodes(userId, teamId);
+      setBusinessMapNodes(nodes);
+    } catch (error) {
+      console.error('Error loading business map nodes:', error);
+      // Set empty array as fallback to prevent crashes
+      setBusinessMapNodes([]);
+    }
+  };
+
   // Load data from localStorage on mount
   useEffect(() => {
     loadTimeEntries();
     loadUserProfile();
-  }, [userId]);
+    loadBusinessMapNodes();
+  }, [userId, teamId, user]);
+
+  // Subscribe to real-time business map node changes
+  useEffect(() => {
+    if (!user || !userId || !teamId) return;
+
+    try {
+      const unsubscribe = BusinessMapNodesService.subscribeToNodes(userId, teamId, (nodes) => {
+        setBusinessMapNodes(nodes);
+      });
+
+      return () => {
+        if (unsubscribe) {
+          unsubscribe();
+        }
+      };
+    } catch (error) {
+      console.error('Error setting up business map subscription:', error);
+    }
+  }, [userId, teamId, user]);
 
   // Timer effect
   useEffect(() => {
@@ -174,16 +206,19 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
   };
 
   const startTimer = () => {
-    if (!selectedProject || !description.trim()) {
-      alert("Please select a project and enter a description");
+    // At least one selection and description required
+    const hasSelection = selectedBusiness || selectedProject || selectedTask;
+    
+    if (!hasSelection || !description.trim()) {
+      alert("Please select at least one business map element and enter a description");
       return;
     }
 
     const newEntry: TimeEntry = {
       id: `entry_${Date.now()}`,
-      projectId: selectedProject,
-      subProjectId: selectedSubProject || undefined,
-      legId: selectedLeg || undefined,
+      businessId: selectedBusiness || undefined,
+      projectId: selectedProject || undefined,
+      taskId: selectedTask || undefined,
       userId,
       description: description.trim(),
       startTime: new Date(),
@@ -226,8 +261,9 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
       // Reset form
       setDescription("");
       setTags("");
-      setSelectedSubProject("");
-      setSelectedLeg("");
+      setSelectedBusiness("");
+      setSelectedProject("");
+      setSelectedTask("");
 
       onTimeEntryUpdate?.(updatedEntry);
     }
@@ -271,18 +307,22 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
     // Update total time
     const totalTimeLogged = existingProfile.totalTimeLogged + (entry.duration || 0);
 
-    // Update favorite projects
-    const favoriteProjects = [...existingProfile.favoriteProjects];
-    const projectIndex = favoriteProjects.findIndex(fp => fp.projectId === entry.projectId);
+    // Update favorite business map elements
+    const favoriteElements = [...existingProfile.favoriteProjects];
     
-    if (projectIndex >= 0) {
-      favoriteProjects[projectIndex].totalTime += entry.duration || 0;
-    } else {
-      const project = projects.find(p => p.id === entry.projectId);
-      if (project) {
-        favoriteProjects.push({
-          projectId: entry.projectId,
-          projectName: project.name,
+    // Add time to the primary selected element
+    const primaryElementId = entry.businessId || entry.projectId || entry.taskId;
+    
+    if (primaryElementId) {
+      const elementIndex = favoriteElements.findIndex(fp => fp.projectId === primaryElementId);
+      const element = businessMapNodes.find(n => n.id === primaryElementId);
+      
+      if (elementIndex >= 0) {
+        favoriteElements[elementIndex].totalTime += entry.duration || 0;
+      } else if (element) {
+        favoriteElements.push({
+          projectId: primaryElementId,
+          projectName: element.data.title,
           totalTime: entry.duration || 0
         });
       }
@@ -292,7 +332,7 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
       ...existingProfile,
       totalTimeLogged,
       dailyStats,
-      favoriteProjects: favoriteProjects.sort((a, b) => b.totalTime - a.totalTime).slice(0, 5)
+      favoriteProjects: favoriteElements.sort((a, b) => b.totalTime - a.totalTime).slice(0, 5)
     };
 
     saveUserProfile(updatedProfile);
@@ -326,8 +366,6 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
     })
     .reduce((total, entry) => total + (entry.duration || 0), 0);
 
-  const selectedProjectData = projects.find(p => p.id === selectedProject);
-  const selectedSubProjectData = selectedProjectData?.subProjects?.find(sp => sp.id === selectedSubProject);
 
   return (
     <div className="w-full space-y-6">
@@ -358,18 +396,34 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
             )}
           </div>
 
-          {/* Project Selection */}
+          {/* Business Map Element Selection */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Project *</label>
+              <label className="text-sm font-medium mb-2 block">Business</label>
+              <Select value={selectedBusiness} onValueChange={setSelectedBusiness}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select business" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getBusinessNodes().map(node => (
+                    <SelectItem key={node.id} value={node.id}>
+                      {node.data.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Project</label>
               <Select value={selectedProject} onValueChange={setSelectedProject}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select project" />
                 </SelectTrigger>
                 <SelectContent>
-                  {projects.map(project => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
+                  {getProjectNodes().map(node => (
+                    <SelectItem key={node.id} value={node.id}>
+                      {node.data.title}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -377,39 +431,15 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Sub-Project</label>
-              <Select 
-                value={selectedSubProject} 
-                onValueChange={setSelectedSubProject}
-                disabled={!selectedProjectData?.subProjects?.length}
-              >
+              <label className="text-sm font-medium mb-2 block">Task</label>
+              <Select value={selectedTask} onValueChange={setSelectedTask}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select sub-project" />
+                  <SelectValue placeholder="Select task" />
                 </SelectTrigger>
                 <SelectContent>
-                  {selectedProjectData?.subProjects?.map(subProject => (
-                    <SelectItem key={subProject.id} value={subProject.id}>
-                      {subProject.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Leg</label>
-              <Select 
-                value={selectedLeg} 
-                onValueChange={setSelectedLeg}
-                disabled={!selectedSubProjectData?.legs?.length}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select leg" />
-                </SelectTrigger>
-                <SelectContent>
-                  {selectedSubProjectData?.legs?.map(leg => (
-                    <SelectItem key={leg.id} value={leg.id}>
-                      {leg.name}
+                  {getTaskNodes().map(node => (
+                    <SelectItem key={node.id} value={node.id}>
+                      {node.data.title}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -542,9 +572,17 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
               filteredEntries
                 .sort((a, b) => b.startTime.getTime() - a.startTime.getTime())
                 .map(entry => {
-                  const project = projects.find(p => p.id === entry.projectId);
-                  const subProject = project?.subProjects?.find(sp => sp.id === entry.subProjectId);
-                  const leg = subProject?.legs?.find(l => l.id === entry.legId);
+                  // Find the selected business map elements
+                  const business = businessMapNodes.find(n => n.id === entry.businessId);
+                  const project = businessMapNodes.find(n => n.id === entry.projectId);
+                  const task = businessMapNodes.find(n => n.id === entry.taskId);
+
+                  // Build the element chain
+                  const elementChain = [
+                    business?.data.title,
+                    project?.data.title,
+                    task?.data.title
+                  ].filter(Boolean).join(' → ');
 
                   return (
                     <div
@@ -562,9 +600,7 @@ const TimeTracker: React.FC<TimeTrackerProps> = ({
                         </div>
                         <div className="text-sm text-muted-foreground space-y-1">
                           <div>
-                            <strong>{project?.name}</strong>
-                            {subProject && ` → ${subProject.name}`}
-                            {leg && ` → ${leg.name}`}
+                            <strong>{elementChain || 'No elements selected'}</strong>
                           </div>
                           <div>
                             {formatDate(entry.startTime)} • {formatTime(entry.startTime)}

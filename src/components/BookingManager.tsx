@@ -8,7 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useAuth } from '@/contexts/AuthContext';
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext';
+import { 
+  FirebaseBookingTemplatesService, 
+  FirebaseBookingsService, 
+  FirebaseBookingSettingsService 
+} from '@/lib/firebase-booking';
 import { 
   Calendar, 
   Clock, 
@@ -34,7 +39,9 @@ import { toast } from '@/hooks/use-toast';
 import type { BookingTemplate, Booking, BookingSettings } from '@/types/booking';
 
 export default function BookingManager() {
-  const { profile } = useAuth();
+  const { user } = useFirebaseAuth();
+  const userId = user?.uid || 'anonymous';
+  const teamId = 'default-team'; // Match the business map teamId
   const [templates, setTemplates] = useState<BookingTemplate[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [settings, setSettings] = useState<BookingSettings | null>(null);
@@ -51,146 +58,263 @@ export default function BookingManager() {
     currency: 'USD'
   });
 
-  // Load data from localStorage
+  // Load data from Firebase
   useEffect(() => {
-    const loadData = () => {
-      const userId = profile?.id || 'anonymous';
-      const savedTemplates = localStorage.getItem(`bookingTemplates_${userId}`);
-      const savedBookings = localStorage.getItem(`bookings_${userId}`);
-      const savedSettings = localStorage.getItem(`bookingSettings_${userId}`);
-      
-      if (savedTemplates) {
-        const parsed = JSON.parse(savedTemplates);
-        setTemplates(parsed.map((t: any) => ({
-          ...t,
-          createdAt: new Date(t.createdAt),
-          updatedAt: new Date(t.updatedAt)
-        })));
-      }
-      
-      if (savedBookings) {
-        const parsed = JSON.parse(savedBookings);
-        setBookings(parsed.map((b: any) => ({
-          ...b,
-          startTime: new Date(b.startTime),
-          endTime: new Date(b.endTime),
-          createdAt: new Date(b.createdAt),
-          updatedAt: new Date(b.updatedAt),
-          cancelledAt: b.cancelledAt ? new Date(b.cancelledAt) : undefined
-        })));
-      }
-      
-      if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
-      } else {
-        // Create default settings
-        const defaultSettings: BookingSettings = {
-          userId: 'current-user',
-          timezone: 'America/New_York',
-          workingHours: {
-            monday: { start: '09:00', end: '17:00', enabled: true },
-            tuesday: { start: '09:00', end: '17:00', enabled: true },
-            wednesday: { start: '09:00', end: '17:00', enabled: true },
-            thursday: { start: '09:00', end: '17:00', enabled: true },
-            friday: { start: '09:00', end: '17:00', enabled: true },
-            saturday: { start: '10:00', end: '16:00', enabled: false },
-            sunday: { start: '10:00', end: '16:00', enabled: false }
-          },
-          advanceBookingDays: 30,
-          minNoticeHours: 2,
-          maxBookingsPerDay: 8,
-          allowWeekendBookings: false,
-          allowHolidayBookings: false,
-          autoConfirmBookings: true,
-          requirePayment: false,
-          emailReminders: true,
-          smsReminders: false,
-          reminderTimings: {
-            email24h: true,
-            email1h: true,
-            sms24h: false,
-            sms1h: false
-          },
-          cancellationPolicy: {
-            allowCancellation: true,
-            minHoursNotice: 24,
-            refundPercentage: 100
+    if (!user || !userId || !teamId) return;
+
+    const loadData = async () => {
+      try {
+        // Try Firebase first
+        try {
+          console.log('🔄 Loading data from Firebase...');
+          console.log('🔄 User ID:', userId, 'Team ID:', teamId);
+          
+          const templatesData = await FirebaseBookingTemplatesService.getTemplates(userId, teamId);
+          console.log('📊 Templates loaded from Firebase:', templatesData.length);
+          
+          const bookingsData = await FirebaseBookingsService.getBookings(userId, teamId);
+          console.log('📊 Bookings loaded from Firebase:', bookingsData.length);
+          console.log('📊 Booking details:', bookingsData.map(b => ({ id: b.id, customerName: b.customerName, status: b.status })));
+          
+          const settingsData = await FirebaseBookingSettingsService.getSettings(userId, teamId);
+          console.log('📊 Settings loaded from Firebase:', !!settingsData);
+          
+          setTemplates(templatesData);
+          setBookings(bookingsData);
+          
+          if (settingsData) {
+            setSettings(settingsData);
+          } else {
+            // Create default settings
+            const defaultSettings: BookingSettings = {
+              userId: userId,
+              timezone: 'America/New_York',
+              workingHours: {
+                monday: { start: '09:00', end: '17:00', enabled: true },
+                tuesday: { start: '09:00', end: '17:00', enabled: true },
+                wednesday: { start: '09:00', end: '17:00', enabled: true },
+                thursday: { start: '09:00', end: '17:00', enabled: true },
+                friday: { start: '09:00', end: '17:00', enabled: true },
+                saturday: { start: '10:00', end: '16:00', enabled: false },
+                sunday: { start: '10:00', end: '16:00', enabled: false }
+              },
+              advanceBookingDays: 30,
+              minNoticeHours: 2,
+              maxBookingsPerDay: 8,
+              allowWeekendBookings: false,
+              allowHolidayBookings: false,
+              autoConfirmBookings: true,
+              requirePayment: false,
+              emailReminders: true,
+              smsReminders: false,
+              reminderTimings: {
+                email24h: true,
+                email1h: true,
+                sms24h: false,
+                sms1h: false
+              },
+              cancellationPolicy: {
+                allowCancellation: true,
+                minHoursNotice: 24,
+                refundPercentage: 100
+              },
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+            setSettings(defaultSettings);
           }
-        };
-        setSettings(defaultSettings);
+
+          // Create sample template if none exist
+          if (templatesData.length === 0) {
+            const sampleTemplate: Omit<BookingTemplate, 'id' | 'createdAt' | 'updatedAt'> = {
+              userId: userId,
+              name: 'Consultation Call',
+              description: 'A 60-minute consultation to discuss your needs and how we can help.',
+              duration: 60,
+              bufferTime: 15,
+              meetingType: 'video-call',
+              videoLink: 'https://zoom.us/j/123456789',
+              instructions: 'Please have your questions ready and ensure you have a stable internet connection.',
+              price: 150,
+              currency: 'USD',
+              isActive: true
+            };
+            await FirebaseBookingTemplatesService.createTemplate(userId, teamId, sampleTemplate);
+          }
+          
+          console.log('✅ Data loaded from Firebase successfully');
+        } catch (firebaseError) {
+          console.warn('⚠️ Firebase failed, falling back to localStorage:', firebaseError);
+          
+          // Fallback to localStorage
+          console.log('🔄 Loading data from localStorage...');
+          const savedTemplates = localStorage.getItem(`bookingTemplates_${userId}`);
+          const savedBookings = localStorage.getItem(`bookings_${userId}`);
+          const savedSettings = localStorage.getItem(`bookingSettings_${userId}`);
+          
+          console.log('📊 localStorage data:', {
+            templates: savedTemplates ? JSON.parse(savedTemplates).length : 0,
+            bookings: savedBookings ? JSON.parse(savedBookings).length : 0,
+            settings: !!savedSettings
+          });
+          
+          // Always create sample template if none exist
+          if (!savedTemplates || JSON.parse(savedTemplates).length === 0) {
+            console.log('🔄 Creating sample template in localStorage...');
+            const sampleTemplate = {
+              id: 'sample_template_' + Date.now(),
+              userId: userId,
+              name: 'Consultation Call',
+              description: 'A 60-minute consultation to discuss your needs and how we can help.',
+              duration: 60,
+              bufferTime: 15,
+              meetingType: 'video-call',
+              videoLink: 'https://zoom.us/j/123456789',
+              instructions: 'Please have your questions ready and ensure you have a stable internet connection.',
+              price: 150,
+              currency: 'USD',
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+            localStorage.setItem(`bookingTemplates_${userId}`, JSON.stringify([sampleTemplate]));
+            console.log('✅ Sample template created in localStorage');
+          }
+          
+          if (savedTemplates) {
+            const parsed = JSON.parse(savedTemplates);
+            setTemplates(parsed.map((t: any) => ({
+              ...t,
+              createdAt: new Date(t.createdAt),
+              updatedAt: new Date(t.updatedAt)
+            })));
+          }
+          
+          if (savedBookings) {
+            const parsed = JSON.parse(savedBookings);
+            const bookings = parsed.map((b: any) => ({
+              ...b,
+              startTime: new Date(b.startTime),
+              endTime: new Date(b.endTime),
+              createdAt: new Date(b.createdAt),
+              updatedAt: new Date(b.updatedAt),
+              cancelledAt: b.cancelledAt ? new Date(b.cancelledAt) : undefined
+            }));
+            console.log('📊 Bookings loaded from localStorage:', bookings.length);
+            console.log('📊 localStorage booking details:', bookings.map(b => ({ id: b.id, customerName: b.customerName, status: b.status })));
+            setBookings(bookings);
+          }
+          
+          if (savedSettings) {
+            setSettings(JSON.parse(savedSettings));
+          } else {
+            // Create default settings
+            const defaultSettings: BookingSettings = {
+              userId: userId,
+              timezone: 'America/New_York',
+              workingHours: {
+                monday: { start: '09:00', end: '17:00', enabled: true },
+                tuesday: { start: '09:00', end: '17:00', enabled: true },
+                wednesday: { start: '09:00', end: '17:00', enabled: true },
+                thursday: { start: '09:00', end: '17:00', enabled: true },
+                friday: { start: '09:00', end: '17:00', enabled: true },
+                saturday: { start: '10:00', end: '16:00', enabled: false },
+                sunday: { start: '10:00', end: '16:00', enabled: false }
+              },
+              advanceBookingDays: 30,
+              minNoticeHours: 2,
+              maxBookingsPerDay: 8,
+              allowWeekendBookings: false,
+              allowHolidayBookings: false,
+              autoConfirmBookings: true,
+              requirePayment: false,
+              emailReminders: true,
+              smsReminders: false,
+              reminderTimings: {
+                email24h: true,
+                email1h: true,
+                sms24h: false,
+                sms1h: false
+              },
+              cancellationPolicy: {
+                allowCancellation: true,
+                minHoursNotice: 24,
+                refundPercentage: 100
+              },
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+            setSettings(defaultSettings);
+          }
+
+          // Create sample template if none exist
+          const existingTemplates = JSON.parse(localStorage.getItem(`bookingTemplates_${userId}`) || '[]');
+          if (existingTemplates.length === 0) {
+            const sampleTemplate: BookingTemplate = {
+              id: 'sample_template_1',
+              userId: userId,
+              name: 'Consultation Call',
+              description: 'A 60-minute consultation to discuss your needs and how we can help.',
+              duration: 60,
+              bufferTime: 15,
+              meetingType: 'video-call',
+              videoLink: 'https://zoom.us/j/123456789',
+              instructions: 'Please have your questions ready and ensure you have a stable internet connection.',
+              price: 150,
+              currency: 'USD',
+              isActive: true,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+            localStorage.setItem(`bookingTemplates_${userId}`, JSON.stringify([sampleTemplate]));
+            setTemplates([sampleTemplate]);
+          }
+          
+          console.log('✅ Data loaded from localStorage successfully');
+        }
+      } catch (error) {
+        console.error('Error loading booking data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load booking data. Please try again.",
+          variant: "destructive",
+        });
       }
     };
 
     loadData();
 
-    // Initialize with a sample template if none exist
-    const userId = profile?.id || 'anonymous';
-    const savedTemplates = localStorage.getItem(`bookingTemplates_${userId}`);
-    if (!savedTemplates || JSON.parse(savedTemplates).length === 0) {
-      const sampleTemplate: BookingTemplate = {
-        id: 'sample_template_1',
-        userId: 'current-user',
-        name: 'Consultation Call',
-        description: 'A 60-minute consultation to discuss your needs and how we can help.',
-        duration: 60,
-        bufferTime: 15,
-        meetingType: 'video-call',
-        videoLink: 'https://zoom.us/j/123456789',
-        instructions: 'Please have your questions ready and ensure you have a stable internet connection.',
-        price: 150,
-        currency: 'USD',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      setTemplates([sampleTemplate]);
-      localStorage.setItem(`bookingTemplates_${userId}`, JSON.stringify([sampleTemplate]));
-    }
-
-    // Listen for storage changes (when bookings are added from other tabs)
-    const handleStorageChange = (e: StorageEvent) => {
-      const userId = profile?.id || 'anonymous';
-      if (e.key === `bookings_${userId}`) {
-        loadData();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    // Also listen for custom events (same tab)
-    const handleCustomStorageChange = () => {
+    // Listen for booking updates from other components
+    const handleBookingUpdate = () => {
+      console.log('🔄 Booking update event received, reloading data...');
       loadData();
     };
 
-    window.addEventListener('bookingsUpdated', handleCustomStorageChange);
+    window.addEventListener('bookingsUpdated', handleBookingUpdate);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('bookingsUpdated', handleCustomStorageChange);
+      window.removeEventListener('bookingsUpdated', handleBookingUpdate);
     };
-  }, [profile?.id]);
+  }, [user, userId, teamId]);
 
-  // Save data to localStorage
+  // Real-time Firebase listener for bookings
   useEffect(() => {
-    const userId = profile?.id || 'anonymous';
-    localStorage.setItem(`bookingTemplates_${userId}`, JSON.stringify(templates));
-  }, [templates, profile?.id]);
+    if (!user || !userId || !teamId) return;
 
-  useEffect(() => {
-    const userId = profile?.id || 'anonymous';
-    localStorage.setItem(`bookings_${userId}`, JSON.stringify(bookings));
-  }, [bookings, profile?.id]);
+    console.log('🔄 Setting up real-time Firebase listener for bookings...');
+    
+    const unsubscribe = FirebaseBookingsService.subscribeToBookings(userId, teamId, (bookings) => {
+      console.log('📡 Real-time booking update received:', bookings.length, 'bookings');
+      console.log('📡 Booking details:', bookings.map(b => ({ id: b.id, customerName: b.customerName, status: b.status })));
+      setBookings(bookings);
+    });
 
-  useEffect(() => {
-    if (settings) {
-      const userId = profile?.id || 'anonymous';
-      localStorage.setItem(`bookingSettings_${userId}`, JSON.stringify(settings));
-      
-      // Dispatch custom event to notify other components (same tab)
-      window.dispatchEvent(new CustomEvent('bookingSettingsUpdated'));
-      console.log('Settings saved and custom event dispatched');
-    }
-  }, [settings, profile?.id]);
+    return () => {
+      console.log('🔄 Cleaning up Firebase listener...');
+      unsubscribe();
+    };
+  }, [user, userId, teamId]);
+
 
   const generateBookingLink = (templateId: string) => {
     const baseUrl = window.location.origin;
@@ -199,6 +323,7 @@ export default function BookingManager() {
 
   const copyBookingLink = (templateId: string) => {
     const link = generateBookingLink(templateId);
+    console.log('📋 Copying booking link:', link);
     navigator.clipboard.writeText(link);
     toast({
       title: "Link Copied",
@@ -206,7 +331,7 @@ export default function BookingManager() {
     });
   };
 
-  const createTemplate = () => {
+  const createTemplate = async () => {
     if (!newTemplate.name || !newTemplate.description || !newTemplate.duration) {
       toast({
         title: "Missing Information",
@@ -216,59 +341,165 @@ export default function BookingManager() {
       return;
     }
 
-    const template: BookingTemplate = {
-      id: `template_${Date.now()}`,
-      userId: 'current-user',
-      name: newTemplate.name,
-      description: newTemplate.description,
-      duration: newTemplate.duration,
-      bufferTime: newTemplate.bufferTime || 15,
-      location: newTemplate.location,
-      meetingType: newTemplate.meetingType || 'video-call',
-      videoLink: newTemplate.videoLink,
-      phoneNumber: newTemplate.phoneNumber,
-      instructions: newTemplate.instructions,
-      price: newTemplate.price,
-      currency: newTemplate.currency || 'USD',
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    setTemplates(prev => [...prev, template]);
-    setNewTemplate({
-      name: '',
-      description: '',
-      duration: 60,
-      bufferTime: 15,
-      meetingType: 'video-call',
-      isActive: true,
-      currency: 'USD'
-    });
-    setIsCreateTemplateOpen(false);
-    
-    toast({
-      title: "Template Created",
-      description: `${template.name} has been created successfully`,
-    });
-  };
-
-  const deleteTemplate = (templateId: string) => {
-    if (window.confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
-      setTemplates(prev => prev.filter(t => t.id !== templateId));
+    if (!user || !userId || !teamId) {
+      console.error('❌ Authentication error:', { user: !!user, userId, teamId });
       toast({
-        title: "Template Deleted",
-        description: "Template has been deleted successfully",
+        title: "Authentication Error",
+        description: "Please log in to create templates",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    console.log('✅ Authentication check passed:', { user: user.uid, userId, teamId });
+
+    // Test Firebase connection first
+    const connectionTest = await FirebaseBookingTemplatesService.testConnection(userId, teamId);
+    if (!connectionTest) {
+      toast({
+        title: "Connection Error",
+        description: "Cannot connect to Firebase. Please check your internet connection.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const templateData: Omit<BookingTemplate, 'id' | 'createdAt' | 'updatedAt'> = {
+        userId: userId,
+        name: newTemplate.name,
+        description: newTemplate.description,
+        duration: newTemplate.duration,
+        bufferTime: newTemplate.bufferTime || 15,
+        location: newTemplate.location,
+        meetingType: newTemplate.meetingType || 'video-call',
+        videoLink: newTemplate.videoLink,
+        phoneNumber: newTemplate.phoneNumber,
+        instructions: newTemplate.instructions,
+        price: newTemplate.price,
+        currency: newTemplate.currency || 'USD',
+        isActive: true
+      };
+
+      console.log('🔄 Creating template with data:', templateData);
+      console.log('🔄 User ID:', userId, 'Team ID:', teamId);
+      
+      try {
+        // Try Firebase first
+        const createdTemplate = await FirebaseBookingTemplatesService.createTemplate(userId, teamId, templateData);
+        console.log('✅ Template created successfully in Firebase:', createdTemplate);
+      } catch (firebaseError) {
+        console.warn('⚠️ Firebase failed, falling back to localStorage:', firebaseError);
+        
+        // Fallback to localStorage
+        const template: BookingTemplate = {
+          id: `template_${Date.now()}`,
+          userId: userId,
+          name: newTemplate.name,
+          description: newTemplate.description,
+          duration: newTemplate.duration,
+          bufferTime: newTemplate.bufferTime || 15,
+          location: newTemplate.location,
+          meetingType: newTemplate.meetingType || 'video-call',
+          videoLink: newTemplate.videoLink,
+          phoneNumber: newTemplate.phoneNumber,
+          instructions: newTemplate.instructions,
+          price: newTemplate.price,
+          currency: newTemplate.currency || 'USD',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        // Save to localStorage
+        const existingTemplates = JSON.parse(localStorage.getItem(`bookingTemplates_${userId}`) || '[]');
+        const updatedTemplates = [...existingTemplates, template];
+        localStorage.setItem(`bookingTemplates_${userId}`, JSON.stringify(updatedTemplates));
+        
+        // Update local state
+        setTemplates(prev => [...prev, template]);
+        
+        console.log('✅ Template created successfully in localStorage:', template);
+      }
+      
+      setNewTemplate({
+        name: '',
+        description: '',
+        duration: 60,
+        bufferTime: 15,
+        meetingType: 'video-call',
+        isActive: true,
+        currency: 'USD'
+      });
+      setIsCreateTemplateOpen(false);
+      
+      toast({
+        title: "Template Created",
+        description: `${templateData.name} has been created successfully`,
+      });
+    } catch (error) {
+      console.error('Error creating template:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create template. Please try again.",
+        variant: "destructive",
       });
     }
   };
 
-  const toggleTemplateStatus = (templateId: string) => {
-    setTemplates(prev => prev.map(t => 
-      t.id === templateId 
-        ? { ...t, isActive: !t.isActive, updatedAt: new Date() }
-        : t
-    ));
+  const deleteTemplate = async (templateId: string) => {
+    if (window.confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
+      if (!user || !userId || !teamId) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in to delete templates",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      try {
+        await FirebaseBookingTemplatesService.deleteTemplate(userId, teamId, templateId);
+        toast({
+          title: "Template Deleted",
+          description: "Template has been deleted successfully",
+        });
+      } catch (error) {
+        console.error('Error deleting template:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete template. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const toggleTemplateStatus = async (templateId: string) => {
+    if (!user || !userId || !teamId) {
+      toast({
+        title: "Authentication Error",
+        description: "Please log in to update templates",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const template = templates.find(t => t.id === templateId);
+      if (template) {
+        await FirebaseBookingTemplatesService.updateTemplate(userId, teamId, templateId, {
+          isActive: !template.isActive
+        });
+      }
+    } catch (error) {
+      console.error('Error updating template status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update template status. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getBookingStatusColor = (status: string) => {

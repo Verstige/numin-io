@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { FirebaseAuthProvider } from "@/contexts/FirebaseAuthContext";
+import './lib/debug-firebase'; // Load Firebase debugging utilities
 import ProtectedRoute from "@/components/ProtectedRoute";
 import LandingPage from "./components/LandingPage";
 import Index from "./pages/Index";
@@ -18,6 +19,13 @@ import SettingsDashboard from "./components/Settings/SettingsDashboard";
 import GmailCallback from "./pages/GmailCallback";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PublicBookingPage from "./components/PublicBookingPage";
+import BookingPageTest from "./components/BookingPageTest";
+import DataDebugger from "./components/DataDebugger";
+import FirebaseTest from "./components/FirebaseTest";
+import BookingFlowTest from "./components/BookingFlowTest";
+import FirebaseConnectionTest from "./components/FirebaseConnectionTest";
+import AgentSystemStatus from "./components/AgentSystemStatus";
+import ContactsTest from "./components/ContactsTest";
 import { ReminderSystem } from "./lib/reminder-system";
 import { initializeMobileApp } from "./lib/mobile-config";
 import { useEffect } from "react";
@@ -82,6 +90,13 @@ const App = () => {
         <Route path="/auth/gmail/callback" element={<GmailCallback />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="/book/:templateId" element={<PublicBookingPage />} />
+        <Route path="/booking-test" element={<BookingPageTest />} />
+        <Route path="/data-debug" element={<DataDebugger />} />
+        <Route path="/firebase-test" element={<FirebaseTest />} />
+        <Route path="/booking-flow-test" element={<BookingFlowTest />} />
+        <Route path="/firebase-connection-test" element={<FirebaseConnectionTest />} />
+        <Route path="/agent-status" element={<AgentSystemStatus showDetails={true} className="max-w-2xl mx-auto p-4" />} />
+        <Route path="/contacts-test" element={<ContactsTest />} />
             <Route path="/demo" element={<DemoWorkspace />} />
             <Route path="/nexus-demo" element={<NexusDemo />} />
             <Route path="/home" element={<LandingPage />} />
