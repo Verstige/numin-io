@@ -149,31 +149,61 @@ class GmailIntegrationService {
   // Handle OAuth callback and exchange code for tokens
   async handleAuthCallback(code: string, state: string): Promise<GmailAccount> {
     if (!this.authConfig) {
-      throw new Error('Gmail integration not initialized');
+      console.error('❌ Gmail integration not initialized in handleAuthCallback');
+      throw new Error('Gmail integration not initialized. Please configure Gmail OAuth credentials.');
+    }
+
+    if (!this.authConfig.clientId || this.authConfig.clientId.trim() === '') {
+      console.error('❌ Client ID is missing in handleAuthCallback');
+      throw new Error('Gmail Client ID is not configured. Please set your Gmail OAuth credentials in settings.');
     }
 
     try {
+      console.log('🔄 Exchanging code for tokens:', {
+        clientId: this.authConfig.clientId.substring(0, 20) + '...',
+        redirectUri: this.authConfig.redirectUri,
+        hasClientSecret: !!this.authConfig.clientSecret
+      });
+
+      const tokenParams: any = {
+        client_id: this.authConfig.clientId,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: this.authConfig.redirectUri,
+      };
+
+      // Only include client_secret if it's provided (some OAuth flows don't require it for public clients)
+      if (this.authConfig.clientSecret && this.authConfig.clientSecret.trim() !== '') {
+        tokenParams.client_secret = this.authConfig.clientSecret;
+      }
+
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-          client_id: this.authConfig.clientId,
-          client_secret: this.authConfig.clientSecret,
-          code,
-          grant_type: 'authorization_code',
-          redirect_uri: this.authConfig.redirectUri,
-        }),
+        body: new URLSearchParams(tokenParams),
       });
 
       if (!tokenResponse.ok) {
-        throw new Error('Failed to exchange authorization code for tokens');
+        const errorData = await tokenResponse.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ Token exchange failed:', {
+          status: tokenResponse.status,
+          statusText: tokenResponse.statusText,
+          error: errorData
+        });
+        throw new Error(`Failed to exchange authorization code: ${errorData.error || errorData.error_description || tokenResponse.statusText}`);
       }
 
       const tokens = await tokenResponse.json();
+      console.log('✅ Token exchange successful');
+      
+      if (!tokens.access_token) {
+        throw new Error('No access token received from Google');
+      }
       
       // Get user info
+      console.log('🔄 Fetching user information...');
       const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: {
           'Authorization': `Bearer ${tokens.access_token}`,
@@ -181,17 +211,20 @@ class GmailIntegrationService {
       });
 
       if (!userResponse.ok) {
-        throw new Error('Failed to get user information');
+        const errorText = await userResponse.text();
+        console.error('❌ Failed to get user info:', errorText);
+        throw new Error(`Failed to get user information: ${userResponse.statusText}`);
       }
 
       const userInfo = await userResponse.json();
+      console.log('✅ User info retrieved:', userInfo.email);
 
       const account: GmailAccount = {
         id: userInfo.id,
         email: userInfo.email,
         name: userInfo.name,
         accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token,
+        refreshToken: tokens.refresh_token || '',
         expiresAt: Date.now() + (tokens.expires_in * 1000),
         connected: true,
         lastSync: new Date()
@@ -200,9 +233,13 @@ class GmailIntegrationService {
       this.connectedAccounts.set(account.id, account);
       this.saveConnectedAccounts();
 
+      console.log('✅ Gmail account saved:', account.email);
       return account;
     } catch (error) {
-      console.error('Gmail auth callback error:', error);
+      console.error('❌ Gmail auth callback error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
       throw new Error('Failed to complete Gmail authentication');
     }
   }
