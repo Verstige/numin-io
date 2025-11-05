@@ -15,18 +15,11 @@ import {
   Calendar,
   User
 } from 'lucide-react';
-
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-  visibility: 'private' | 'team';
-}
+import { FirebaseNotesService, type Note } from '@/lib/firebase-notes';
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext';
 
 export default function BuiltInNotes() {
+  const { user } = useFirebaseAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -42,79 +35,135 @@ export default function BuiltInNotes() {
     visibility: 'private' as 'private' | 'team'
   });
 
-  // Load notes from localStorage
+  // Load notes from Firebase
   useEffect(() => {
-    const loadNotes = () => {
+    const loadNotes = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const savedNotes = localStorage.getItem('workspace_notes');
-        if (savedNotes) {
-          const parsedNotes = JSON.parse(savedNotes);
-          setNotes(parsedNotes);
-        }
+        setIsLoading(true);
+        console.log('📝 Loading notes from Firebase...');
+        
+        const userId = user.uid;
+        const teamId = 'default-team';
+        
+        const firebaseNotes = await FirebaseNotesService.getNotes(userId, teamId);
+        setNotes(firebaseNotes);
+        console.log('✅ Notes loaded from Firebase:', firebaseNotes.length);
       } catch (error) {
         console.error('Error loading notes:', error);
+        setNotes([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadNotes();
-  }, []);
+  }, [user]);
 
-  // Save notes to localStorage
-  const saveNotes = (updatedNotes: Note[]) => {
+  // Create new note
+  const handleCreateNote = async () => {
+    if (!newNote.title.trim() || !user) return;
+
     try {
-      localStorage.setItem('workspace_notes', JSON.stringify(updatedNotes));
-      setNotes(updatedNotes);
+      setIsLoading(true);
+      console.log('🔄 Creating note in Firebase...');
+      
+      const userId = user.uid;
+      const teamId = 'default-team';
+      
+      const noteData = {
+        title: newNote.title,
+        content: newNote.content,
+        tags: newNote.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        visibility: newNote.visibility
+      };
+
+      console.log('🔄 Note data to save:', noteData);
+      const createdNote = await FirebaseNotesService.createNote(userId, teamId, noteData);
+      console.log('✅ Note created successfully:', createdNote.id);
+      
+      // Update local state
+      setNotes(prev => [createdNote, ...prev]);
+      
+      // Reset form
+      setNewNote({ title: '', content: '', tags: '', visibility: 'private' });
+      setIsCreating(false);
     } catch (error) {
-      console.error('Error saving notes:', error);
+      console.error('Error creating note:', error);
+      alert('Failed to create note. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Create new note
-  const handleCreateNote = () => {
-    if (!newNote.title.trim()) return;
-
-    const note: Note = {
-      id: Date.now().toString(),
-      title: newNote.title,
-      content: newNote.content,
-      tags: newNote.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      visibility: newNote.visibility
-    };
-
-    const updatedNotes = [...notes, note];
-    saveNotes(updatedNotes);
-    
-    // Reset form
-    setNewNote({ title: '', content: '', tags: '', visibility: 'private' });
-    setIsCreating(false);
-  };
-
   // Update note
-  const handleUpdateNote = () => {
-    if (!editingNote || !editingNote.title.trim()) return;
+  const handleUpdateNote = async () => {
+    if (!editingNote || !editingNote.title.trim() || !user) return;
 
-    const updatedNote = {
-      ...editingNote,
-      updatedAt: new Date().toISOString()
-    };
+    try {
+      setIsLoading(true);
+      console.log('🔄 Updating note in Firebase...');
+      
+      const userId = user.uid;
+      const teamId = 'default-team';
+      
+      const updateData = {
+        title: editingNote.title,
+        content: editingNote.content,
+        tags: editingNote.tags,
+        visibility: editingNote.visibility
+      };
 
-    const updatedNotes = notes.map(note => 
-      note.id === editingNote.id ? updatedNote : note
-    );
-    
-    saveNotes(updatedNotes);
-    setEditingNote(null);
+      console.log('🔄 Note update data:', updateData);
+      await FirebaseNotesService.updateNote(userId, teamId, editingNote.id, updateData);
+      console.log('✅ Note updated successfully');
+      
+      // Update local state
+      const updatedNote: Note = {
+        ...editingNote,
+        updatedAt: new Date()
+      };
+
+      setNotes(prev => prev.map(note => 
+        note.id === editingNote.id ? updatedNote : note
+      ));
+      
+      setEditingNote(null);
+    } catch (error) {
+      console.error('Error updating note:', error);
+      alert('Failed to update note. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Delete note
-  const handleDeleteNote = (noteId: string) => {
-    if (window.confirm('Are you sure you want to delete this note?')) {
-      const updatedNotes = notes.filter(note => note.id !== noteId);
-      saveNotes(updatedNotes);
+  const handleDeleteNote = async (noteId: string) => {
+    if (!window.confirm('Are you sure you want to delete this note?')) return;
+    
+    if (!user) return;
+
+    try {
+      setIsLoading(true);
+      console.log('🔄 Deleting note from Firebase...');
+      
+      const userId = user.uid;
+      const teamId = 'default-team';
+      
+      await FirebaseNotesService.deleteNote(userId, teamId, noteId);
+      console.log('✅ Note deleted successfully');
+      
+      // Update local state
+      setNotes(prev => prev.filter(note => note.id !== noteId));
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      alert('Failed to delete note. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 

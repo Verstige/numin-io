@@ -94,144 +94,126 @@ export interface FirebaseWorkspaceTask {
 }
 
 export class FirebaseWorkspaceTasksService {
-  static async getTasks(userId: string, teamId: string, projectId?: string): Promise<FirebaseWorkspaceTask[]> {
-    // Return immediately from localStorage (no async delay) with user-specific key
-    const userSpecificKey = `firebaseTasks_${userId}_${teamId}`;
-    const savedTasks = localStorage.getItem(userSpecificKey);
-    let localTasks: FirebaseWorkspaceTask[] = [];
-    if (savedTasks) {
-      localTasks = JSON.parse(savedTasks);
-      console.log('📝 Loaded tasks from localStorage for user:', userId, 'Count:', localTasks.length);
-    }
+  private static getCollection(userId: string, teamId: string) {
+    return collection(db, 'tasks');
+  }
 
-    // Try Firebase in background (don't wait for it)
-    setTimeout(async () => {
-      try {
-        let q = query(
-          collection(db, 'users', userId, 'teams', teamId, 'tasks'),
+  static async getTasks(userId: string, teamId: string, projectId?: string): Promise<FirebaseWorkspaceTask[]> {
+    try {
+      console.log('🔄 FirebaseWorkspaceTasksService.getTasks called with:', { userId, teamId, projectId });
+      
+      let q = query(
+        this.getCollection(userId, teamId),
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc')
+      );
+
+      if (projectId) {
+        q = query(
+          this.getCollection(userId, teamId),
+          where('userId', '==', userId),
+          where('projectId', '==', projectId),
           orderBy('createdAt', 'desc')
         );
-
-        if (projectId) {
-          q = query(
-            collection(db, 'users', userId, 'teams', teamId, 'tasks'),
-            where('projectId', '==', projectId),
-            orderBy('createdAt', 'desc')
-          );
-        }
-
-        const querySnapshot = await getDocs(q);
-        const dbTasks = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            title: data.title,
-            description: data.description || '',
-            status: data.status || 'todo',
-            priority: data.priority || 'medium',
-            assignee: data.assignee || 'Unassigned',
-            assigneeAvatar: data.assigneeAvatar,
-            dueDate: data.dueDate ? new Date(data.dueDate.seconds * 1000) : undefined,
-            startDate: data.startDate ? new Date(data.startDate.seconds * 1000) : undefined,
-            tags: data.tags || [],
-            projectId: data.projectId,
-            visibility: data.visibility || 'team',
-            subtasks: data.subtasks || [],
-            createdAt: data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date(),
-            updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000) : new Date()
-          };
-        });
-        
-        // Update localStorage with Firebase data
-        localStorage.setItem(userSpecificKey, JSON.stringify(dbTasks));
-        console.log('✅ Synced tasks from Firebase to localStorage');
-      } catch (dbError) {
-        console.warn('Firebase not available, using localStorage:', dbError);
       }
-    }, 0);
 
-    return localTasks;
+      console.log('🔄 Querying tasks collection');
+      const querySnapshot = await getDocs(q);
+      console.log('📊 Tasks query returned', querySnapshot.docs.length, 'documents');
+      
+      const tasks = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        console.log('📄 Task data:', { id: doc.id, title: data.title });
+        return {
+          id: doc.id,
+          title: data.title,
+          description: data.description || '',
+          status: data.status || 'todo',
+          priority: data.priority || 'medium',
+          assignee: data.assignee || 'Unassigned',
+          assigneeAvatar: data.assigneeAvatar,
+          dueDate: data.dueDate?.toDate() || undefined,
+          startDate: data.startDate?.toDate() || undefined,
+          tags: data.tags || [],
+          projectId: data.projectId,
+          visibility: data.visibility || 'team',
+          subtasks: data.subtasks || [],
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date()
+        } as FirebaseWorkspaceTask;
+      });
+      
+      console.log('✅ Returning tasks:', tasks.length);
+      return tasks;
+    } catch (error) {
+      console.error('❌ Error getting tasks:', error);
+      return [];
+    }
   }
 
   static async createTask(task: Omit<FirebaseWorkspaceTask, 'id' | 'createdAt' | 'updatedAt'>, userId: string, teamId: string): Promise<FirebaseWorkspaceTask> {
-    // Always create in localStorage first for immediate response
-    const newTask: FirebaseWorkspaceTask = {
-      id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      ...task,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    
-    const userSpecificKey = `firebaseTasks_${userId}_${teamId}`;
-    const savedTasks = localStorage.getItem(userSpecificKey);
-    const tasks = savedTasks ? JSON.parse(savedTasks) : [];
-    tasks.unshift(newTask);
-    localStorage.setItem(userSpecificKey, JSON.stringify(tasks));
-    console.log('✅ Task saved to localStorage for user:', userId, 'Task ID:', newTask.id);
-
-    // Try to save to Firebase in background
     try {
+      console.log('🔄 FirebaseWorkspaceTasksService.createTask called with:', { userId, teamId, task });
+      
       const firebaseTaskData = {
-        title: newTask.title,
-        description: newTask.description || '',
-        status: newTask.status,
-        priority: newTask.priority,
-        assignee: newTask.assignee,
-        assigneeAvatar: newTask.assigneeAvatar,
-        dueDate: newTask.dueDate ? Timestamp.fromDate(newTask.dueDate) : null,
-        startDate: newTask.startDate ? Timestamp.fromDate(newTask.startDate) : null,
-        tags: newTask.tags,
-        projectId: newTask.projectId || null,
-        visibility: newTask.visibility,
-        subtasks: newTask.subtasks,
+        userId: userId,
+        teamId: teamId,
+        title: task.title,
+        description: task.description || '',
+        status: task.status,
+        priority: task.priority,
+        assignee: task.assignee,
+        assigneeAvatar: task.assigneeAvatar,
+        dueDate: task.dueDate ? Timestamp.fromDate(task.dueDate) : null,
+        startDate: task.startDate ? Timestamp.fromDate(task.startDate) : null,
+        tags: task.tags || [],
+        projectId: task.projectId || null,
+        visibility: task.visibility,
+        subtasks: task.subtasks || [],
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
 
-      const docRef = await addDoc(collection(db, 'users', userId, 'teams', teamId, 'tasks'), firebaseTaskData);
+      console.log('🔄 Task data to save:', firebaseTaskData);
+      console.log('🔄 Collection path: tasks');
       
-      // Update localStorage with Firebase ID
-      const updatedTasks = tasks.map(t => 
-        t.id === newTask.id 
-          ? { ...t, id: docRef.id }
-          : t
-      );
-      localStorage.setItem(userSpecificKey, JSON.stringify(updatedTasks));
-      console.log('✅ Task synced to Firebase for user:', userId);
+      const docRef = await addDoc(this.getCollection(userId, teamId), firebaseTaskData);
+      console.log('✅ Task document created with ID:', docRef.id);
 
       return {
-        ...newTask,
-        id: docRef.id
+        id: docRef.id,
+        ...task,
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
-    } catch (dbError) {
-      console.warn('Firebase save failed, using localStorage only:', dbError);
+    } catch (error: any) {
+      console.error('❌ Error creating task:', error);
+      console.error('❌ Error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack
+      });
+      
+      // Add specific error handling for common Firebase errors
+      if (error.code === 'permission-denied') {
+        console.error('❌ Permission denied - check Firebase security rules');
+        throw new Error('Permission denied. Please check your Firebase security rules.');
+      } else if (error.code === 'unavailable') {
+        console.error('❌ Firebase service unavailable');
+        throw new Error('Firebase service is currently unavailable. Please try again later.');
+      } else if (error.code === 'invalid-argument') {
+        console.error('❌ Invalid argument - check data structure');
+        throw new Error('Invalid data structure. Please check all required fields.');
+      }
+      
+      throw error;
     }
-
-    return newTask;
   }
 
   static async updateTask(id: string, updates: Partial<FirebaseWorkspaceTask>, userId: string, teamId: string): Promise<FirebaseWorkspaceTask> {
-    const userSpecificKey = `firebaseTasks_${userId}_${teamId}`;
-    const savedTasks = localStorage.getItem(userSpecificKey);
-    const tasks = savedTasks ? JSON.parse(savedTasks) : [];
-    
-    const taskIndex = tasks.findIndex((t: FirebaseWorkspaceTask) => t.id === id);
-    if (taskIndex === -1) {
-      throw new Error('Task not found');
-    }
-
-    const updatedTask = {
-      ...tasks[taskIndex],
-      ...updates,
-      updatedAt: new Date()
-    };
-    
-    tasks[taskIndex] = updatedTask;
-    localStorage.setItem(userSpecificKey, JSON.stringify(tasks));
-    console.log('✅ Task updated in localStorage');
-
-    // Try to update in Firebase in background
     try {
+      console.log('🔄 FirebaseWorkspaceTasksService.updateTask called with:', { userId, teamId, id, updates });
+      
       const firebaseUpdates: any = {
         ...updates,
         updatedAt: serverTimestamp()
@@ -245,37 +227,51 @@ export class FirebaseWorkspaceTasksService {
         firebaseUpdates.startDate = Timestamp.fromDate(updates.startDate);
       }
 
-      await updateDoc(doc(collection(db, 'users', userId, 'teams', teamId, 'tasks'), id), firebaseUpdates);
-      console.log('✅ Task updated in Firebase');
-    } catch (dbError) {
-      console.warn('Firebase update failed, using localStorage only:', dbError);
-    }
+      const taskRef = doc(db, 'tasks', id);
+      
+      await updateDoc(taskRef, firebaseUpdates);
+      console.log('✅ Task updated successfully');
 
-    return updatedTask;
+      // Get the updated task to return
+      const taskSnap = await getDoc(taskRef);
+      if (taskSnap.exists()) {
+        const data = taskSnap.data();
+        return {
+          id: taskSnap.id,
+          ...data,
+          dueDate: data.dueDate?.toDate() || undefined,
+          startDate: data.startDate?.toDate() || undefined,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date()
+        } as FirebaseWorkspaceTask;
+      }
+      
+      throw new Error('Task not found after update');
+    } catch (error: any) {
+      console.error('❌ Error updating task:', error);
+      throw error;
+    }
   }
 
   static async deleteTask(id: string, userId: string, teamId: string): Promise<void> {
-    const userSpecificKey = `firebaseTasks_${userId}_${teamId}`;
-    const savedTasks = localStorage.getItem(userSpecificKey);
-    const tasks = savedTasks ? JSON.parse(savedTasks) : [];
-    
-    const updatedTasks = tasks.filter((t: FirebaseWorkspaceTask) => t.id !== id);
-    localStorage.setItem(userSpecificKey, JSON.stringify(updatedTasks));
-    console.log('✅ Task deleted from localStorage');
-
-    // Try to delete from Firebase in background
     try {
-      await deleteDoc(doc(collection(db, 'users', userId, 'teams', teamId, 'tasks'), id));
-      console.log('✅ Task deleted from Firebase');
-    } catch (dbError) {
-      console.warn('Firebase delete failed, using localStorage only:', dbError);
+      console.log('🔄 FirebaseWorkspaceTasksService.deleteTask called with:', { userId, teamId, id });
+      
+      const taskRef = doc(db, 'tasks', id);
+      
+      await deleteDoc(taskRef);
+      console.log('✅ Task deleted successfully');
+    } catch (error: any) {
+      console.error('❌ Error deleting task:', error);
+      throw error;
     }
   }
 
   // Subscribe to tasks for real-time updates
   static subscribeToTasks(userId: string, teamId: string, callback: (tasks: FirebaseWorkspaceTask[]) => void): () => void {
     const q = query(
-      collection(db, 'users', userId, 'teams', teamId, 'tasks'),
+      this.getCollection(userId, teamId),
+      where('userId', '==', userId),
       orderBy('createdAt', 'desc')
     );
 
@@ -290,14 +286,14 @@ export class FirebaseWorkspaceTasksService {
           priority: data.priority || 'medium',
           assignee: data.assignee || 'Unassigned',
           assigneeAvatar: data.assigneeAvatar,
-          dueDate: data.dueDate ? new Date(data.dueDate.seconds * 1000) : undefined,
-          startDate: data.startDate ? new Date(data.startDate.seconds * 1000) : undefined,
+          dueDate: data.dueDate?.toDate() || undefined,
+          startDate: data.startDate?.toDate() || undefined,
           tags: data.tags || [],
           projectId: data.projectId,
           visibility: data.visibility || 'team',
           subtasks: data.subtasks || [],
-          createdAt: data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date(),
-          updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000) : new Date()
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date()
         };
       });
       callback(tasks);
