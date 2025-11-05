@@ -105,7 +105,9 @@ class GmailIntegrationService {
             'https://www.googleapis.com/auth/gmail.readonly',
             'https://www.googleapis.com/auth/gmail.send',
             'https://www.googleapis.com/auth/gmail.modify',
-            'https://www.googleapis.com/auth/gmail.labels'
+            'https://www.googleapis.com/auth/gmail.labels',
+            'https://www.googleapis.com/auth/userinfo.profile',
+            'https://www.googleapis.com/auth/userinfo.email'
           ]
         });
         this.currentUserId = userId;
@@ -250,31 +252,76 @@ class GmailIntegrationService {
       
       // Get user info
       console.log('🔄 Fetching user information...');
-      const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-        headers: {
-          'Authorization': `Bearer ${tokens.access_token}`,
-        },
-      });
+      let userInfo;
+      
+      try {
+        const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: {
+            'Authorization': `Bearer ${tokens.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-      if (!userResponse.ok) {
-        const errorText = await userResponse.text();
-        console.error('❌ Failed to get user info:', errorText);
-        throw new Error(`Failed to get user information: ${userResponse.statusText}`);
+        if (!userResponse.ok) {
+          const errorText = await userResponse.text();
+          console.error('❌ Failed to get user info:', {
+            status: userResponse.status,
+            statusText: userResponse.statusText,
+            errorText: errorText
+          });
+          
+          // Try to parse error if it's JSON
+          let errorMessage = userResponse.statusText || 'Unknown error';
+          try {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.error?.message || errorData.error_description || errorMessage;
+          } catch {
+            errorMessage = errorText || errorMessage;
+          }
+          
+          throw new Error(`Failed to get user information: ${errorMessage} (Status: ${userResponse.status})`);
+        }
+
+        userInfo = await userResponse.json();
+        console.log('✅ User info retrieved:', userInfo.email);
+        
+        // Validate required fields
+        if (!userInfo.email) {
+          console.error('❌ User info missing email:', userInfo);
+          throw new Error('User info from Google is missing email address');
+        }
+        
+        if (!userInfo.id) {
+          console.error('❌ User info missing id:', userInfo);
+          throw new Error('User info from Google is missing user ID');
+        }
+      } catch (fetchError) {
+        console.error('❌ Error fetching user info:', fetchError);
+        // If it's already our formatted error, re-throw it
+        if (fetchError instanceof Error && fetchError.message.includes('Failed to get user information')) {
+          throw fetchError;
+        }
+        // Otherwise, wrap it
+        throw new Error(`Failed to get user information: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);
       }
 
-      const userInfo = await userResponse.json();
-      console.log('✅ User info retrieved:', userInfo.email);
-
       const account: GmailAccount = {
-        id: userInfo.id,
-        email: userInfo.email,
-        name: userInfo.name,
+        id: userInfo.id || `gmail_${Date.now()}`,
+        email: userInfo.email || 'unknown@example.com',
+        name: userInfo.name || userInfo.email || 'Gmail User',
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token || '',
-        expiresAt: Date.now() + (tokens.expires_in * 1000),
+        expiresAt: Date.now() + ((tokens.expires_in || 3600) * 1000),
         connected: true,
         lastSync: new Date()
       };
+      
+      console.log('✅ Account created:', {
+        id: account.id,
+        email: account.email,
+        hasAccessToken: !!account.accessToken,
+        hasRefreshToken: !!account.refreshToken
+      });
 
       this.connectedAccounts.set(account.id, account);
       this.saveConnectedAccounts();
