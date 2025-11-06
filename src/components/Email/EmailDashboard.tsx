@@ -421,9 +421,9 @@ export default function EmailDashboard() {
       for (const account of gmailAccounts) {
         try {
           console.log(`🔄 Syncing emails for ${account.email}...`);
-          const result = await gmailService.syncEmails(account.id);
-          totalAdded += result.messagesAdded;
-          totalUpdated += result.messagesUpdated;
+        const result = await gmailService.syncEmails(account.id);
+        totalAdded += result.messagesAdded;
+        totalUpdated += result.messagesUpdated;
           console.log(`✅ Sync complete for ${account.email}: ${result.messagesAdded} added, ${result.messagesUpdated} updated`);
         } catch (error) {
           console.error(`❌ Sync failed for ${account.email}:`, error);
@@ -970,9 +970,9 @@ Best,
 
   // Main email dashboard
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar */}
-      <div className="w-64 bg-chatgpt-card border-r border-border flex flex-col">
+      <div className="w-56 bg-chatgpt-card border-r border-border flex flex-col flex-shrink-0">
         {/* Header */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3 mb-2">
@@ -1041,23 +1041,23 @@ Best,
             {folders.map((folder) => {
               const folderCount = emails.filter(e => e.folder === folder.id).length;
               return (
-                <button
-                  key={folder.id}
-                  onClick={() => setSelectedFolder(folder.id)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
-                    selectedFolder === folder.id
-                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                      : 'hover:bg-background/50 text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    {folder.icon}
-                    <span className="font-medium">{folder.name}</span>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
+            <button
+              key={folder.id}
+              onClick={() => setSelectedFolder(folder.id)}
+              className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
+                selectedFolder === folder.id
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                  : 'hover:bg-background/50 text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                {folder.icon}
+                <span className="font-medium">{folder.name}</span>
+              </div>
+              <Badge variant="outline" className="text-xs">
                     {folderCount}
-                  </Badge>
-                </button>
+              </Badge>
+            </button>
               );
             })}
           </div>
@@ -1197,9 +1197,9 @@ Best,
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 flex">
+        <div className="flex-1 flex overflow-hidden">
           {/* Email List */}
-          <div className="w-1/3 border-r border-border bg-background">
+          <div className="w-80 border-r border-border bg-background flex-shrink-0">
             <div className="h-full overflow-y-auto">
               {filteredEmails.length === 0 ? (
                 <div className="p-8 text-center">
@@ -1286,15 +1286,15 @@ Best,
                             );
                           })
                         )}
-                        {email.tags.length > 0 && (
+                      {email.tags.length > 0 && (
                           email.tags.slice(0, 2).map((tag) => (
                             <Badge key={tag} variant="outline" className="text-xs">
                               {tag}
                             </Badge>
                           ))
-                        )}
-                      </div>
+                      )}
                     </div>
+                  </div>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -1327,7 +1327,7 @@ Best,
                               </button>
                             );
                           })}
-                        </div>
+                </div>
                       </PopoverContent>
                     </Popover>
                   </div>
@@ -1338,20 +1338,20 @@ Best,
           </div>
 
           {/* Email Content / AI Assistant */}
-          <div className="flex-1 flex">
+          <div className="flex-1 flex overflow-hidden">
             {activeTab === 'emails' ? (
               /* Email Content */
-              <div className="flex-1 p-6 overflow-y-auto">
+              <div className="flex-1 p-6 overflow-y-auto overflow-x-hidden">
                 {selectedEmail ? (
-                  <div className="space-y-6 max-w-4xl mx-auto">
+                  <div className="space-y-6 max-w-5xl mx-auto pr-4">
                     <div className="flex items-center justify-between flex-wrap gap-4 pb-4 border-b border-border">
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4" />
-                          <span className="font-medium text-foreground">From:</span>
-                          <span className="break-all">{selectedEmail.from}</span>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap min-w-0 flex-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <User className="w-4 h-4 flex-shrink-0" />
+                          <span className="font-medium text-foreground flex-shrink-0">From:</span>
+                          <span className="break-all truncate">{selectedEmail.from}</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <Clock className="w-4 h-4" />
                           <span>{new Date(selectedEmail.timestamp).toLocaleString()}</span>
                         </div>
@@ -1371,7 +1371,7 @@ Best,
                         </Button>
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm">
                               <TagIcon className="w-4 h-4 mr-2" />
                               Categories
                             </Button>
@@ -1402,8 +1402,8 @@ Best,
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-2xl font-bold text-foreground break-words pr-4">{selectedEmail.subject}</h2>
+                    <div className="flex items-center justify-between gap-4">
+                      <h2 className="text-2xl font-bold text-foreground break-words flex-1 min-w-0">{selectedEmail.subject}</h2>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <Button 
                           variant="outline" 
@@ -1455,7 +1455,7 @@ Best,
                             </Badge>
                           );
                         })}
-                      </div>
+                        </div>
                     )}
 
                     <div className="prose max-w-none border-t border-border pt-6">
@@ -1471,7 +1471,8 @@ Best,
                                 wordBreak: 'break-word',
                                 overflowWrap: 'break-word',
                                 maxWidth: '100%',
-                                color: 'inherit'
+                                color: 'inherit',
+                                paddingRight: '0'
                               }}
                             />
                           );
@@ -1494,18 +1495,29 @@ Best,
                     {/* Add CSS for email images */}
                     <style>{`
                       .email-content img {
-                        max-width: 100%;
-                        height: auto;
+                        max-width: 100% !important;
+                        height: auto !important;
                         display: block;
                         margin: 1rem 0;
                         border-radius: 0.5rem;
                       }
                       .email-content {
                         color: inherit;
+                        overflow-wrap: break-word;
+                        word-wrap: break-word;
+                        overflow-x: hidden;
+                      }
+                      .email-content * {
+                        max-width: 100% !important;
+                      }
+                      .email-content table {
+                        max-width: 100% !important;
+                        table-layout: fixed;
                       }
                       .email-content a {
                         color: rgb(59, 130, 246);
                         text-decoration: underline;
+                        word-break: break-all;
                       }
                       .email-content a:hover {
                         color: rgb(37, 99, 235);
