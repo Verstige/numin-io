@@ -472,7 +472,7 @@ class GmailIntegrationService {
       for (const messageRef of data.messages || []) {
         try {
           const messageResponse = await fetch(
-            `https://gmail.googleapis.com/gmail/v1/users/${account.email}/messages/${messageRef.id}`,
+            `https://gmail.googleapis.com/gmail/v1/users/${account.email}/messages/${messageRef.id}?format=full`,
             {
               headers: {
                 'Authorization': `Bearer ${accessToken}`,
@@ -692,16 +692,36 @@ class GmailIntegrationService {
     let body = '';
     let htmlBody = '';
     
-    if (messageData.payload.body && messageData.payload.body.data) {
-      body = atob(messageData.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'));
-    } else if (messageData.payload.parts) {
-      for (const part of messageData.payload.parts) {
+    // Helper function to extract body from parts recursively
+    const extractBodyFromParts = (parts: any[]) => {
+      for (const part of parts) {
         if (part.mimeType === 'text/plain' && part.body && part.body.data) {
-          body = atob(part.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+          try {
+            body = atob(part.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+          } catch (e) {
+            console.error('Error decoding plain text body:', e);
+          }
         } else if (part.mimeType === 'text/html' && part.body && part.body.data) {
-          htmlBody = atob(part.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+          try {
+            htmlBody = atob(part.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+          } catch (e) {
+            console.error('Error decoding HTML body:', e);
+          }
+        } else if (part.parts) {
+          // Recursively check nested parts (for multipart messages)
+          extractBodyFromParts(part.parts);
         }
       }
+    };
+    
+    if (messageData.payload.body && messageData.payload.body.data) {
+      try {
+        body = atob(messageData.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+      } catch (e) {
+        console.error('Error decoding body:', e);
+      }
+    } else if (messageData.payload.parts) {
+      extractBodyFromParts(messageData.payload.parts);
     }
 
     return {
