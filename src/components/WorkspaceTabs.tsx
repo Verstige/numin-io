@@ -50,6 +50,12 @@ interface WorkspaceTabsProps {
 
 const tabConfig = [
   {
+    id: "projects" as WorkspaceTab,
+    label: "Projects",
+    icon: LayoutGrid,
+    description: "Project management with Kanban & Table views"
+  },
+  {
     id: "notes" as WorkspaceTab,
     label: "Notes",
     icon: FileText,
@@ -80,11 +86,10 @@ const tabConfig = [
     description: "Workspace calendar & scheduling"
   },
   {
-    id: "team" as WorkspaceTab,
-    label: "Team",
-    icon: Users,
-    description: "Team management",
-    requiresRole: ["owner", "admin"] as const
+    id: "bookings" as WorkspaceTab,
+    label: "Bookings",
+    icon: CalendarDays,
+    description: "Appointment booking management"
   },
   {
     id: "timer" as WorkspaceTab,
@@ -93,16 +98,11 @@ const tabConfig = [
     description: "Time tracking"
   },
   {
-    id: "bookings" as WorkspaceTab,
-    label: "Bookings",
-    icon: CalendarDays,
-    description: "Appointment booking management"
-  },
-  {
-    id: "projects" as WorkspaceTab,
-    label: "Projects",
-    icon: LayoutGrid,
-    description: "Project management with Kanban & Table views"
+    id: "team" as WorkspaceTab,
+    label: "Team",
+    icon: Users,
+    description: "Team management",
+    requiresRole: ["owner", "admin"] as const
   }
 ];
 
@@ -190,7 +190,7 @@ export default function WorkspaceTabs({
       {/* Custom Horizontal Tab Navigation */}
       <div className="w-full mb-4 sm:mb-6 lg:mb-8">
         <div className="flex items-center justify-center px-2 sm:px-4 lg:px-0">
-          <div className="flex items-center gap-1 bg-muted/30 p-1 sm:p-1.5 rounded-xl border border-border/50 shadow-sm backdrop-blur-sm overflow-x-auto scrollbar-hide w-full max-w-4xl min-w-0">
+          <div className="flex items-center gap-1 bg-muted/30 p-1 sm:p-1.5 rounded-xl border border-border/50 shadow-sm backdrop-blur-sm overflow-x-auto scrollbar-hide w-fit min-w-0">
             {availableTabs.length > 0 ? availableTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
