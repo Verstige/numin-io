@@ -39,6 +39,10 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const cloneFirebaseUser = (firebaseUser: User): User => {
+    return Object.assign(Object.create(Object.getPrototypeOf(firebaseUser)), firebaseUser);
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
@@ -91,6 +95,11 @@ export const FirebaseAuthProvider: React.FC<FirebaseAuthProviderProps> = ({ chil
     try {
       if (user) {
         await updateProfile(user, data);
+        await user.reload();
+        const refreshedUser = auth.currentUser;
+        if (refreshedUser) {
+          setUser(cloneFirebaseUser(refreshedUser));
+        }
       }
     } catch (error) {
       console.error('Update profile error:', error);

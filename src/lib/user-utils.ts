@@ -5,8 +5,12 @@
  * Falls back to email if full_name is not available
  * Falls back to "User" if nothing is available
  */
-export function getUserDisplayName(profile: { full_name?: string | null; email?: string | null; user_metadata?: any } | null): string {
+export function getUserDisplayName(profile: { full_name?: string | null; displayName?: string | null; email?: string | null; user_metadata?: any } | null): string {
   if (!profile) return "User";
+  
+  if (profile.displayName && profile.displayName.trim()) {
+    return profile.displayName.trim();
+  }
   
   // Check for full_name in profile object (for direct profile objects)
   if (profile.full_name && profile.full_name.trim()) {
@@ -30,7 +34,7 @@ export function getUserDisplayName(profile: { full_name?: string | null; email?:
 /**
  * Get the user's first name only
  */
-export function getUserFirstName(profile: { full_name?: string | null; email?: string | null; user_metadata?: any } | null): string {
+export function getUserFirstName(profile: { full_name?: string | null; displayName?: string | null; email?: string | null; user_metadata?: any } | null): string {
   const displayName = getUserDisplayName(profile);
   
   // If it's an email-derived name, return as is

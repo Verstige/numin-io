@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,13 +25,19 @@ import {
   Settings as SettingsIcon,
   Save,
   Edit,
-  ArrowRight
+  ArrowRight,
+  Loader2,
+  Camera
 } from 'lucide-react';
 import GmailIntegration from './GmailIntegration';
+import { useFirebaseAuth } from '@/contexts/FirebaseAuthContext';
+import { FirebaseUserProfileService } from '@/lib/firebase-user-profile';
+import { storage } from '@/lib/firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { toast } from '@/hooks/use-toast';
 
 // Types
 interface UserProfile {
-  id: string;
   name: string;
   email: string;
   avatar?: string;
@@ -55,23 +61,58 @@ interface Integration {
 }
 
 export default function SettingsDashboard() {
+  const { user, updateUserProfile: updateFirebaseUserProfile } = useFirebaseAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const defaultTimezone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC';
   
   // User profile state
   const [userProfile, setUserProfile] = useState<UserProfile>({
-    id: '1',
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    bio: 'Business Intelligence Specialist',
-    company: 'Nexus AI Corp',
-    role: 'CEO',
-    phone: '+1 (555) 123-4567',
-    timezone: 'America/New_York',
+    name: '',
+    email: '',
+    avatar: '',
+    bio: '',
+    company: '',
+    role: '',
+    phone: '',
+    timezone: defaultTimezone,
     language: 'English'
   });
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+
+      try {
+        const existingProfile = await FirebaseUserProfileService.getProfile(user.uid);
+        setUserProfile({
+          name: existingProfile?.fullName || user.displayName || user.email?.split('@')[0] || 'User',
+          email: existingProfile?.email || user.email || '',
+          avatar: existingProfile?.avatarUrl || user.photoURL || '',
+          bio: existingProfile?.bio || '',
+          company: existingProfile?.company || '',
+          role: existingProfile?.role || '',
+          phone: existingProfile?.phone || '',
+          timezone: existingProfile?.timezone || defaultTimezone,
+          language: existingProfile?.language || 'English'
+        });
+      } catch (error) {
+        console.error('Failed to load user profile:', error);
+        toast({
+          title: 'Failed to load profile',
+          description: 'We were unable to load your profile details. Please try again.',
+          variant: 'destructive'
+        });
+      }
+    };
+
+    loadProfile();
+  }, [user, defaultTimezone]);
 
   // Password change state
   const [passwordData, setPasswordData] = useState({
@@ -118,11 +159,67 @@ export default function SettingsDashboard() {
     }));
   };
 
-  const handleSaveProfile = () => {
-    // Here you would typically save to your backend
-    console.log('Saving profile:', userProfile);
-    setIsEditing(false);
-    // Show success message
+  const handleSaveProfile = async () => {
+    if (!user) {
+      toast({
+        title: 'You need to sign in',
+        description: 'Log in to update your profile information.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!userProfile.name.trim()) {
+      toast({
+        title: 'Name is required',
+        description: 'Please provide your full name before saving.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsSavingProfile(true);
+
+    try {
+      const trimmedName = userProfile.name.trim();
+
+      await FirebaseUserProfileService.saveProfile(user.uid, {
+        fullName: trimmedName,
+        email: userProfile.email || user.email || '',
+        bio: userProfile.bio,
+        company: userProfile.company,
+        role: userProfile.role,
+        phone: userProfile.phone,
+        timezone: userProfile.timezone,
+        language: userProfile.language,
+        avatarUrl: userProfile.avatar
+      });
+
+      await updateFirebaseUserProfile({
+        displayName: trimmedName,
+        photoURL: userProfile.avatar || undefined
+      });
+
+      setUserProfile(prev => ({
+        ...prev,
+        name: trimmedName
+      }));
+      setIsEditing(false);
+
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile changes have been saved successfully.'
+      });
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: 'Failed to save profile',
+        description: 'Something went wrong while saving your profile. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const handlePasswordChange = () => {
@@ -176,6 +273,110 @@ export default function SettingsDashboard() {
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
+
+  const handleAvatarButtonClick = () => {
+    if (!user) {
+      toast({
+        title: 'You need to sign in',
+        description: 'Log in to update your avatar.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!user) {
+      toast({
+        title: 'You need to sign in',
+        description: 'Log in to update your avatar.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: 'File is too large',
+        description: 'Please choose an image smaller than 2MB.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: 'Unsupported file type',
+        description: 'Please upload a JPG, PNG, GIF, or WEBP image.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsAvatarUploading(true);
+
+    try {
+      const extension = file.name.split('.').pop() || 'jpg';
+      const avatarRef = storageRef(storage, `users/${user.uid}/avatar.${extension}`);
+      await uploadBytes(avatarRef, file);
+      const downloadURL = await getDownloadURL(avatarRef);
+
+      setUserProfile(prev => ({
+        ...prev,
+        avatar: downloadURL
+      }));
+      setIsEditing(true);
+
+      toast({
+        title: 'Avatar uploaded',
+        description: 'Save your profile to apply the new avatar.'
+      });
+    } catch (error) {
+      console.error('Avatar upload failed:', error);
+      toast({
+        title: 'Avatar upload failed',
+        description: 'Something went wrong while uploading your avatar. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsAvatarUploading(false);
+      if (event.target) {
+        event.target.value = '';
+      }
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    setUserProfile(prev => ({
+      ...prev,
+      avatar: ''
+    }));
+    setIsEditing(true);
+  };
+
+  if (!user) {
+    return (
+      <div className="p-6 space-y-6 bg-background min-h-screen">
+        <Card className="max-w-xl mx-auto text-center border-border">
+          <CardHeader>
+            <CardTitle className="text-2xl">Sign in to manage your settings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              You need to be signed in to update your profile, security options, and integrations.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 bg-background min-h-screen">
@@ -243,11 +444,16 @@ export default function SettingsDashboard() {
                   size="sm"
                   onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
                   className={isEditing ? "bg-blue-600 hover:bg-blue-700" : "border-border text-foreground hover:bg-background/50"}
+                  disabled={isEditing && isSavingProfile}
                 >
                   {isEditing ? (
                     <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
+                      {isSavingProfile ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4 mr-2" />
+                      )}
+                      {isSavingProfile ? 'Saving...' : 'Save Changes'}
                     </>
                   ) : (
                     <>
@@ -261,14 +467,61 @@ export default function SettingsDashboard() {
             <CardContent className="space-y-6">
               {/* Avatar Section */}
               <div className="flex items-center gap-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                  {userProfile.name.split(' ').map(n => n[0]).join('')}
+                <div className="relative">
+                  {userProfile.avatar ? (
+                    <img
+                      src={userProfile.avatar}
+                      alt="User avatar"
+                      className="w-20 h-20 rounded-full object-cover border border-border shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                      {userProfile.name
+                        ? userProfile.name.split(' ').map(n => n[0]).join('').slice(0, 2)
+                        : 'NA'}
+                    </div>
+                  )}
+                  {isAvatarUploading && (
+                    <div className="absolute inset-0 bg-background/70 rounded-full flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Button variant="outline" size="sm" className="border-border text-foreground hover:bg-background/50">
-                    Change Avatar
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-border text-foreground hover:bg-background/50"
+                    onClick={handleAvatarButtonClick}
+                    disabled={isAvatarUploading}
+                  >
+                    {isAvatarUploading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Camera className="w-4 h-4 mr-2" />
+                    )}
+                    {isAvatarUploading ? 'Uploading...' : 'Change Avatar'}
                   </Button>
-                  <p className="text-xs text-muted-foreground">JPG, PNG or GIF. Max size 2MB.</p>
+                  {userProfile.avatar && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground px-0"
+                      onClick={handleRemoveAvatar}
+                      disabled={isAvatarUploading}
+                    >
+                      Remove Avatar
+                    </Button>
+                  )}
+                  <p className="text-xs text-muted-foreground">JPG, PNG, GIF or WEBP. Max size 2MB.</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
                 </div>
               </div>
 
