@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,6 +51,19 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
+    priority: "medium" as FirebaseWorkspaceTask["priority"],
+    assignee: currentUser,
+    visibility: "team" as FirebaseWorkspaceTask["visibility"],
+    tags: "",
+    dueDate: "",
+    startDate: ""
+  });
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<FirebaseWorkspaceTask | null>(null);
+  const [editTask, setEditTask] = useState({
+    title: "",
+    description: "",
+    status: "todo" as FirebaseWorkspaceTask["status"],
     priority: "medium" as FirebaseWorkspaceTask["priority"],
     assignee: currentUser,
     visibility: "team" as FirebaseWorkspaceTask["visibility"],
@@ -187,6 +201,132 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
     return Math.round((completedSubtasks / task.subtasks.length) * 100);
   };
 
+  const openEditTaskDialog = (task: FirebaseWorkspaceTask) => {
+    setEditingTask(task);
+    setEditTask({
+      title: task.title,
+      description: task.description || "",
+      status: task.status,
+      priority: task.priority,
+      assignee: task.assignee,
+      visibility: task.visibility || "team",
+      tags: task.tags.join(", "),
+      dueDate: task.dueDate ? task.dueDate.toISOString().split("T")[0] : "",
+      startDate: task.startDate ? task.startDate.toISOString().split("T")[0] : ""
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEditedTask = async () => {
+    if (!editingTask || !user) return;
+
+    try {
+      const currentTeamId = teamId || 'default-team';
+      const updates: Partial<FirebaseWorkspaceTask> = {
+        title: editTask.title.trim(),
+        description: editTask.description,
+        status: editTask.status,
+        priority: editTask.priority,
+        assignee: editTask.assignee,
+        visibility: editTask.visibility,
+        tags: editTask.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        dueDate: editTask.dueDate ? new Date(editTask.dueDate) : undefined,
+        startDate: editTask.startDate ? new Date(editTask.startDate) : undefined
+      };
+
+      const updatedTask = await FirebaseWorkspaceTasksService.updateTask(
+        editingTask.id,
+        updates,
+        user.uid,
+        currentTeamId
+      );
+
+      setTasks(prev => prev.map(task => task.id === updatedTask.id ? {
+        ...task,
+        ...updatedTask,
+        tags: (updatedTask.tags || []).map(tag => typeof tag === 'string' ? tag : String(tag)),
+        dueDate: updatedTask.dueDate ? new Date(updatedTask.dueDate) : undefined,
+        startDate: updatedTask.startDate ? new Date(updatedTask.startDate) : undefined
+      } : task));
+
+      setIsEditDialogOpen(false);
+      setEditingTask(null);
+      toast({
+        title: "Task Updated",
+        description: "Your task changes have been saved."
+      });
+    } catch (error) {
+      console.error('Error updating task:', error);
+      toast({
+        title: "Update Failed",
+        description: "We couldn't update the task. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleToggleTaskCompletion = async (task: FirebaseWorkspaceTask) => {
+    if (!user) return;
+
+    try {
+      const currentTeamId = teamId || 'default-team';
+      const newStatus: FirebaseWorkspaceTask["status"] = task.status === 'done' ? 'todo' : 'done';
+
+      const updatedTask = await FirebaseWorkspaceTasksService.updateTask(
+        task.id,
+        { status: newStatus },
+        user.uid,
+        currentTeamId
+      );
+ 
+      setTasks(prev => prev.map(t => t.id === task.id ? {
+        ...t,
+        ...updatedTask,
+        dueDate: updatedTask.dueDate ? new Date(updatedTask.dueDate) : undefined,
+        startDate: updatedTask.startDate ? new Date(updatedTask.startDate) : undefined,
+        tags: (updatedTask.tags || []).map(tag => typeof tag === 'string' ? tag : String(tag))
+      } : t));
+
+      toast({
+        title: newStatus === 'done' ? "Task Completed" : "Task Reopened",
+        description: newStatus === 'done'
+          ? 'Nice work! The task is marked as completed.'
+          : 'The task is back in your active list.'
+      });
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      toast({
+        title: "Update Failed",
+        description: "We couldn't update the task status. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteTask = async (task: FirebaseWorkspaceTask) => {
+    if (!user) return;
+
+    const confirmDelete = window.confirm(`Delete "${task.title}"? This action cannot be undone.`);
+    if (!confirmDelete) return;
+
+    try {
+      const currentTeamId = teamId || 'default-team';
+      await FirebaseWorkspaceTasksService.deleteTask(task.id, user.uid, currentTeamId);
+      setTasks(prev => prev.filter(t => t.id !== task.id));
+      toast({
+        title: "Task Deleted",
+        description: 'The task has been removed from your list.'
+      });
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast({
+        title: "Delete Failed",
+        description: "We couldn't delete the task. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleCreateTask = async () => {
     if (!newTask.title.trim() || !user) return;
 
@@ -235,6 +375,177 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
       });
     }
   };
+
+  const renderTaskCard = (task: FirebaseWorkspaceTask) => {
+    const progress = getTaskProgress(task);
+    const daysUntilDue = task.dueDate ? getDaysUntilDue(task.dueDate) : null;
+    const isOverdue = daysUntilDue !== null && daysUntilDue < 0;
+    const isExpanded = expandedTasks.has(task.id);
+    const isCompleted = task.status === 'done';
+
+    return (
+      <Card
+        key={task.id}
+        className={cn(
+          "hover:shadow-md transition-shadow",
+          isCompleted ? "border-green-500/30 bg-green-500/5" : ""
+        )}
+      >
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3 flex-1">
+              <div className="mt-1 text-muted-foreground">
+                {getStatusIcon(task.status)}
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-lg leading-tight break-words">
+                  {task.title}
+                </CardTitle>
+                <div className="flex items-center flex-wrap gap-3 mt-2">
+                  <Badge className={cn("text-xs", getStatusColor(task.status))}>
+                    {task.status.replace("-", " ")}
+                  </Badge>
+                  <Badge className={cn("text-xs", getPriorityColor(task.priority))}>
+                    {task.priority}
+                  </Badge>
+                  {task.dueDate && (
+                    <div
+                      className={cn(
+                        "flex items-center gap-1 text-xs",
+                        isOverdue
+                          ? "text-red-600"
+                          : daysUntilDue !== null && daysUntilDue <= 3
+                            ? "text-yellow-600"
+                            : "text-muted-foreground"
+                      )}
+                    >
+                      <Calendar className="w-3 h-3" />
+                      {isOverdue
+                        ? `Overdue by ${Math.abs(daysUntilDue)} days`
+                        : daysUntilDue === 0
+                          ? "Due today"
+                          : daysUntilDue === 1
+                            ? "Due tomorrow"
+                            : `Due in ${daysUntilDue} days`}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn("h-8 w-8", isCompleted ? "text-green-600" : "text-muted-foreground")}
+                onClick={() => handleToggleTaskCompletion(task)}
+                aria-label={isCompleted ? "Reopen task" : "Mark task as completed"}
+              >
+                <CheckCircle className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => openEditTaskDialog(task)}
+                aria-label="Edit task"
+              >
+                <Edit3 className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive"
+                onClick={() => handleDeleteTask(task)}
+                aria-label="Delete task"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => toggleTaskExpansion(task.id)}
+                aria-label="Show task details"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between mt-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <User className="w-3 h-3" />
+              <span>{task.assignee}</span>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="pt-0">
+          {task.description && (
+            <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+              {task.description}
+            </p>
+          )}
+
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">Progress</span>
+              <span className="text-sm text-muted-foreground">{progress}%</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+
+          {task.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-3">
+              {task.tags.map(tag => (
+                <Badge key={tag} variant="secondary" className="text-xs">
+                  <Tag className="w-3 h-3 mr-1" />
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {(task.startDate || task.dueDate) && (
+            <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
+              {task.startDate && (
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  <span>Start: {task.startDate.toLocaleDateString()}</span>
+                </div>
+              )}
+              {task.dueDate && (
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>Due: {task.dueDate.toLocaleDateString()}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {task.subtasks && task.subtasks.length > 0 && isExpanded && (
+            <div className="border-t pt-4 mt-4">
+              <h4 className="text-sm font-medium mb-3">Subtasks ({task.subtasks.length})</h4>
+              <div className="space-y-2">
+                {task.subtasks.map(subtask => (
+                  <div key={subtask.id} className="flex items-center gap-3 p-2 bg-secondary/50 rounded-md">
+                    {getStatusIcon(subtask.status)}
+                    <span className="text-sm flex-1">{subtask.title}</span>
+                    <Badge className={cn("text-xs", getStatusColor(subtask.status))}>
+                      {subtask.status.replace("-", " ")}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const activeTasks = filteredTasks.filter(task => task.status !== 'done');
+  const completedTasks = filteredTasks.filter(task => task.status === 'done');
 
   if (isLoading) {
     return (
@@ -372,7 +683,7 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
                 <label className="text-sm text-muted-foreground mb-1 block">Priority</label>
                 <select
                   value={newTask.priority}
-                  onChange={(e) => setNewTask(prev => ({ ...prev, priority: e.target.value as Task["priority"] }))}
+                  onChange={(e) => setNewTask(prev => ({ ...prev, priority: e.target.value as FirebaseWorkspaceTask["priority"] }))}
                   className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="low">Low</option>
@@ -420,12 +731,11 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
               />
               <select
                 value={newTask.visibility}
-                onChange={(e) => setNewTask(prev => ({ ...prev, visibility: e.target.value as Task["visibility"] }))}
+                onChange={(e) => setNewTask(prev => ({ ...prev, visibility: e.target.value as FirebaseWorkspaceTask["visibility"] }))}
                 className="px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="private">Private</option>
                 <option value="team">Team</option>
-                <option value="public">Public</option>
               </select>
             </div>
             <div className="flex gap-2">
@@ -443,134 +753,25 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
       )}
 
       {/* Tasks List */}
-      <div className="space-y-4">
-        {filteredTasks.map(task => {
-          const progress = getTaskProgress(task);
-          const daysUntilDue = task.dueDate ? getDaysUntilDue(task.dueDate) : null;
-          const isOverdue = daysUntilDue !== null && daysUntilDue < 0;
-          const isExpanded = expandedTasks.has(task.id);
+      {activeTasks.length > 0 && (
+        <div className="space-y-4">
+          {activeTasks.map(renderTaskCard)}
+        </div>
+      )}
 
-          return (
-            <Card key={task.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3 flex-1">
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(task.status)}
-                      <CardTitle className="text-lg leading-tight">{task.title}</CardTitle>
-                    </div>
-                    <div className="flex gap-2 ml-auto">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => toggleTaskExpansion(task.id)}
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center gap-4">
-                    <Badge className={cn("text-xs", getStatusColor(task.status))}>
-                      {task.status.replace("-", " ")}
-                    </Badge>
-                    <Badge className={cn("text-xs", getPriorityColor(task.priority))}>
-                      {task.priority}
-                    </Badge>
-                    {task.dueDate && (
-                      <div className={cn(
-                        "flex items-center gap-1 text-xs",
-                        isOverdue ? "text-red-600" : daysUntilDue !== null && daysUntilDue <= 3 ? "text-yellow-600" : "text-muted-foreground"
-                      )}>
-                        <Calendar className="w-3 h-3" />
-                        {isOverdue ? `Overdue by ${Math.abs(daysUntilDue)} days` : 
-                         daysUntilDue === 0 ? "Due today" :
-                         daysUntilDue === 1 ? "Due tomorrow" :
-                         `Due in ${daysUntilDue} days`}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {task.assigneeAvatar && (
-                      <img 
-                        src={task.assigneeAvatar} 
-                        alt={task.assignee}
-                        className="w-6 h-6 rounded-full"
-                      />
-                    )}
-                    <span className="text-sm text-muted-foreground">{task.assignee}</span>
-                  </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="pt-0">
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                  {task.description}
-                </p>
-                
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Progress</span>
-                    <span className="text-sm text-muted-foreground">{progress}%</span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
-                </div>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {task.tags.map(tag => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      <Tag className="w-3 h-3 mr-1" />
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-
-                {/* Dates */}
-                {(task.startDate || task.dueDate) && (
-                  <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
-                    {task.startDate && (
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>Start: {task.startDate.toLocaleDateString()}</span>
-                      </div>
-                    )}
-                    {task.dueDate && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        <span>Due: {task.dueDate.toLocaleDateString()}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Subtasks */}
-                {task.subtasks && task.subtasks.length > 0 && isExpanded && (
-                  <div className="border-t pt-4 mt-4">
-                    <h4 className="text-sm font-medium mb-3">Subtasks ({task.subtasks.length})</h4>
-                    <div className="space-y-2">
-                      {task.subtasks.map(subtask => (
-                        <div key={subtask.id} className="flex items-center gap-3 p-2 bg-secondary/50 rounded-md">
-                          {getStatusIcon(subtask.status)}
-                          <span className="text-sm flex-1">{subtask.title}</span>
-                          <Badge className={cn("text-xs", getStatusColor(subtask.status))}>
-                            {subtask.status.replace("-", " ")}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {completedTasks.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Completed Tasks</h3>
+            <Badge variant="secondary" className="text-xs">
+              {completedTasks.length}
+            </Badge>
+          </div>
+          <div className="space-y-4">
+            {completedTasks.map(renderTaskCard)}
+          </div>
+        </div>
+      )}
 
       {filteredTasks.length === 0 && (
         <div className="text-center py-12">
@@ -584,6 +785,121 @@ export default function ViewableTasks({ projectId, currentUser = "Current User",
           </p>
         </div>
       )}
+
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open);
+          if (!open) {
+            setEditingTask(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <Input
+              placeholder="Task title..."
+              value={editTask.title}
+              onChange={(e) => setEditTask(prev => ({ ...prev, title: e.target.value }))}
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+            />
+            <Textarea
+              placeholder="Task description..."
+              value={editTask.description}
+              onChange={(e) => setEditTask(prev => ({ ...prev, description: e.target.value }))}
+              rows={3}
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Status</label>
+                <select
+                  value={editTask.status}
+                  onChange={(e) => setEditTask(prev => ({ ...prev, status: e.target.value as FirebaseWorkspaceTask["status"] }))}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="todo">To Do</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="review">Review</option>
+                  <option value="done">Done</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Priority</label>
+                <select
+                  value={editTask.priority}
+                  onChange={(e) => setEditTask(prev => ({ ...prev, priority: e.target.value as FirebaseWorkspaceTask["priority"] }))}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Assignee</label>
+                <Input
+                  placeholder="Assignee name..."
+                  value={editTask.assignee}
+                  onChange={(e) => setEditTask(prev => ({ ...prev, assignee: e.target.value }))}
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Visibility</label>
+                <select
+                  value={editTask.visibility}
+                  onChange={(e) => setEditTask(prev => ({ ...prev, visibility: e.target.value as FirebaseWorkspaceTask["visibility"] }))}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="private">Private</option>
+                  <option value="team">Team</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Start Date</label>
+                <Input
+                  type="date"
+                  value={editTask.startDate}
+                  onChange={(e) => setEditTask(prev => ({ ...prev, startDate: e.target.value }))}
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Due Date</label>
+                <Input
+                  type="date"
+                  value={editTask.dueDate}
+                  onChange={(e) => setEditTask(prev => ({ ...prev, dueDate: e.target.value }))}
+                  className="bg-background border-border text-foreground"
+                />
+              </div>
+            </div>
+            <Input
+              placeholder="Tags (comma separated)..."
+              value={editTask.tags}
+              onChange={(e) => setEditTask(prev => ({ ...prev, tags: e.target.value }))}
+              className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+            />
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="w-full sm:w-auto">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEditedTask} className="w-full sm:w-auto">
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
