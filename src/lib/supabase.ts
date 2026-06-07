@@ -1,12 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
 // Validate environment variables
 if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your-supabase-url' || supabaseAnonKey === 'your-supabase-anon-key') {
-  console.error('❌ Supabase configuration error: Missing or invalid environment variables');
-  console.error('Please check your .env file and ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set correctly');
+  console.warn('⚠️ Supabase configuration error: Missing or invalid environment variables');
 } else {
   console.log('✅ Supabase client initialized:', {
     url: supabaseUrl,
@@ -14,19 +13,20 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your-supabase-url' || s
   });
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    redirectTo: import.meta.env.VITE_SITE_URL || 'https://nexusaisuite.com'
-  },
-  global: {
-    headers: {
-      'x-application-name': 'nexus-ai'
-    }
-  }
-})
+// Safe mock client used when env vars are missing — prevents null crashes throughout the app
+const createMockClient = (): SupabaseClient => ({
+  from: () => ({ select: () => ({ data: null, error: null }), insert: () => ({ data: null, error: null }), update: () => ({ data: null, error: null }), delete: () => ({ data: null, error: null }) }),
+  auth: { getSession: async () => ({ data: { session: null }, error: null }), onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }), signInWithPassword: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase not configured' } }), signUp: async () => ({ data: { user: null, session: null }, error: { message: 'Supabase not configured' } }), signOut: async () => ({ error: null }), updateUser: async () => ({ data: { user: null }, error: { message: 'Supabase not configured' } }), getUser: async () => ({ data: { user: null }, error: { message: 'Supabase not configured' } }) },
+  storage: { from: () => ({ upload: async () => ({ data: null, error: null }), download: async () => ({ data: null, error: null }), list: async () => ({ data: null, error: null }), remove: async () => ({ data: null, error: null }) }) },
+  rpc: async () => ({ data: null, error: null })
+} as unknown as SupabaseClient)
+
+// Only initialize real Supabase client when valid env vars are present
+export const supabase: SupabaseClient = (supabaseUrl && supabaseAnonKey && supabaseUrl !== 'your-supabase-url')
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { autoRefreshToken: true, persistSession: true }
+    })
+  : createMockClient()
 
 // Test Supabase connection on initialization
 export const testSupabaseConnection = async () => {

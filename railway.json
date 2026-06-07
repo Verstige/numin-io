@@ -1,5 +1,1 @@
-{
-  "build": {
-    "builder": "DOCKER"
-  }
-}
+{"build":{"builder":"NIXPACKS"}}
