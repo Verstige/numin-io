@@ -646,6 +646,188 @@ h1.hero-h {
 }
 .compare-head > div:nth-child(3) { color: var(--accent); }
 
+/* ── Numin vs Claude Code ── */
+.vscc { background: var(--bg); padding: 120px 52px; position: relative; overflow: hidden; }
+.vscc-head { text-align: center; max-width: 800px; margin: 0 auto 64px; }
+.vscc-table {
+  max-width: 1100px; margin: 0 auto;
+  border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
+}
+.vscc-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.vscc-row:last-child { border-bottom: none; }
+.vscc-row > div { padding: 22px 24px; font-size: 0.9rem; }
+.vscc-row > div:first-child {
+  background: rgba(255, 255, 255, 0.02);
+  font-weight: 700; color: var(--text);
+}
+.vscc-row > div:nth-child(2) { color: var(--text-mute); }
+.vscc-row > div:nth-child(3) {
+  color: var(--text); background: rgba(var(--accent-rgb), 0.04);
+  border-left: 1px solid rgba(var(--accent-rgb), 0.15);
+}
+.vscc-head > div {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--text-mid);
+}
+.vscc-head > div:nth-child(3) { color: var(--accent); }
+.vscc-cta { text-align: center; margin-top: 48px; font-size: 1.05rem; color: var(--text-mid); }
+
+/* ── What you own ── */
+.own { background: linear-gradient(180deg, var(--bg) 0%, var(--bg-3) 100%); padding: 120px 52px; }
+.own-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 1100px; margin: 0 auto; }
+.own-card {
+  border-radius: 20px; border: 1px solid var(--border);
+  background: var(--bg-2); padding: 36px;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.own-card:hover { border-color: rgba(var(--accent-rgb), 0.25); transform: translateY(-4px); }
+.own-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: rgba(var(--accent-rgb), 0.08);
+  border: 1px solid rgba(var(--accent-rgb), 0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; margin-bottom: 18px;
+}
+.own-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
+.own-card p { font-size: 0.88rem; color: var(--text-mid); line-height: 1.6; }
+
+/* ── Pricing ── */
+.pricing { background: var(--bg); padding: 120px 52px; }
+.pricing-head { text-align: center; max-width: 800px; margin: 0 auto 64px; }
+.pricing-head .body-text { margin-left: auto; margin-right: auto; }
+.pricing-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  max-width: 1200px; margin: 0 auto 32px;
+}
+.price-card {
+  border-radius: 20px; border: 1px solid var(--border);
+  background: var(--bg-2); padding: 32px;
+  transition: border-color 0.3s, transform 0.3s;
+  display: flex; flex-direction: column;
+}
+.price-card:hover { border-color: rgba(var(--accent-rgb), 0.25); transform: translateY(-4px); }
+.price-card.featured { border-color: rgba(var(--accent-rgb), 0.4); position: relative; }
+.price-card.featured::before {
+  content: 'Most popular'; position: absolute; top: -12px; left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  color: var(--bg); font-size: 0.7rem; font-weight: 700;
+  padding: 4px 12px; border-radius: 90px; letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.price-tier {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+}
+.price-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 4px; }
+.price-tagline { font-size: 0.85rem; color: var(--text-mid); margin-bottom: 24px; min-height: 40px; }
+.price-amount { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+.price-amount-main { font-size: 2.4rem; font-weight: 900; letter-spacing: -0.03em; }
+.price-amount-period { font-size: 0.95rem; color: var(--text-mute); }
+.price-setup {
+  font-size: 0.82rem; color: var(--text-mid); margin-bottom: 24px;
+  padding-bottom: 24px; border-bottom: 1px solid var(--border);
+}
+.price-setup strong { color: var(--text); font-weight: 600; }
+.price-features { list-style: none; margin: 0 0 24px; padding: 0; }
+.price-features li {
+  display: flex; gap: 10px; font-size: 0.85rem; color: var(--text-mid);
+  padding: 6px 0; line-height: 1.4;
+}
+.price-features li::before {
+  content: '✓'; color: var(--accent); font-weight: 700; flex-shrink: 0;
+}
+.price-features li.no { color: var(--text-mute); }
+.price-features li.no::before { content: '–'; color: var(--text-mute); }
+.price-cta {
+  margin-top: auto; display: block; text-align: center;
+  padding: 14px 20px; border-radius: 90px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text); font-size: 0.9rem; font-weight: 600;
+  transition: all 0.3s;
+}
+.price-cta:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); }
+.price-card.featured .price-cta {
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  color: var(--bg); border-color: transparent;
+  font-weight: 700;
+}
+.price-card.featured .price-cta:hover { filter: brightness(1.08); }
+.pricing-row-2 { max-width: 600px; margin: 0 auto; }
+.pricing-foot {
+  text-align: center; max-width: 700px; margin: 48px auto 0;
+  padding: 24px; border-radius: 16px;
+  background: rgba(var(--accent-rgb), 0.04);
+  border: 1px solid rgba(var(--accent-rgb), 0.12);
+}
+.pricing-foot p { font-size: 0.92rem; color: var(--text-mid); line-height: 1.6; margin: 0; }
+
+/* ── Credits ── */
+.credits { background: linear-gradient(180deg, var(--bg-3) 0%, var(--bg) 100%); padding: 120px 52px; }
+.credits-head { text-align: center; max-width: 800px; margin: 0 auto 64px; }
+.credits-head .body-text { margin-left: auto; margin-right: auto; }
+.credits-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  max-width: 1100px; margin: 0 auto;
+}
+.credit-card {
+  border-radius: 20px; border: 1px solid var(--border);
+  background: var(--bg-2); padding: 32px 28px;
+  transition: border-color 0.3s, transform 0.3s;
+  position: relative;
+}
+.credit-card:hover { border-color: rgba(var(--accent-rgb), 0.25); transform: translateY(-4px); }
+.credit-card.featured { border-color: rgba(var(--accent-rgb), 0.4); }
+.credit-tier { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+.credit-amount { font-size: 2.2rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 4px; }
+.credit-unit { font-size: 0.85rem; color: var(--text-mute); margin-bottom: 16px; }
+.credit-price {
+  font-size: 1.5rem; font-weight: 800; color: var(--text);
+  margin-bottom: 4px;
+}
+.credit-rate { font-size: 0.78rem; color: var(--text-mute); margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.credit-best { font-size: 0.78rem; color: var(--accent); font-weight: 600; }
+.credit-note {
+  margin-top: 32px; text-align: center; font-size: 0.85rem; color: var(--text-mid);
+  max-width: 700px; margin-left: auto; margin-right: auto;
+}
+
+/* ── FAQ ── */
+.faq { background: var(--bg); padding: 120px 52px; }
+.faq-head { text-align: center; max-width: 800px; margin: 0 auto 64px; }
+.faq-head .body-text { margin-left: auto; margin-right: auto; }
+.faq-list { max-width: 800px; margin: 0 auto; }
+.faq-item {
+  border-bottom: 1px solid var(--border);
+  padding: 4px 0;
+}
+.faq-q {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 24px 0; background: none; border: none;
+  color: var(--text); font-family: inherit;
+  font-size: 1.05rem; font-weight: 600; text-align: left;
+  cursor: pointer;
+}
+.faq-q::after {
+  content: '+'; color: var(--accent); font-size: 1.4rem; font-weight: 300;
+  transition: transform 0.3s;
+  margin-left: 16px;
+}
+.faq-item.open .faq-q::after { transform: rotate(45deg); }
+.faq-a {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.3s, padding 0.3s;
+  font-size: 0.92rem; color: var(--text-mid); line-height: 1.7;
+}
+.faq-item.open .faq-a {
+  max-height: 400px; padding-bottom: 24px;
+}
+.faq-a strong { color: var(--text); font-weight: 600; }
+
 /* ── CTA ── */
 .cta { padding: 120px 52px 100px; text-align: center; background: var(--bg); position: relative; overflow: hidden; }
 .cta-h .accent-text { color: var(--accent); }
@@ -728,6 +910,14 @@ h1.hero-h {
   .compare-row > div:nth-child(3) { background: none; border-left: none; overflow-wrap: break-word; word-break: break-word; }
   .compare-head { display: none; }
   .compare-table { border: none; border-radius: 16px; overflow: visible; }
+  .vscc-row { grid-template-columns: 1fr; gap: 4px; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+  .vscc-row > div { padding: 8px 14px; font-size: 0.82rem; }
+  .vscc-row > div:first-child { background: none; font-weight: 700; padding-bottom: 4px; }
+  .vscc-row > div:nth-child(2) { color: var(--text-mute); padding-top: 0; padding-bottom: 8px; border-left: none; border-bottom: 1px dashed rgba(255, 255, 255, 0.08); }
+  .vscc-row > div:nth-child(3) { background: none; border-left: none; overflow-wrap: break-word; word-break: break-word; }
+  .vscc-table { border: none; border-radius: 16px; overflow: visible; }
+  .vscc-head { display: none; }
+  .own-grid, .pricing-grid, .credits-grid { grid-template-columns: 1fr; gap: 12px; }
   .footer { flex-direction: column; text-align: center; padding: 32px 20px; gap: 20px; }
   .footer-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
 }
@@ -767,7 +957,7 @@ h1.hero-h {
   </div>
   <div class="badge">
     <span class="badge-dot">N</span>
-    <span data-skin-text="badge">YOUR AI EMPLOYEE · RUNNING LOCALLY</span>
+    <span data-skin-text="badge">FOR ENTREPRENEURS · CEOS · OPERATORS</span>
   </div>
   <h1 class="hero-h">
     <span class="dim" data-skin-text="line1-dim">Six agents.</span>
@@ -1171,6 +1361,299 @@ h1.hero-h {
   </div>
 </section>
 
+<section class="vscc" id="vs-claude">
+  <div class="vscc-head">
+    <div class="eyebrow" style="justify-content:center">The honest comparison</div>
+    <h2 class="h2">Numin vs <span class="accent-text">Claude Code</span></h2>
+    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">Both are great. They're built for different jobs. Claude Code writes code in a one-shot session. Numin runs your business 24/7.</p>
+  </div>
+  <div class="vscc-table">
+    <div class="vscc-row vscc-head">
+      <div></div>
+      <div>Claude Code ($200/mo)</div>
+      <div>Numin (from $50/mo)</div>
+    </div>
+    <div class="vscc-row"><div>Price</div><div>$200/mo flat, no setup fee</div><div>From $50/mo + optional $299 setup</div></div>
+    <div class="vscc-row"><div>Usage caps</div><div>Daily message limits, throttled at peak</div><div>Credit-based, never throttled, no daily caps</div></div>
+    <div class="vscc-row"><div>Where it lives</div><div>Your terminal, one window</div><div>iMessage, WhatsApp, Telegram, web — every channel you already use</div></div>
+    <div class="vscc-row"><div>Memory</div><div>Per-session, dies when you close the window</div><div>Permanent, learns your business over time, never forgets</div></div>
+    <div class="vscc-row"><div>Always on</div><div>No — waits for you to open it</div><div>Yes — runs 24/7, monitors, briefs you in the morning</div></div>
+    <div class="vscc-row"><div>Specialists</div><div>One generalist agent</div><div>6 specialists — research, build, plan, write, sell, orchestrate</div></div>
+    <div class="vscc-row"><div>Custom training</div><div>Generic prompts you write yourself</div><div>Pre-trained on your business during onboarding</div></div>
+    <div class="vscc-row"><div>Tasks it does</div><div>Suggests code, waits for review</div><div>Sends emails, updates CRM, books meetings, closes tickets — without asking</div></div>
+    <div class="vscc-row"><div>Ownership</div><div>Renting a tool — they can change pricing or shut it down</div><div>Your agent, your data, your Mac — you own the runtime</div></div>
+    <div class="vscc-row"><div>Best for</div><div>Developers writing code</div><div>Entrepreneurs, CEOs, and operators running a business</div></div>
+  </div>
+  <p class="vscc-cta">Both have their place. If you're shipping code, use Claude Code. If you're running a business, use Numin.</p>
+</section>
+
+<section class="own" id="own">
+  <div class="eyebrow">What you own</div>
+  <h2 class="h2">Yours. Not rented.<br><span class="dim">Not locked in.</span></h2>
+  <p class="body-text">Most AI tools rent you access to someone else's model running on someone else's servers. Numin is the opposite. You own the runtime, you own the data, and you can leave anytime.</p>
+  <div class="own-grid">
+    <div class="own-card">
+      <div class="own-icon">💻</div>
+      <h3>Your Mac</h3>
+      <p>On Local, your agent runs on your physical hardware. On Cloud, your agent runs on a dedicated cloud Mac that is yours alone. Either way, you own the runtime — not a shared instance.</p>
+    </div>
+    <div class="own-card">
+      <div class="own-icon">🔒</div>
+      <h3>Your data</h3>
+      <p>Your business data, your conversations, your memory — all of it stays on your machine (or your cloud Mac). We never train anyone else's model on your data. We can't, because we never have access to it.</p>
+    </div>
+    <div class="own-card">
+      <div class="own-icon">🧠</div>
+      <h3>Your agent</h3>
+      <p>The skills, integrations, and customizations your agent learns are yours. Cancel your subscription tomorrow and your agent keeps running on your Mac. The knowledge doesn't disappear.</p>
+    </div>
+    <div class="own-card">
+      <div class="own-icon">🚪</div>
+      <h3>No lock-in</h3>
+      <p>No proprietary data formats. No proprietary APIs. Your agent talks to your tools through standard protocols. Switch LLMs, switch channels, switch deployment — all without losing anything.</p>
+    </div>
+    <div class="own-card">
+      <div class="own-icon">📦</div>
+      <h3>Open architecture</h3>
+      <p>Built on Hermes Agent — an open agentic platform. Your codebase, your integration points, your documentation. You can read it, modify it, or hire someone else to extend it.</p>
+    </div>
+    <div class="own-card">
+      <div class="own-icon">🌍</div>
+      <h3>Portable</h3>
+      <p>Take your agent and move it anywhere. From your Mac to your cloud Mac, from one cloud provider to another, from one LLM to another. It's your agent. It goes where you go.</p>
+    </div>
+  </div>
+</section>
+
+<section class="pricing" id="pricing">
+  <div class="pricing-head">
+    <div class="eyebrow" style="justify-content:center">Pricing</div>
+    <h2 class="h2">Built for every size of<br><span class="dim">operation.</span></h2>
+    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">From solo entrepreneurs to global enterprises. One-time setup covers onboarding and customization. Monthly covers the cloud Mac, your agents, and ongoing support.</p>
+  </div>
+
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-tier">DIY</div>
+      <div class="price-name">Local</div>
+      <div class="price-tagline">For technical founders who want full control.</div>
+      <div class="price-amount">
+        <span class="price-amount-main">$0</span>
+        <span class="price-amount-period">/month</span>
+      </div>
+      <div class="price-setup"><strong>$499</strong> one-time setup fee</div>
+      <ul class="price-features">
+        <li>Runs on your Mac</li>
+        <li>All 6 agents included</li>
+        <li>You bring your own API key</li>
+        <li>GitHub repo access</li>
+        <li class="no">No setup call — DIY install</li>
+        <li class="no">Email support ($99/hr)</li>
+      </ul>
+      <a href="#faq" class="price-cta">Start DIY</a>
+    </div>
+
+    <div class="price-card">
+      <div class="price-tier">Solo</div>
+      <div class="price-name">Cloud</div>
+      <div class="price-tagline">For entrepreneurs and solo operators.</div>
+      <div class="price-amount">
+        <span class="price-amount-main">$50</span>
+        <span class="price-amount-period">/month</span>
+      </div>
+      <div class="price-setup"><strong>$299</strong> one-time setup fee</div>
+      <ul class="price-features">
+        <li>1 dedicated cloud Mac</li>
+        <li>1 primary agent</li>
+        <li>100K credits / month included</li>
+        <li>iMessage + WhatsApp + Telegram + web</li>
+        <li>30-min setup call included</li>
+        <li>Email support</li>
+      </ul>
+      <a href="#cta" class="price-cta">Start Solo</a>
+    </div>
+
+    <div class="price-card featured">
+      <div class="price-tier">Pro</div>
+      <div class="price-name">All 6 Agents</div>
+      <div class="price-tagline">For operators using agents daily across all functions.</div>
+      <div class="price-amount">
+        <span class="price-amount-main">$200</span>
+        <span class="price-amount-period">/month</span>
+      </div>
+      <div class="price-setup"><strong>$299</strong> one-time setup fee</div>
+      <ul class="price-features">
+        <li>1 dedicated cloud Mac</li>
+        <li><strong>All 6 agents</strong> active 24/7</li>
+        <li>500K credits / month included</li>
+        <li>iMessage + WhatsApp + Telegram + web</li>
+        <li>Custom agent training</li>
+        <li>Priority Slack support</li>
+      </ul>
+      <a href="#cta" class="price-cta">Start Pro</a>
+    </div>
+  </div>
+
+  <div class="pricing-grid" style="margin-top:16px">
+    <div class="price-card">
+      <div class="price-tier">Business</div>
+      <div class="price-name">For Teams</div>
+      <div class="price-tagline">Small companies and agencies running multiple operations.</div>
+      <div class="price-amount">
+        <span class="price-amount-main">$500</span>
+        <span class="price-amount-period">/month</span>
+      </div>
+      <div class="price-setup"><strong>$1,499</strong> one-time setup fee</div>
+      <ul class="price-features">
+        <li>2 dedicated cloud Macs</li>
+        <li>All 6 agents + custom roles</li>
+        <li>2M credits / month included</li>
+        <li>Custom integrations built for you</li>
+        <li>Dedicated onboarding specialist</li>
+        <li>Priority support + monthly check-ins</li>
+      </ul>
+      <a href="#cta" class="price-cta">Talk to sales</a>
+    </div>
+
+    <div class="price-card">
+      <div class="price-tier">Enterprise</div>
+      <div class="price-name">White-Label</div>
+      <div class="price-tagline">For large companies needing dedicated infrastructure.</div>
+      <div class="price-amount">
+        <span class="price-amount-main">$2,499</span>
+        <span class="price-amount-period">/month</span>
+      </div>
+      <div class="price-setup"><strong>$4,999</strong> one-time setup fee</div>
+      <ul class="price-features">
+        <li>Dedicated cluster</li>
+        <li>White-labeled as your brand</li>
+        <li>Unlimited credits</li>
+        <li>Custom agent training on your domain</li>
+        <li>Account manager + SLA</li>
+        <li>Security review + compliance</li>
+      </ul>
+      <a href="#cta" class="price-cta">Contact sales</a>
+    </div>
+
+    <div class="price-card">
+      <div class="price-tier">All Plans</div>
+      <div class="price-name">Add-ons</div>
+      <div class="price-tagline">Custom integrations, extra Macs, training sessions.</div>
+      <div class="price-amount">
+        <span class="price-amount-main">$99</span>
+        <span class="price-amount-period">/hour</span>
+      </div>
+      <div class="price-setup">Billed monthly, no contract</div>
+      <ul class="price-features">
+        <li>Custom integration builds</li>
+        <li>Additional cloud Mac slots</li>
+        <li>Agent training sessions</li>
+        <li>Priority bug fixes</li>
+        <li>Data migration</li>
+        <li>Cancel anytime</li>
+      </ul>
+      <a href="#cta" class="price-cta">Get a quote</a>
+    </div>
+  </div>
+
+  <div class="pricing-foot">
+    <p><strong>All plans include:</strong> 14-day free trial · No long-term contracts · Cancel anytime · 30-day money-back guarantee · All 6 agent capabilities · iMessage, WhatsApp, Telegram, and web access · Source-code access to your agent</p>
+  </div>
+</section>
+
+<section class="credits" id="credits">
+  <div class="credits-head">
+    <div class="eyebrow" style="justify-content:center">Credit usage</div>
+    <h2 class="h2">No daily caps.<br><span class="dim">No throttling. Ever.</span></h2>
+    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">Most AI tools hit you with a wall when you need them most. Numin uses credit-based usage so you get predictable costs and never get throttled mid-task. Buy more when you need it.</p>
+  </div>
+  <div class="credits-grid">
+    <div class="credit-card">
+      <div class="credit-tier">Starter</div>
+      <div class="credit-amount">250K</div>
+      <div class="credit-unit">tokens</div>
+      <div class="credit-price">$10</div>
+      <div class="credit-rate">$0.040 per 1K tokens</div>
+      <div class="credit-best">Light weekend projects</div>
+    </div>
+    <div class="credit-card featured">
+      <div class="credit-tier">Standard</div>
+      <div class="credit-amount">1M</div>
+      <div class="credit-unit">tokens</div>
+      <div class="credit-price">$35</div>
+      <div class="credit-rate">$0.035 per 1K tokens</div>
+      <div class="credit-best">Most solo operators</div>
+    </div>
+    <div class="credit-card">
+      <div class="credit-tier">Pro</div>
+      <div class="credit-amount">5M</div>
+      <div class="credit-unit">tokens</div>
+      <div class="credit-price">$150</div>
+      <div class="credit-rate">$0.030 per 1K tokens</div>
+      <div class="credit-best">Daily-driver operators</div>
+    </div>
+    <div class="credit-card">
+      <div class="credit-tier">Team</div>
+      <div class="credit-amount">20M</div>
+      <div class="credit-unit">tokens</div>
+      <div class="credit-price">$500</div>
+      <div class="credit-rate">$0.025 per 1K tokens</div>
+      <div class="credit-best">Agencies + teams</div>
+    </div>
+  </div>
+  <p class="credit-note">All plans include monthly credits (Solo: 100K · Pro: 500K · Business: 2M · Enterprise: unlimited). Buy additional packs anytime — they roll over for 12 months. Pricing aligned with industry-standard rates (MiniMax, OpenAI, Anthropic).</p>
+</section>
+
+<section class="faq" id="faq">
+  <div class="faq-head">
+    <div class="eyebrow" style="justify-content:center">Frequently asked</div>
+    <h2 class="h2">Questions, answered.</h2>
+    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">If you have a question we missed, reach out and we'll add it.</p>
+  </div>
+  <div class="faq-list">
+    <div class="faq-item">
+      <button class="faq-q">What's the difference between Local and Cloud?</button>
+      <div class="faq-a"><strong>Local</strong> runs on your own Mac — you own the hardware, the data never leaves your machine, and you can run it offline once set up. <strong>Cloud</strong> runs on a dedicated Apple Silicon Mac in the cloud that's yours alone — accessible from any device via browser, iMessage, WhatsApp, or Telegram, with no hardware to buy or maintain.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">What's required for the DIY Local setup?</button>
+      <div class="faq-a">DIY Local requires comfort with the terminal, navigating file systems on macOS, managing environment variables (like API keys), and basic troubleshooting when things go wrong. If you've used Homebrew, run a few npm/pip installs, or can read a stack trace, you're fine. If those words made you nervous, go with Solo Cloud and we'll handle the setup for you.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">What are credits and how do they work?</button>
+      <div class="faq-a">Credits are how we meter your agent's LLM usage. Every plan includes monthly credits. If you use them up, you can buy a credit pack (from $10 for 250K tokens) and they roll over for 12 months. Your agents never stop working — they just slow down on heavier tasks until you top up.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">Which LLM does Numin use?</button>
+      <div class="faq-a">Numin is built on the Hermes Agent platform and supports multiple LLM providers. By default it uses MiniMax for cost efficiency. You can bring your own API key (OpenAI, Anthropic, or any provider Hermes supports) and we'll wire it up. Enterprise customers can route to private models.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">Can I switch plans later?</button>
+      <div class="faq-a">Yes. Upgrade or downgrade anytime — we prorate the difference. Your agent, customizations, and integrations move with you.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">What if I want to cancel?</button>
+      <div class="faq-a">Cancel anytime, no penalties. You keep all your data and can export it. If you're on Cloud, your cloud Mac is decommissioned within 7 days. Your agent code stays with you — it's on your GitHub regardless of plan.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">Is my data private?</button>
+      <div class="faq-a">Yes. Your business data, conversations, and memory live on your Mac (Local) or your dedicated cloud Mac (Cloud). We never have access to it, we never train anyone else's models on it, and we can't read it. Enterprise plans include additional compliance and audit log options.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">Why is the setup fee so high for DIY?</button>
+      <div class="faq-a">Because DIY isn't truly "do it yourself" if we're walking you through the terminal. The $499 covers a 2-hour setup session where we get your agent running, configure your API keys, set up your channels, and answer every question. If you'd rather figure it out alone, the GitHub repo is free.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">How does this compare to just hiring an assistant?</button>
+      <div class="faq-a">A US-based virtual assistant costs $1,500-$3,000/month and works 40 hours a week. Numin Pro is $200/month and works 24/7. It won't replace human judgment, but it will replace the recurring tasks your VA currently handles — and it never sleeps, never takes a day off, and never forgets.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q">Do you offer custom builds?</button>
+      <div class="faq-a">Yes. Beyond our standard plans, we build custom integrations (CRMs, ERPs, internal tools), custom agent training on your domain, and white-labeled deployments. Hourly at $99/hr or scoped project quotes.</div>
+    </div>
+  </div>
+</section>
+
 <section class="cta">
   <h2 class="h2 cta-h">
     Stop managing.<br>
@@ -1233,12 +1716,12 @@ document.head.appendChild(style);
 // ── Skin / Tab toggle ──
 const SKIN_COPY = {
   local: {
-    badge: 'YOUR AI EMPLOYEE · RUNNING LOCALLY',
+    badge: 'FOR ENTREPRENEURS · CEOS · OPERATORS',
     'line1-dim': 'Six agents.',
     'line1-bright': 'One business.',
     'line2-dim': 'Running',
     'line2-bright': 'on your Mac.',
-    sub: 'Numin deploys six specialized AI agents that run your entire business — operations, sales, support, and communications — 24/7. Text them on iMessage, WhatsApp, Telegram, or web. From anywhere.',
+    sub: 'Numin deploys six specialized AI agents that run your entire business — operations, sales, support, and communications — 24/7. Built for entrepreneurs, CEOs, and operators. Text them on iMessage, WhatsApp, Telegram, or web.',
     primary: 'Start free trial →',
     secondary: '▶ See how it works',
     ctaSub: '14-day free trial. Runs on your Mac. No cloud required.',
@@ -1252,14 +1735,14 @@ const SKIN_COPY = {
     body: 'ChatGPT is a conversation. Numin is an operating system. The difference is memory, action, and ownership.',
   },
   cloud: {
-    badge: 'YOUR AI EMPLOYEE · IN YOUR PRIVATE CLOUD',
+    badge: 'FOR ENTREPRENEURS · CEOS · OPERATORS',
     'line1-dim': 'Six agents.',
     'line1-bright': 'Zero hardware.',
     'line2-dim': 'Hosted',
     'line2-bright': 'on your cloud Mac.',
-    sub: 'Skip the Mac mini. We provision a dedicated Apple Silicon machine in the cloud, your agent is online in minutes. Reach it from iMessage, WhatsApp, Telegram, or any browser.',
+    sub: 'Get the full Numin experience without buying a Mac. We provision a dedicated cloud Mac, your agent is online in minutes. Reach it from iMessage, WhatsApp, Telegram, or any browser. Built for entrepreneurs, CEOs, and operators.',
     primary: 'Provision your agent →',
-    secondary: '▶ See how it works',
+    secondary: '▶ Watch cloud demo',
     ctaSub: '14-day free trial. Browser access. Your dedicated cloud computer.',
     ctaNote: 'No credit card · Any device · Apple Silicon in the cloud · Hermes-powered',
     eyebrow: 'The cloud advantage',
@@ -1267,7 +1750,7 @@ const SKIN_COPY = {
     h2aDim: 'need your hardware.',
     h2b: 'Numin Cloud',
     h2bDim: 'runs',
-    h2bSuffix: ' on yours.',
+    h2bSuffix: ' on ours.',
     body: 'Skip the install. We spin up a dedicated cloud Mac pre-configured with your agents. Isolated, persistent, and reachable from anywhere.',
   },
 };
@@ -1306,6 +1789,16 @@ try {
   const saved = localStorage.getItem('numin-skin');
   if (saved && SKIN_COPY[saved]) applySkin(saved);
 } catch (e) {}
+
+// FAQ accordion
+document.querySelectorAll('.faq-q').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.parentElement;
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  });
+});
 
 // Mobile-test mode: ?mobile=1 forces a 390px container so we can audit mobile layout
 // from a desktop browser. Renders inside a styled wrapper to simulate the viewport.
