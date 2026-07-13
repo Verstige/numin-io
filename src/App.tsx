@@ -32,6 +32,7 @@ import { ReminderSystem } from "./lib/reminder-system";
 import { initializeMobileApp } from "./lib/mobile-config";
 import { useEffect } from "react";
 import "./lib/firebase-test"; // Import Firebase connection test
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => {
   }, []);
 
   return (
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <FirebaseAuthProvider>
         <TooltipProvider>
@@ -109,6 +111,7 @@ const App = () => {
       </TooltipProvider>
     </FirebaseAuthProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
   );
 };
 
