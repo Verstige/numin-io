@@ -430,7 +430,7 @@ h1.hero-h {
 .center-h .body-text { margin-left: auto; margin-right: auto; }
 
 /* ── Channels ── */
-.channels, .cloud-what, .audience, .advantage, .experience, .workflow, .compare, .cta { position: relative; z-index: 1; }
+.channels, .cloud-what, .audience, .advantage, .experience, .workflow, .compare, .own, .cta { position: relative; z-index: 1; }
 .channels { padding: 120px 52px; }
 .channels-grid {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
@@ -1024,7 +1024,171 @@ h1.hero-h {
 .efficient-callout p { font-size: 0.95rem; color: var(--text); line-height: 1.6; margin: 0; }
 .efficient-callout strong { color: var(--accent); font-weight: 700; }
 
-/* ── Numin vs Claude Code ── */
+/* ── Card stack interaction (used by vs-claude, built, compare) ── */
+.stack {
+  position: relative;
+  padding: 40px 0 200px;
+}
+.stack-sticky {
+  position: sticky;
+  top: 80px;
+  height: calc(100vh - 80px);
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stack-card {
+  position: absolute;
+  width: 100%;
+  max-width: 800px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 100%);
+  padding: 40px 36px;
+  opacity: 0;
+  transform: translateY(40px) scale(0.96);
+  transition: opacity 0.5s, transform 0.5s;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.stack-card.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.stack-card.passed {
+  opacity: 0;
+  transform: translateY(-40px) scale(0.96);
+}
+.stack-card.exit {
+  opacity: 0;
+  transform: translateY(60px) scale(0.94);
+}
+.stack-progress {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+.stack-progress-bar {
+  width: 200px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 90px;
+  overflow: hidden;
+}
+.stack-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  transition: width 0.15s;
+  border-radius: 90px;
+}
+.stack-progress-label {
+  font-size: 0.7rem;
+  color: var(--text-mute);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: ui-monospace, monospace;
+}
+.stack-hint {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  color: var(--text-mute);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: ui-monospace, monospace;
+  pointer-events: none;
+}
+@media (max-width: 768px) {
+  .stack { padding: 20px 0 100px; }
+  .stack-sticky { top: 70px; height: calc(100vh - 70px); padding: 0 16px; }
+  .stack-card { padding: 28px 24px; }
+  .stack-card { border-radius: 20px; }
+}
+
+/* ── Card stack inner content (shared) ── */
+.stack-head {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 24px;
+}
+.stack-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent);
+}
+.stack-icon .icon { width: 24px; height: 24px; }
+.stack-num {
+  font-size: 0.75rem; font-weight: 800; color: var(--accent);
+  letter-spacing: 0.14em;
+  font-family: ui-monospace, monospace;
+}
+.stack-num + h3 { margin-top: 4px; }
+.stack-card h3 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 12px; }
+.stack-card p { font-size: 1rem; color: var(--text-mid); line-height: 1.6; margin-bottom: 20px; }
+
+/* Two-column row used in vs-claude/compare stacks */
+.stack-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 16px 0;
+}
+.stack-side {
+  border-radius: 14px;
+  padding: 20px;
+}
+.stack-side.opp {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.stack-side.us {
+  background: rgba(var(--accent-rgb), 0.06);
+  border: 1px solid rgba(var(--accent-rgb), 0.2);
+}
+.stack-side-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px;
+}
+.stack-side-logo {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  padding: 4px;
+  flex-shrink: 0;
+}
+.stack-side-logo img,
+.stack-side-logo svg { width: 100%; height: 100%; object-fit: contain; }
+.stack-side-name {
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+.stack-side.us .stack-side-name { color: var(--accent); }
+.stack-side-text {
+  font-size: 0.92rem; line-height: 1.5;
+  color: var(--text-mid);
+}
+.stack-side.us .stack-side-text { color: var(--text); font-weight: 500; }
+@media (max-width: 768px) {
+  .stack-row { grid-template-columns: 1fr; }
+  .stack-card h3 { font-size: 1.25rem; }
+}
+
+/* ── Numin vs Claude Code + FAQ + Pricing ── */
 .pricing, .vscc, .faq { background: var(--bg); padding: 120px 52px; position: relative; z-index: 1; }
 .vscc-h { text-align: center; max-width: 800px; margin: 0 auto 64px; padding: 120px 52px 0; }
 .vscc-logos {
@@ -1571,238 +1735,189 @@ h1.hero-h {
   <div class="vscc-h">
     <div class="eyebrow" style="justify-content:center">The honest comparison</div>
     <h2 class="h2">Numin vs <span class="accent-text">Claude Code</span></h2>
-    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">Both are great. They're built for different jobs. Scroll to see how Numin runs circles around Claude Code for actual business operations.</p>
+    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">Both are great. They're built for different jobs. Scroll to flip through how Numin runs circles around Claude Code for actual business operations.</p>
+    <div class="vscc-logos">
+      <div class="vscc-logo-block">
+        <div class="vscc-logo-img">
+          <img src="logo-claude.svg" alt="Claude Code" style="width:80px;height:80px;object-fit:contain" />
+        </div>
+        <div class="vscc-logo-label">Claude Code</div>
+      </div>
+      <div class="vscc-vs">VS</div>
+      <div class="vscc-logo-block">
+        <div class="vscc-logo-img numin">
+          <svg class="icon" style="width:72px;height:72px"><use href="#i-sparkles"/></svg>
+        </div>
+        <div class="vscc-logo-label" style="color:var(--accent)">Numin</div>
+      </div>
+    </div>
   </div>
-  <div class="vscc-logos">
-    <div class="vscc-logo-block">
-      <div class="vscc-logo-img">
-        <img src="logo-claude.svg" alt="Claude Code" style="width:80px;height:80px;object-fit:contain" />
+  <div class="stack" id="vscc-stack">
+    <div class="stack-sticky">
+      <div class="stack-card" data-label="Price">
+        <div class="stack-head">
+          <div class="stack-num">CARD 01 / 10</div>
+        </div>
+        <h3>Quarter the price.</h3>
+        <p>Numin Pro starts at $200/mo. Numin Solo starts at $50/mo. Compare to Claude Code's flat $200/mo with no flexibility, no setup help, no tiers.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head">
+              <div class="stack-side-logo"><img src="logo-claude.svg" alt="Claude Code" /></div>
+              <div class="stack-side-name">Claude Code</div>
+            </div>
+            <div class="stack-side-text">$200/mo flat. No setup fee. No flexibility.</div>
+          </div>
+          <div class="stack-side us">
+            <div class="stack-side-head">
+              <div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
+              <div class="stack-side-name">Numin · from $50/mo</div>
+            </div>
+            <div class="stack-side-text">From $50/mo + optional $299 setup. Up to 75% cheaper.</div>
+          </div>
+        </div>
       </div>
-      <div class="vscc-logo-label">Claude Code</div>
+      <div class="stack-card" data-label="Usage caps">
+        <div class="stack-head"><div class="stack-num">CARD 02 / 10</div></div>
+        <h3>No daily wall.</h3>
+        <p>Claude Code has daily message limits and throttles you at peak hours. Numin runs on credits — you buy what you need, they roll over 12 months, and nothing stops mid-task.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-claude.svg" alt="Claude Code" /></div><div class="stack-side-name">Claude Code</div></div>
+            <div class="stack-side-text">Daily message limits. Throttled at peak hours.</div>
+          </div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">Credit-based. Never throttled. No daily caps.</div>
+          </div>
+        </div>
+      </div>
+      <div class="stack-card" data-label="Where it lives">
+        <div class="stack-head"><div class="stack-num">CARD 03 / 10</div></div>
+        <h3>Where you already are.</h3>
+        <p>Claude Code lives in your terminal — one window, one session at a time. Numin lives in iMessage, WhatsApp, Telegram, and your browser. Pick up on your phone where you left off on your Mac.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-claude.svg" alt="Claude Code" /></div><div class="stack-side-name">Claude Code</div></div>
+            <div class="stack-side-text">Your terminal. One window. One session at a time.</div>
+          </div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">iMessage, WhatsApp, Telegram, web — every channel you already use.</div>
+          </div>
+        </div>
+      </div>
+      <div class="stack-card" data-label="Memory">
+        <div class="stack-head"><div class="stack-num">CARD 04 / 10</div></div>
+        <h3>Compounding intelligence.</h3>
+        <p>Claude Code starts fresh every session. Numin builds permanent memory of your business. Every conversation makes it smarter about your clients, your decisions, your patterns.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-claude.svg" alt="Claude Code" /></div><div class="stack-side-name">Claude Code</div></div>
+            <div class="stack-side-text">Per-session. Dies when you close the window.</div>
+          </div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">Permanent. Learns your business over time. Never forgets.</div>
+          </div>
+        </div>
+      </div>
+      <div class="stack-card" data-label="Always on">
+        <div class="stack-head"><div class="stack-num">CARD 05 / 10</div></div>
+        <h3>Works while you sleep.</h3>
+        <p>Claude Code waits for you to open it. Numin runs 24/7 — monitors overnight, briefs you in the morning, flags what's urgent. It never takes a day off.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-claude.svg" alt="Claude Code" /></div><div class="stack-side-name">Claude Code</div></div>
+            <div class="stack-side-text">No. Waits for you to open it.</div>
+          </div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">Yes. Runs 24/7. Monitors, briefs, flags issues.</div>
+          </div>
+        </div>
+      </div>
+      <div class="stack-card" data-label="Specialists">
+        <div class="stack-head"><div class="stack-num">CARD 06 / 10</div></div>
+        <h3>Six specialists. One brain.</h3>
+        <p>Claude Code is one generalist agent. Numin has six: ARIA for research, VANCE for build, NEXUS for planning, PRISM for content, APEX for sales, NUMIN for orchestration. Each owns a domain.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-claude.svg" alt="Claude Code" /></div><div class="stack-side-name">Claude Code</div></div>
+            <div class="stack-side-text">One generalist agent.</div>
+          </div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">6 specialists — research, build, plan, write, sell, orchestrate.</div>
+          </div>
+        </div>
+      </div>
+      <div class="stack-card" data-label="Custom training">
+        <div class="stack-head"><div class="stack-num">CARD 07 / 10</div></div>
+        <h3>Trained on YOUR business.</h3>
+        <p>Claude Code uses generic prompts you write yourself. Numin ingests your docs, your customer profiles, your past decisions. It answers like a teammate who's been at your company for years.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-claude.svg" alt="Claude Code" /></div><div class="stack-side-name">Claude Code</div></div>
+            <div class="stack-side-text">Generic prompts you write yourself.</div>
+          </div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">Pre-trained on your business during onboarding.</div>
+          </div>
+        </div>
+      </div>
+      <div class="stack-card" data-label="Tasks it does">
+        <div class="stack-head"><div class="stack-num">CARD 08 / 10</div></div>
+        <h3>Closes the loop.</h3>
+        <p>Claude Code suggests code, waits for review. Numin sends emails, updates CRM, books meetings, closes tickets — without asking. Real work, not suggestions.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-claude.svg" alt="Claude Code" /></div><div class="stack-side-name">Claude Code</div></div>
+            <div class="stack-side-text">Suggests code, waits for review.</div>
+          </div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">Sends emails, updates CRM, books meetings, closes tickets — without asking.</div>
+          </div>
+        </div>
+      </div>
+      <div class="stack-card" data-label="Ownership">
+        <div class="stack-head"><div class="stack-num">CARD 09 / 10</div></div>
+        <h3>Yours, not rented.</h3>
+        <p>Claude Code can change pricing or shut down anytime. Numin runs on your Mac or your dedicated cloud Mac — you own the runtime, the data, the agent.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-claude.svg" alt="Claude Code" /></div><div class="stack-side-name">Claude Code</div></div>
+            <div class="stack-side-text">Renting a tool. They can change pricing or shut it down.</div>
+          </div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">Your agent, your data, your Mac — you own the runtime.</div>
+          </div>
+        </div>
+      </div>
+      <div class="stack-card" data-label="Best for">
+        <div class="stack-head"><div class="stack-num">CARD 10 / 10</div></div>
+        <h3>Different jobs.</h3>
+        <p>Claude Code is for developers writing code. Numin is for entrepreneurs, CEOs, and operators running a business. Both have their place. We just built the second one.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-claude.svg" alt="Claude Code" /></div><div class="stack-side-name">Claude Code</div></div>
+            <div class="stack-side-text">Developers writing code.</div>
+          </div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">Entrepreneurs, CEOs, and operators running a business.</div>
+          </div>
+        </div>
+      </div>
+      <div class="stack-progress">
+        <div class="stack-progress-bar"><div class="stack-progress-fill"></div></div>
+        <div class="stack-progress-label">01 / 10 · Price</div>
+      </div>
+      <div class="stack-hint">Scroll to flip through ↓</div>
     </div>
-    <div class="vscc-vs">VS</div>
-    <div class="vscc-logo-block">
-      <div class="vscc-logo-img numin">
-        <svg class="icon" style="width:72px;height:72px"><use href="#i-sparkles"/></svg>
-      </div>
-      <div class="vscc-logo-label" style="color:var(--accent)">Numin</div>
-    </div>
-  </div>
-  <div class="compare-stage" style="padding:40px 0 60px">
-    <div class="compare-track" id="vscc-track">
-      <div class="cslide">
-        <div class="cslide-label">Price</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-claude.svg" alt="Claude Code" style="width:24px;height:24px" /></div>
-              <div class="cslide-side-name">Claude Code · $200/mo</div>
-            </div>
-            <div class="cslide-side-text">$200/mo flat. No setup fee. No flexibility.</div>
-          </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin · from $50/mo</div>
-            </div>
-            <div class="cslide-side-text">From $50/mo + optional $299 setup. Up to 75% cheaper.</div>
-          </div>
-        </div>
-        <div class="cslide-summary"><strong>Quarter the price.</strong> Same monthly commitment, dramatically different value.</div>
-      </div>
-      <div class="cslide">
-        <div class="cslide-label">Usage caps</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-claude.svg" alt="Claude Code" style="width:24px;height:24px" /></div>
-              <div class="cslide-side-name">Claude Code</div>
-            </div>
-            <div class="cslide-side-text">Daily message limits. Throttled at peak hours.</div>
-          </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">Credit-based. Never throttled. No daily caps.</div>
-          </div>
-        </div>
-        <div class="cslide-summary"><strong>No wall.</strong> Numin never hits you with "you've reached your limit."</div>
-      </div>
-      <div class="cslide">
-        <div class="cslide-label">Where it lives</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-claude.svg" alt="Claude Code" style="width:24px;height:24px" /></div>
-              <div class="cslide-side-name">Claude Code</div>
-            </div>
-            <div class="cslide-side-text">Your terminal. One window. One session at a time.</div>
-          </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">iMessage, WhatsApp, Telegram, web — every channel you already use.</div>
-          </div>
-        </div>
-        <div class="cslide-summary"><strong>Where you are.</strong> Text your agent from anywhere. No terminal needed.</div>
-      </div>
-      <div class="cslide">
-        <div class="cslide-label">Memory</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-claude.svg" alt="Claude Code" style="width:24px;height:24px" /></div>
-              <div class="cslide-side-name">Claude Code</div>
-            </div>
-            <div class="cslide-side-text">Per-session. Dies when you close the window.</div>
-          </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">Permanent. Learns your business over time. Never forgets.</div>
-          </div>
-        </div>
-        <div class="cslide-summary"><strong>Compounding intelligence.</strong> Every conversation makes Numin smarter about your business.</div>
-      </div>
-      <div class="cslide">
-        <div class="cslide-label">Always on</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-claude.svg" alt="Claude Code" style="width:24px;height:24px" /></div>
-              <div class="cslide-side-name">Claude Code</div>
-            </div>
-            <div class="cslide-side-text">No. Waits for you to open it.</div>
-          </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">Yes. Runs 24/7. Monitors, briefs, flags issues.</div>
-          </div>
-        </div>
-        <div class="cslide-summary"><strong>It works while you sleep.</strong> Briefs you in the morning. Flags what's urgent.</div>
-      </div>
-      <div class="cslide">
-        <div class="cslide-label">Specialists</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-claude.svg" alt="Claude Code" style="width:24px;height:24px" /></div>
-              <div class="cslide-side-name">Claude Code</div>
-            </div>
-            <div class="cslide-side-text">One generalist agent.</div>
-          </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">6 specialists — research, build, plan, write, sell, orchestrate.</div>
-          </div>
-        </div>
-        <div class="cslide-summary"><strong>Six experts.</strong> ARIA, VANCE, NEXUS, PRISM, APEX, NUMIN — each owns a domain.</div>
-      </div>
-      <div class="cslide">
-        <div class="cslide-label">Custom training</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-claude.svg" alt="Claude Code" style="width:24px;height:24px" /></div>
-              <div class="cslide-side-name">Claude Code</div>
-            </div>
-            <div class="cslide-side-text">Generic prompts you write yourself.</div>
-          </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">Pre-trained on your business during onboarding.</div>
-          </div>
-        </div>
-        <div class="cslide-summary"><strong>It knows your business.</strong> Onboard in 30 min — agent reads your docs, learns your voice.</div>
-      </div>
-      <div class="cslide">
-        <div class="cslide-label">Tasks it does</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-claude.svg" alt="Claude Code" style="width:24px;height:24px" /></div>
-              <div class="cslide-side-name">Claude Code</div>
-            </div>
-            <div class="cslide-side-text">Suggests code, waits for review.</div>
-          </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">Sends emails, updates CRM, books meetings, closes tickets — without asking.</div>
-          </div>
-        </div>
-        <div class="cslide-summary"><strong>Closes the loop.</strong> Numin executes the work, not just suggests it.</div>
-      </div>
-      <div class="cslide">
-        <div class="cslide-label">Ownership</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-claude.svg" alt="Claude Code" style="width:24px;height:24px" /></div>
-              <div class="cslide-side-name">Claude Code</div>
-            </div>
-            <div class="cslide-side-text">Renting a tool. They can change pricing or shut it down.</div>
-          </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">Your agent, your data, your Mac — you own the runtime.</div>
-          </div>
-        </div>
-        <div class="cslide-summary"><strong>Yours, not rented.</strong> Cancel anytime — your agent keeps running on your Mac.</div>
-      </div>
-      <div class="cslide">
-        <div class="cslide-label">Best for</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-claude.svg" alt="Claude Code" style="width:24px;height:24px" /></div>
-              <div class="cslide-side-name">Claude Code</div>
-            </div>
-            <div class="cslide-side-text">Developers writing code.</div>
-          </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">Entrepreneurs, CEOs, and operators running a business.</div>
-          </div>
-        </div>
-        <div class="cslide-summary"><strong>Different jobs.</strong> If you're shipping code, use Claude Code. If you're running a business, use Numin.</div>
-      </div>
-    </div>
-    <div class="compare-progress"><div class="compare-progress-bar" id="vscc-progress-bar"></div></div>
-    <div class="compare-hint">Scroll to compare ↓</div>
   </div>
 </section>
 
@@ -2147,76 +2262,79 @@ h1.hero-h {
   <div class="built-head">
     <div class="eyebrow" style="justify-content:center">What's under the hood</div>
     <h2 class="h2">Built on a complete<br><span class="dim">intelligence system.</span></h2>
-    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">Numin isn't a wrapper around a chatbot. It's a full-stack agentic platform. Scroll to explore every layer of what's under the hood.</p>
+    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">Numin isn't a wrapper around a chatbot. It's a full-stack agentic platform. Scroll to flip through every layer of what's under the hood.</p>
+    <div class="built-stats">
+      <div class="built-stat"><div class="built-stat-num">6</div><div class="built-stat-label">Specialized agents</div></div>
+      <div class="built-stat"><div class="built-stat-num">7</div><div class="built-stat-label">Channels</div></div>
+      <div class="built-stat"><div class="built-stat-num">1000+</div><div class="built-stat-label">Integrations</div></div>
+      <div class="built-stat"><div class="built-stat-num">24/7</div><div class="built-stat-label">Always on</div></div>
+      <div class="built-stat"><div class="built-stat-num">∞</div><div class="built-stat-label">Memory</div></div>
+    </div>
   </div>
-  <div class="built-stats">
-    <div class="built-stat"><div class="built-stat-num">6</div><div class="built-stat-label">Specialized agents</div></div>
-    <div class="built-stat"><div class="built-stat-num">7</div><div class="built-stat-label">Channels</div></div>
-    <div class="built-stat"><div class="built-stat-num">1000+</div><div class="built-stat-label">Integrations</div></div>
-    <div class="built-stat"><div class="built-stat-num">24/7</div><div class="built-stat-label">Always on</div></div>
-    <div class="built-stat"><div class="built-stat-num">∞</div><div class="built-stat-label">Memory</div></div>
-  </div>
-  <div class="built-stage">
-    <div class="built-track" id="built-track">
-      <div class="bcard">
-        <div class="bcard-num">01 / INTELLIGENCE</div>
-        <div class="bcard-icon"><svg class="icon"><use href="#i-brain"/></svg></div>
+  <div class="stack" id="built-stack">
+    <div class="stack-sticky">
+      <div class="stack-card" data-label="Memory">
+        <div class="stack-head"><div class="stack-num">CARD 01 / 08 · INTELLIGENCE</div></div>
+        <div class="stack-icon"><svg class="icon"><use href="#i-brain"/></svg></div>
         <h3>Persistent memory</h3>
-        <p>Your agent remembers every client, every preference, every decision — across sessions, across months, across years. It builds a model of your business that compounds over time.</p>
+        <p>Your agent remembers every client, every preference, every decision — across sessions, across months, across years. It builds a model of your business that compounds over time. New team members onboard by reading the agent's memory.</p>
         <div class="bcard-stat">NEVER FORGETS</div>
       </div>
-      <div class="bcard">
-        <div class="bcard-num">02 / CHANNELS</div>
-        <div class="bcard-icon"><svg class="icon"><use href="#i-message-circle"/></svg></div>
+      <div class="stack-card" data-label="Channels">
+        <div class="stack-head"><div class="stack-num">CARD 02 / 08 · CHANNELS</div></div>
+        <div class="stack-icon"><svg class="icon"><use href="#i-message-circle"/></svg></div>
         <h3>Every messaging surface</h3>
-        <p>iMessage, WhatsApp, Telegram, Discord, Slack, SMS, web chat, voice. One conversation context across all of them.</p>
+        <p>iMessage, WhatsApp, Telegram, Discord, Slack, SMS, web chat, voice. Your agent reaches you wherever you already are. One conversation context across all of them — pick up on iPhone where you left off on Mac.</p>
         <div class="bcard-stat">7 SURFACES</div>
       </div>
-      <div class="bcard">
-        <div class="bcard-num">03 / SKILLS LIBRARY</div>
-        <div class="bcard-icon"><svg class="icon"><use href="#i-wand"/></svg></div>
+      <div class="stack-card" data-label="Skills">
+        <div class="stack-head"><div class="stack-num">CARD 03 / 08 · SKILLS</div></div>
+        <div class="stack-icon"><svg class="icon"><use href="#i-wand"/></svg></div>
         <h3>Skills that compose</h3>
-        <p>A growing library of pre-built capabilities — email triage, calendar scheduling, CRM updates, invoicing, research, content drafting, code review, data analysis.</p>
+        <p>A growing library of pre-built capabilities — email triage, calendar scheduling, CRM updates, invoicing, research, content drafting, code review, data analysis. Compose them like building blocks. Your agent picks the right skill for each task.</p>
         <div class="bcard-stat">COMPOSABLE</div>
       </div>
-      <div class="bcard">
-        <div class="bcard-num">04 / INTEGRATIONS</div>
-        <div class="bcard-icon"><svg class="icon"><use href="#i-plug"/></svg></div>
+      <div class="stack-card" data-label="Integrations">
+        <div class="stack-head"><div class="stack-num">CARD 04 / 08 · INTEGRATIONS</div></div>
+        <div class="stack-icon"><svg class="icon"><use href="#i-plug"/></svg></div>
         <h3>1,000+ tools, native</h3>
-        <p>Native integrations with Gmail, Outlook, Calendar, Slack, Notion, HubSpot, Salesforce, Stripe, Linear, GitHub. Your agent executes inside them.</p>
+        <p>Native integrations with Gmail, Outlook, Google Calendar, Apple Calendar, Slack, Notion, HubSpot, Salesforce, Stripe, Linear, GitHub, and hundreds more. Your agent doesn't just talk to these tools — it actually executes inside them.</p>
         <div class="bcard-stat">1000+</div>
       </div>
-      <div class="bcard">
-        <div class="bcard-num">05 / ORCHESTRATION</div>
-        <div class="bcard-icon"><svg class="icon"><use href="#i-network"/></svg></div>
+      <div class="stack-card" data-label="Orchestration">
+        <div class="stack-head"><div class="stack-num">CARD 05 / 08 · ORCHESTRATION</div></div>
+        <div class="stack-icon"><svg class="icon"><use href="#i-network"/></svg></div>
         <h3>Six specialists, one brain</h3>
-        <p>ARIA for research. VANCE for build. NEXUS for planning. PRISM for content. APEX for sales. NUMIN for orchestration. Each owns a domain.</p>
+        <p>ARIA for research. VANCE for build. NEXUS for planning. PRISM for content. APEX for sales. NUMIN for orchestration. Each owns a domain. They share context, hand off tasks, and coordinate without you.</p>
         <div class="bcard-stat">6 AGENTS</div>
       </div>
-      <div class="bcard">
-        <div class="bcard-num">06 / SCHEDULING</div>
-        <div class="bcard-icon"><svg class="icon"><use href="#i-clock"/></svg></div>
+      <div class="stack-card" data-label="Scheduling">
+        <div class="stack-head"><div class="stack-num">CARD 06 / 08 · SCHEDULING</div></div>
+        <div class="stack-icon"><svg class="icon"><use href="#i-clock"/></svg></div>
         <h3>Cron that actually works</h3>
-        <p>Schedule anything — daily briefings, weekly reports, monthly invoicing, quarterly reviews. Your agent runs them in the background and surfaces results.</p>
+        <p>Schedule anything — daily briefings, weekly reports, monthly invoicing, quarterly reviews. Your agent runs them in the background and surfaces results. No missed tasks, no forgotten deadlines.</p>
         <div class="bcard-stat">AUTOMATED</div>
       </div>
-      <div class="bcard">
-        <div class="bcard-num">07 / SUB-AGENTS</div>
-        <div class="bcard-icon"><svg class="icon"><use href="#i-users"/></svg></div>
+      <div class="stack-card" data-label="Sub-agents">
+        <div class="stack-head"><div class="stack-num">CARD 07 / 08 · SUB-AGENTS</div></div>
+        <div class="stack-icon"><svg class="icon"><use href="#i-users"/></svg></div>
         <h3>Specialists on demand</h3>
-        <p>Spin up a dedicated sub-agent for a project — a marketing agent for the launch, a research agent for due diligence. They run, deliver, and report back.</p>
+        <p>Spin up a dedicated sub-agent for a project — a marketing agent for the launch, a research agent for due diligence, a coding agent for the MVP. They run, deliver, and report back. You stay focused on the main work.</p>
         <div class="bcard-stat">ON DEMAND</div>
       </div>
-      <div class="bcard">
-        <div class="bcard-num">08 / CUSTOM TRAINING</div>
-        <div class="bcard-icon"><svg class="icon"><use href="#i-target"/></svg></div>
+      <div class="stack-card" data-label="Custom training">
+        <div class="stack-head"><div class="stack-num">CARD 08 / 08 · CUSTOM TRAINING</div></div>
+        <div class="stack-icon"><svg class="icon"><use href="#i-target"/></svg></div>
         <h3>Trained on your business</h3>
-        <p>During onboarding, your agent ingests your docs, your past decisions, your customer profiles, your voice. It answers like someone who's been at your company for years.</p>
+        <p>During onboarding, your agent ingests your docs, your past decisions, your customer profiles, your voice. It answers like someone who's been at your company for years — because it has read everything.</p>
         <div class="bcard-stat">YOU-TRAINED</div>
       </div>
+      <div class="stack-progress">
+        <div class="stack-progress-bar"><div class="stack-progress-fill"></div></div>
+        <div class="stack-progress-label">01 / 08 · Memory</div>
+      </div>
+      <div class="stack-hint">Scroll to flip through ↓</div>
     </div>
-    <div class="built-progress"><div class="built-progress-bar" id="built-progress-bar"></div></div>
-    <div class="built-hint">Scroll to explore ↓</div>
   </div>
 </section>
 
@@ -2249,160 +2367,121 @@ h1.hero-h {
   <div class="compare-h">
     <div class="eyebrow" style="justify-content:center">The comparison</div>
     <h2 class="h2">This isn't <span class="dim">ChatGPT.</span><br>It's an <span class="accent-text">operating system.</span></h2>
-    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">Both AI. Both useful. Wildly different jobs. Scroll to see exactly how Numin runs circles around ChatGPT for actual business operations.</p>
+    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">Both AI. Both useful. Wildly different jobs. Scroll to flip through how Numin runs circles around ChatGPT for actual business operations.</p>
   </div>
-  <div class="compare-stage">
-    <div class="compare-track" id="compare-track">
-      <div class="cslide">
-        <div class="cslide-label">Memory</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div>
-              <div class="cslide-side-name">ChatGPT</div>
-            </div>
-            <div class="cslide-side-text">Forgets everything when you close the tab. Every conversation starts from zero.</div>
+  <div class="stack" id="compare-stack">
+    <div class="stack-sticky">
+      <div class="stack-card" data-label="Memory">
+        <div class="stack-head"><div class="stack-num">CARD 01 / 07</div></div>
+        <h3>Memory that compounds.</h3>
+        <p>ChatGPT forgets everything when you close the tab. Every conversation starts from zero. Numin builds permanent, growing memory of your entire business — every client, every decision, every preference remembered.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div><div class="stack-side-name">ChatGPT</div></div>
+            <div class="stack-side-text">Forgets everything when you close the tab. Every conversation starts from zero.</div>
           </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">Permanent, growing memory of your entire business. Remembers everything.</div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">Permanent, growing memory of your entire business. Remembers everything.</div>
           </div>
         </div>
-        <div class="cslide-summary"><strong>Memory that compounds.</strong> Numin gets smarter about your business the longer it runs.</div>
       </div>
-      <div class="cslide">
-        <div class="cslide-label">Action</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div>
-              <div class="cslide-side-name">ChatGPT</div>
-            </div>
-            <div class="cslide-side-text">Gives you text. You still have to copy, paste, send, update, schedule.</div>
+      <div class="stack-card" data-label="Action">
+        <div class="stack-head"><div class="stack-num">CARD 02 / 07</div></div>
+        <h3>Actions, not answers.</h3>
+        <p>ChatGPT gives you text. You still have to copy, paste, send, update, schedule. Numin takes real action — sends emails, updates CRM, books meetings, closes tickets — without asking.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div><div class="stack-side-name">ChatGPT</div></div>
+            <div class="stack-side-text">Gives you text. You still have to copy, paste, send, update, schedule.</div>
           </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">Takes real action. Sends emails, updates CRM, books meetings, closes tickets — without asking.</div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">Takes real action. Sends emails, updates CRM, books meetings, closes tickets — without asking.</div>
           </div>
         </div>
-        <div class="cslide-summary"><strong>Actions, not answers.</strong> Numin executes. ChatGPT suggests.</div>
       </div>
-      <div class="cslide">
-        <div class="cslide-label">Context</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div>
-              <div class="cslide-side-name">ChatGPT</div>
-            </div>
-            <div class="cslide-side-text">Knows nothing about your business. Generic knowledge. Same answers for everyone.</div>
+      <div class="stack-card" data-label="Context">
+        <div class="stack-head"><div class="stack-num">CARD 03 / 07</div></div>
+        <h3>Your business, your context.</h3>
+        <p>ChatGPT knows nothing about your business. Generic knowledge, same answers for everyone. Numin is trained specifically on YOUR business — reads your docs, knows your clients, learns your voice.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div><div class="stack-side-name">ChatGPT</div></div>
+            <div class="stack-side-text">Knows nothing about your business. Generic knowledge. Same answers for everyone.</div>
           </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">Trained specifically on YOUR business. Reads your docs, knows your clients.</div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">Trained specifically on YOUR business. Reads your docs, knows your clients.</div>
           </div>
         </div>
-        <div class="cslide-summary"><strong>Your business, your context.</strong> Onboard in 30 minutes. Get answers like a teammate who's been there for years.</div>
       </div>
-      <div class="cslide">
-        <div class="cslide-label">Agents</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div>
-              <div class="cslide-side-name">ChatGPT</div>
-            </div>
-            <div class="cslide-side-text">One generalist. Good at many things, expert at nothing.</div>
+      <div class="stack-card" data-label="Agents">
+        <div class="stack-head"><div class="stack-num">CARD 04 / 07</div></div>
+        <h3>Specialists &gt; generalists.</h3>
+        <p>ChatGPT is one generalist — good at many things, expert at nothing. Numin is six specialized AI executives — ARIA for research, VANCE for build, NEXUS for planning, PRISM for content, APEX for sales, NUMIN for orchestration.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div><div class="stack-side-name">ChatGPT</div></div>
+            <div class="stack-side-text">One generalist. Good at many things, expert at nothing.</div>
           </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">6 specialized AI executives — each one owns a domain. ARIA, VANCE, NEXUS, PRISM, APEX, NUMIN.</div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">6 specialized AI executives — each one owns a domain.</div>
           </div>
         </div>
-        <div class="cslide-summary"><strong>Specialists &gt; generalists.</strong> Each agent is trained for its domain — research, build, plan, write, sell, orchestrate.</div>
       </div>
-      <div class="cslide">
-        <div class="cslide-label">Privacy</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div>
-              <div class="cslide-side-name">ChatGPT</div>
-            </div>
-            <div class="cslide-side-text">Your conversations train their models. Your data is their data.</div>
+      <div class="stack-card" data-label="Privacy">
+        <div class="stack-head"><div class="stack-num">CARD 05 / 07</div></div>
+        <h3>Yours, not theirs.</h3>
+        <p>ChatGPT trains their models on your conversations. Your data is their data. Numin runs 100% local or on your private cloud Mac. Your data never leaves. We can't read it. We never have access.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div><div class="stack-side-name">ChatGPT</div></div>
+            <div class="stack-side-text">Your conversations train their models. Your data is their data.</div>
           </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">100% local or your private cloud computer. Your data never leaves.</div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">100% local or your private cloud computer. Your data never leaves.</div>
           </div>
         </div>
-        <div class="cslide-summary"><strong>Yours, not theirs.</strong> We can't read your data. We never have access to it.</div>
       </div>
-      <div class="cslide">
-        <div class="cslide-label">Always On</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div>
-              <div class="cslide-side-name">ChatGPT</div>
-            </div>
-            <div class="cslide-side-text">Waits to be asked. Completely passive. Nothing happens unless you open it.</div>
+      <div class="stack-card" data-label="Always on">
+        <div class="stack-head"><div class="stack-num">CARD 06 / 07</div></div>
+        <h3>24/7 always on.</h3>
+        <p>ChatGPT waits to be asked. Completely passive. Nothing happens unless you open it. Numin runs 24/7 autonomously — monitors overnight, briefs you in the morning, flags what's urgent.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div><div class="stack-side-name">ChatGPT</div></div>
+            <div class="stack-side-text">Waits to be asked. Completely passive. Nothing happens unless you open it.</div>
           </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">Runs 24/7 autonomously. Monitors, briefs, flags issues — without you asking.</div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">Runs 24/7 autonomously. Monitors, briefs, flags issues — without you asking.</div>
           </div>
         </div>
-        <div class="cslide-summary"><strong>24/7 always on.</strong> Monitors overnight. Briefs you in the morning. Flags what's urgent.</div>
       </div>
-      <div class="cslide">
-        <div class="cslide-label">Hardware</div>
-        <div class="cslide-row">
-          <div class="cslide-side chatgpt">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div>
-              <div class="cslide-side-name">ChatGPT</div>
-            </div>
-            <div class="cslide-side-text">Lives in someone else's cloud. Dependent on their servers, their pricing, their terms.</div>
+      <div class="stack-card" data-label="Hardware">
+        <div class="stack-head"><div class="stack-num">CARD 07 / 07</div></div>
+        <h3>Yours, not rented.</h3>
+        <p>ChatGPT lives in someone else's cloud. Dependent on their servers, their pricing, their terms. Numin runs on your Mac or your dedicated cloud Mac — you own the runtime, you own the agent.</p>
+        <div class="stack-row">
+          <div class="stack-side opp">
+            <div class="stack-side-head"><div class="stack-side-logo"><img src="logo-chatgpt.svg" alt="ChatGPT" /></div><div class="stack-side-name">ChatGPT</div></div>
+            <div class="stack-side-text">Lives in someone else's cloud. Dependent on their servers, their pricing, their terms.</div>
           </div>
-          <div class="cslide-vs">vs</div>
-          <div class="cslide-side numin">
-            <div class="cslide-side-head">
-              <div class="cslide-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div>
-              <div class="cslide-side-name">Numin</div>
-            </div>
-            <div class="cslide-side-text">Your Mac, or your dedicated cloud Mac. You own the runtime.</div>
+          <div class="stack-side us">
+            <div class="stack-side-head"><div class="stack-side-logo"><svg class="icon" style="width:18px;height:18px"><use href="#i-sparkles"/></svg></div><div class="stack-side-name">Numin</div></div>
+            <div class="stack-side-text">Your Mac, or your dedicated cloud Mac. You own the runtime.</div>
           </div>
         </div>
-        <div class="cslide-summary"><strong>Yours, not rented.</strong> No vendor lock-in. Cancel anytime, agent keeps running on your Mac.</div>
       </div>
+      <div class="stack-progress">
+        <div class="stack-progress-bar"><div class="stack-progress-fill"></div></div>
+        <div class="stack-progress-label">01 / 07 · Memory</div>
+      </div>
+      <div class="stack-hint">Scroll to flip through ↓</div>
     </div>
-    <div class="compare-progress"><div class="compare-progress-bar" id="compare-progress-bar"></div></div>
-    <div class="compare-hint">Scroll to compare ↓</div>
   </div>
 </section>
 
@@ -2833,141 +2912,95 @@ if ('IntersectionObserver' in window) {
   document.querySelectorAll('.bcard').forEach(el => observer.observe(el));
 }
 
-// Horizontal scroll-driven track for 'This isn't ChatGPT'
+// Card stack interaction: cards flip through as user scrolls the section.
+// The stage is taller than viewport so sticky child stays pinned while scrolling.
 (function() {
-  const track = document.getElementById('compare-track');
-  const stage = document.querySelector('.compare-stage');
-  const progressBar = document.getElementById('compare-progress-bar');
-  if (!track || !stage) return;
+  const stacks = document.querySelectorAll('.stack');
+  if (!stacks.length) return;
 
-  let ticking = false;
-  function update() {
-    const rect = stage.getBoundingClientRect();
-    const stageTop = rect.top;
-    const stageHeight = rect.height;
-    const viewportHeight = window.innerHeight;
+  const observers = [];
 
-    const total = stageHeight + viewportHeight;
-    const passed = Math.min(Math.max(viewportHeight - stageTop, 0), total);
-    const progress = passed / total;
+  stacks.forEach(stack => {
+    const cards = Array.from(stack.querySelectorAll('.stack-card'));
+    const progressBar = stack.querySelector('.stack-progress-fill');
+    const progressLabel = stack.querySelector('.stack-progress-label');
+    const total = cards.length;
+    if (!total) return;
 
-    const trackWidth = track.scrollWidth;
-    const viewportWidth = window.innerWidth;
-    const maxScroll = Math.max(0, trackWidth - viewportWidth);
+    let currentIndex = -1;
 
-    const translateX = -progress * maxScroll;
-    track.style.transform = `translate3d(${translateX}px, 0, 0)`;
+    function setActive(idx) {
+      if (idx === currentIndex) return;
+      currentIndex = idx;
 
-    if (progressBar) {
-      progressBar.style.width = `${(progress * 100).toFixed(1)}%`;
+      cards.forEach((card, i) => {
+        card.classList.remove('active', 'passed', 'exit');
+        if (i < idx) card.classList.add('passed');
+        else if (i === idx) card.classList.add('active');
+        else card.classList.add('exit');
+      });
+
+      if (progressBar) {
+        const pct = total > 1 ? (idx / (total - 1)) * 100 : 100;
+        progressBar.style.width = `${Math.max(0, Math.min(100, pct)).toFixed(1)}%`;
+      }
+      if (progressLabel && cards[idx]) {
+        const label = cards[idx].getAttribute('data-label') || '';
+        progressLabel.textContent = `${String(idx + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')} · ${label}`;
+      }
     }
 
-    ticking = false;
-  }
-
-  function onScroll() {
-    if (!ticking) {
-      window.requestAnimationFrame(update);
-      ticking = true;
+    // Drive progress based on how far the section has scrolled through viewport
+    let ticking = false;
+    function update() {
+      const rect = stack.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      // The sticky child pins for ~viewportHeight of scroll distance.
+      // Total scrollable distance through the section = rect.height - viewportHeight
+      const totalScroll = Math.max(1, rect.height - viewportHeight);
+      // progress 0..1 over the pinned portion (the part where sticky is engaged)
+      const pinnedTop = viewportHeight * 0.1; // sticky engages when section top hits viewport 10% from top
+      const pinnedBottom = viewportHeight * 0.9;
+      let progress;
+      if (rect.top >= pinnedTop) {
+        progress = 0;
+      } else if (rect.bottom <= pinnedBottom) {
+        progress = 1;
+      } else {
+        // how far the section top has traveled from pinnedTop down to where rect.top would be at pinnedBottom
+        const traveled = pinnedTop - rect.top;
+        progress = Math.min(1, Math.max(0, traveled / Math.max(1, totalScroll - viewportHeight * 0.2)));
+      }
+      const idx = Math.min(total - 1, Math.max(0, Math.round(progress * (total - 1))));
+      setActive(idx);
+      ticking = false;
     }
-  }
 
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll);
-  setTimeout(update, 200);
+    function onScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(update);
+        ticking = true;
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    setTimeout(update, 200);
+    setActive(0);
+  });
 })();
 
-// Horizontal scroll-driven track for 'Numin vs Claude Code'
-(function() {
-  const track = document.getElementById('vscc-track');
-  // Walk up to find the parent stage
-  const stage = track && track.closest('.compare-stage');
-  const progressBar = document.getElementById('vscc-progress-bar');
-  if (!track || !stage) return;
 
-  let ticking = false;
-  function update() {
-    const rect = stage.getBoundingClientRect();
-    const stageTop = rect.top;
-    const stageHeight = rect.height;
-    const viewportHeight = window.innerHeight;
+// Dynamic stack height based on card count
+document.querySelectorAll('.stack').forEach(stack => {
+  const cards = stack.querySelectorAll('.stack-card');
+  if (!cards.length) return;
+  // Each card transition needs ~80vh of scroll
+  const minHeight = cards.length * 80 + 100; // vh
+  stack.style.minHeight = minHeight + 'vh';
+});
 
-    const total = stageHeight + viewportHeight;
-    const passed = Math.min(Math.max(viewportHeight - stageTop, 0), total);
-    const progress = passed / total;
-
-    const trackWidth = track.scrollWidth;
-    const viewportWidth = window.innerWidth;
-    const maxScroll = Math.max(0, trackWidth - viewportWidth);
-
-    const translateX = -progress * maxScroll;
-    track.style.transform = `translate3d(${translateX}px, 0, 0)`;
-
-    if (progressBar) {
-      progressBar.style.width = `${(progress * 100).toFixed(1)}%`;
-    }
-
-    ticking = false;
-  }
-
-  function onScroll() {
-    if (!ticking) {
-      window.requestAnimationFrame(update);
-      ticking = true;
-    }
-  }
-
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll);
-  setTimeout(update, 200);
-})();
-
-// Horizontal scroll-driven track for 'What's under the hood'
-(function() {
-  const track = document.getElementById('built-track');
-  const stage = document.querySelector('.built-stage');
-  const progressBar = document.getElementById('built-progress-bar');
-  if (!track || !stage) return;
-
-  let ticking = false;
-  function update() {
-    const rect = stage.getBoundingClientRect();
-    const stageTop = rect.top;
-    const stageHeight = rect.height;
-    const viewportHeight = window.innerHeight;
-
-    // Compute progress: 0 when stage top hits viewport bottom, 1 when stage bottom hits viewport top
-    const total = stageHeight + viewportHeight;
-    const passed = Math.min(Math.max(viewportHeight - stageTop, 0), total);
-    const progress = passed / total;
-
-    // Track width minus viewport width = total scrollable horizontal distance
-    const trackWidth = track.scrollWidth;
-    const viewportWidth = window.innerWidth;
-    const maxScroll = Math.max(0, trackWidth - viewportWidth);
-
-    const translateX = -progress * maxScroll;
-    track.style.transform = `translate3d(${translateX}px, 0, 0)`;
-
-    if (progressBar) {
-      progressBar.style.width = `${(progress * 100).toFixed(1)}%`;
-    }
-
-    ticking = false;
-  }
-
-  function onScroll() {
-    if (!ticking) {
-      window.requestAnimationFrame(update);
-      ticking = true;
-    }
-  }
-
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll);
-  // Initial render
-  setTimeout(update, 200);
-})();
+// Card stack interaction handles vscc + built + compare automatically
 
 // Mobile-test mode: ?mobile=1 forces a 390px container so we can audit mobile layout
 // from a desktop browser. Renders inside a styled wrapper to simulate the viewport.
