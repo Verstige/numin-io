@@ -1096,11 +1096,16 @@ h1.hero-h {
   border: 1px solid var(--border);
   background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 100%);
   padding: 40px 36px;
+  /* Default state — JS overrides these based on scroll position */
   opacity: 0;
   transform: translateY(40px) scale(0.96);
-  transition: opacity 0.5s, transform 0.5s;
+  transition: opacity 0.45s ease-out, transform 0.45s ease-out;
   pointer-events: none;
   will-change: transform, opacity;
+}
+/* Reduced-motion: respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  .stack-card { transition: none; }
 }
 .stack-card.active {
   opacity: 1;
@@ -1160,10 +1165,38 @@ h1.hero-h {
   pointer-events: none;
 }
 @media (max-width: 768px) {
-  .stack { padding: 20px 0 100px; }
+  .stack { padding: 20px 0 80px; }
   .stack-sticky { top: 70px; height: calc(100vh - 70px); padding: 0 16px; }
-  .stack-card { padding: 28px 24px; }
-  .stack-card { border-radius: 20px; }
+  .stack-card { padding: 24px 22px; border-radius: 20px; }
+  .stack-card h3 { font-size: 1.25rem; }
+  .stack-card p { font-size: 0.9rem; }
+  .stack-head { margin-bottom: 16px; }
+  .stack-num { font-size: 0.65rem; letter-spacing: 0.1em; }
+  .stack-icon { width: 40px; height: 40px; }
+  .stack-icon .icon { width: 20px; height: 20px; }
+  .stack-row { grid-template-columns: 1fr; gap: 10px; }
+  .stack-side { padding: 16px; }
+  .stack-side-name { font-size: 0.7rem; }
+  .stack-side-text { font-size: 0.85rem; }
+  .stack-progress { bottom: 16px; }
+  .stack-progress-bar { width: 140px; }
+  .stack-progress-label { font-size: 0.6rem; }
+  .stack-hint { display: none; }
+  .vscc-h { padding: 80px 20px 0; }
+  .vscc-h h2 { font-size: clamp(1.6rem, 8vw, 2.4rem) !important; }
+  .compare-h { padding: 80px 20px 24px; }
+  .compare-h h2 { font-size: clamp(1.6rem, 8vw, 2.4rem) !important; }
+  .built-head { padding: 80px 20px 32px; }
+  .built-head h2 { font-size: clamp(1.6rem, 8vw, 2.4rem) !important; }
+  .built-head .body-text { font-size: 0.9rem; }
+  .built-stats { gap: 12px; padding: 16px 12px; }
+  .built-stat-num { font-size: 1.2rem; }
+  .built-stat-label { font-size: 0.6rem; }
+  .vscc-logos { gap: 24px; margin-bottom: 32px; }
+  .vscc-logo-img { width: 80px; height: 80px; }
+  .vscc-logo-img img,
+  .vscc-logo-img.numin svg { width: 48px; height: 48px; }
+  .vscc-logo-label { font-size: 0.65rem; }
 }
 
 /* ── Card stack inner content (shared) ── */
@@ -2961,12 +2994,26 @@ if ('IntersectionObserver' in window) {
 }
 
 // Card stack interaction: cards flip through as user scrolls the section.
-// The stage is taller than viewport so sticky child stays pinned while scrolling.
+// Each card gets one viewport-height of scroll for its transition. The stack's
+// sticky child pins while the section scrolls past.
+
+// First: size all stacks based on viewport height BEFORE initializing the interactions
+function sizeStacks() {
+  const vh = window.innerHeight;
+  document.querySelectorAll('.stack').forEach(stack => {
+    const cards = stack.querySelectorAll('.stack-card');
+    if (!cards.length) return;
+    const minHeight = cards.length * vh;
+    stack.style.minHeight = `${minHeight}px`;
+  });
+}
+sizeStacks();
+window.addEventListener('resize', sizeStacks);
+
+// Then: set up the card-stack scroll interaction
 (function() {
   const stacks = document.querySelectorAll('.stack');
   if (!stacks.length) return;
-
-  const observers = [];
 
   stacks.forEach(stack => {
     const cards = Array.from(stack.querySelectorAll('.stack-card'));
@@ -2978,54 +3025,97 @@ if ('IntersectionObserver' in window) {
     let currentIndex = -1;
 
     function setActive(idx) {
-      if (idx === currentIndex) return;
-      currentIndex = idx;
+      const clamped = Math.min(total - 1, Math.max(0, idx));
+      if (clamped === currentIndex) return;
+      currentIndex = clamped;
 
       cards.forEach((card, i) => {
         card.classList.remove('active', 'passed', 'exit');
-        if (i < idx) card.classList.add('passed');
-        else if (i === idx) card.classList.add('active');
+        if (i < clamped) card.classList.add('passed');
+        else if (i === clamped) card.classList.add('active');
         else card.classList.add('exit');
       });
 
       if (progressBar) {
-        const pct = total > 1 ? (idx / (total - 1)) * 100 : 100;
-        progressBar.style.width = `${Math.max(0, Math.min(100, pct)).toFixed(1)}%`;
+        const pct = total > 1 ? (clamped / (total - 1)) * 100 : 100;
+        progressBar.style.width = `${pct.toFixed(1)}%`;
       }
-      if (progressLabel && cards[idx]) {
-        const label = cards[idx].getAttribute('data-label') || '';
-        progressLabel.textContent = `${String(idx + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')} · ${label}`;
+      if (progressLabel && cards[clamped]) {
+        const label = cards[clamped].getAttribute('data-label') || '';
+        progressLabel.textContent = `${String(clamped + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')} · ${label}`;
       }
 
       // Update background tone based on card index (cycles 1-10)
-      if (stack) {
-        stack.setAttribute('data-bg-tone', ((idx % 10) + 1).toString());
-      }
+      stack.setAttribute('data-bg-tone', ((clamped % 10) + 1).toString());
     }
 
-    // Drive progress based on how far the section has scrolled through viewport
+    // Calculate the scroll range where cards should activate.
+    // The stack starts engaging when the sticky element hits the top of the viewport.
+    // The stack ends engaging when the sticky element has scrolled past its full height.
     let ticking = false;
     function update() {
       const rect = stack.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      // The sticky child pins for ~viewportHeight of scroll distance.
-      // Total scrollable distance through the section = rect.height - viewportHeight
-      const totalScroll = Math.max(1, rect.height - viewportHeight);
-      // progress 0..1 over the pinned portion (the part where sticky is engaged)
-      const pinnedTop = viewportHeight * 0.1; // sticky engages when section top hits viewport 10% from top
-      const pinnedBottom = viewportHeight * 0.9;
-      let progress;
-      if (rect.top >= pinnedTop) {
-        progress = 0;
-      } else if (rect.bottom <= pinnedBottom) {
-        progress = 1;
-      } else {
-        // how far the section top has traveled from pinnedTop down to where rect.top would be at pinnedBottom
-        const traveled = pinnedTop - rect.top;
-        progress = Math.min(1, Math.max(0, traveled / Math.max(1, totalScroll - viewportHeight * 0.2)));
-      }
-      const idx = Math.min(total - 1, Math.max(0, Math.round(progress * (total - 1))));
-      setActive(idx);
+      const stickyEl = stack.querySelector('.stack-sticky');
+      const stickyHeight = stickyEl ? stickyEl.offsetHeight : window.innerHeight;
+
+      // The sticky pins for (total * stickyHeight) of section scroll, minus the leading offset.
+      // Total scroll distance through the stack = (rect.height - stickyHeight)
+      const totalScroll = Math.max(1, rect.height - stickyHeight);
+
+      // Progress 0..1 based on how far past the start of the sticky region we are.
+      // The sticky engages when rect.top reaches (top of viewport minus stickyHeight)
+      // i.e. when rect.top = -(stickyHeight - viewportHeight - headerOffset)
+      // We want progress = 0 when card 1 first appears, and progress = 1 when card N last visible.
+      const progress = Math.min(1, Math.max(0, -rect.top / totalScroll));
+
+      // Map progress 0..1 to card index 0..total-1 with smooth interpolation.
+      // We use floor so transitions happen at midpoints between integers.
+      const idx = Math.floor(progress * (total - 1) + 0.5);
+
+      // Also compute the fractional position for smooth card animations
+      const exactIdx = progress * (total - 1);
+      const intIdx = Math.round(exactIdx);
+      const frac = exactIdx - Math.floor(exactIdx);
+      // Cards pass through: index transitions between (i, i+1)
+      // Map the previous card and next card relative to exactIdx
+      const prevIdx = Math.floor(exactIdx);
+      const nextIdx = Math.min(total - 1, prevIdx + 1);
+
+      // Update each card's opacity/transform based on how close it is to the active index
+      cards.forEach((card, i) => {
+        const dist = exactIdx - i;
+        let opacity, transform, scale, ty;
+        if (dist <= 0) {
+          // Future card: below, not yet active
+          opacity = 0;
+          ty = 60;
+          scale = 0.94;
+          card.classList.add('exit');
+          card.classList.remove('active', 'passed');
+        } else if (dist >= 1) {
+          // Past card: above, already seen
+          opacity = 0;
+          ty = -40;
+          scale = 0.96;
+          card.classList.add('passed');
+          card.classList.remove('active', 'exit');
+        } else {
+          // Active card: in view, fade in/out smoothly
+          // distance 0 = current, distance 0.5 = halfway to next, etc.
+          const fadeOut = Math.min(1, dist * 2.5); // fully visible for first 40% of its segment
+          opacity = fadeOut;
+          ty = (1 - fadeOut) * 40;
+          scale = 0.96 + (1 - fadeOut) * 0.04;
+          card.classList.add('active');
+          card.classList.remove('passed', 'exit');
+        }
+        card.style.opacity = opacity;
+        card.style.transform = `translateY(${ty}px) scale(${scale})`;
+      });
+
+      // Determine the dominant card index (closest to active)
+      // For progress bar/label, use the integer-rounded index
+      setActive(intIdx);
       ticking = false;
     }
 
@@ -3043,15 +3133,6 @@ if ('IntersectionObserver' in window) {
   });
 })();
 
-
-// Dynamic stack height based on card count
-document.querySelectorAll('.stack').forEach(stack => {
-  const cards = stack.querySelectorAll('.stack-card');
-  if (!cards.length) return;
-  // Each card transition needs ~80vh of scroll
-  const minHeight = cards.length * 80 + 100; // vh
-  stack.style.minHeight = minHeight + 'vh';
-});
 
 // Card stack interaction handles vscc + built + compare automatically
 
