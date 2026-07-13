@@ -24,6 +24,20 @@
 /* ============================================================
    NUMIN LANDING — Self-contained, zero dependencies
    ============================================================ */
+
+/* ── Icon system (Lucide-style stroke icons, all 24x24 viewBox) ── */
+.icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.icon-sm { font-size: 0.875rem; }
+.icon-md { font-size: 1.125rem; }
+.icon-lg { font-size: 1.5rem; }
+.icon-xl { font-size: 2rem; }
+.icon-2xl { font-size: 2.5rem; }
+.icon-3xl { font-size: 3.5rem; }
+.icon-4xl { font-size: 4.5rem; }
+.icon-5xl { font-size: 6rem; }
+
+/* ── Logo icons (svg fills, like for tab dots) ── */
+.icon-fill { width: 1em; height: 1em; fill: currentColor; flex-shrink: 0; vertical-align: -0.125em; }
 :root {
   --bg: #050707;
   --bg-2: #0c0f14;
@@ -738,10 +752,30 @@ h1.hero-h {
   padding: 6px 0; line-height: 1.4;
 }
 .price-features li::before {
-  content: '✓'; color: var(--accent); font-weight: 700; flex-shrink: 0;
+  content: '';
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C9A84C' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  flex-shrink: 0;
+  color: var(--accent);
+  font-weight: 700;
 }
 .price-features li.no { color: var(--text-mute); }
-.price-features li.no::before { content: '–'; color: var(--text-mute); }
+.price-features li.no::before {
+  content: '';
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c6178' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  color: var(--text-mute);
+}
 .price-cta {
   margin-top: auto; display: block; text-align: center;
   padding: 14px 20px; border-radius: 90px;
@@ -924,9 +958,96 @@ h1.hero-h {
 @media (max-width: 480px) {
   .channels-grid { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   ICON SPRITE — Lucide-style, all 24x24 viewBox
+   Usage: <svg class="icon icon-lg"><use href="#i-message"/></svg>
+   ============================================================ */
+.icon-sprite { display: none; }
 </style>
 </head>
 <body data-skin="local">
+
+<!-- Icon sprite (Lucide-style) -->
+<svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <symbol id="i-message-circle" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
+    <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="i-paper-plane" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-rotate-ccw" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></symbol>
+    <symbol id="i-laptop" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2" ry="2"/><line x1="1" y1="20" x2="23" y2="20"/></symbol>
+    <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 2v6"/><path d="M15 2v6"/><path d="M6 8h12v4a6 6 0 0 1-12 0V8z"/><path d="M12 18v4"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></symbol>
+    <symbol id="i-wifi-off" viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></symbol>
+    <symbol id="i-brain" viewBox="0 0 24 24"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M5.562 17.5a3 3 0 0 0 .399 1.375"/><path d="M17.599 17.5a3 3 0 0 1-.399 1.375"/></symbol>
+    <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></symbol>
+    <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></symbol>
+    <symbol id="i-bar-chart" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></symbol>
+    <symbol id="i-log-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></symbol>
+    <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></symbol>
+    <symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="M16.71 13.88l.7.71-2.82 2.82"/></symbol>
+    <symbol id="i-clock-3" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16.5 12"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></symbol>
+    <symbol id="i-thermometer" viewBox="0 0 24 24"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-headphones" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></symbol>
+    <symbol id="i-headset" viewBox="0 0 24 24"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.9 5.7L19 10l-5.1 1.3L12 17l-1.9-5.7L5 10l5.1-1.3L12 3z"/><path d="M5 3v4M3 5h4M19 17v4M17 19h4M11 12l1.5 3 3 1.5-3 1.5L11 21"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M11 2L3 14h7l-1 8 10-12h-7l1-8z"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="i-bullseye" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="i-trending-up" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></symbol>
+    <symbol id="i-package" viewBox="0 0 24 24"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></symbol>
+    <symbol id="i-credit-card" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></symbol>
+    <symbol id="i-briefcase" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol>
+    <symbol id="i-shopping-cart" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-help-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-anchor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></symbol>
+    <symbol id="i-mountain" viewBox="0 0 24 24"><path d="M8 3l4 8 5-5 5 15H2L8 3z"/></symbol>
+    <symbol id="i-wand" viewBox="0 0 24 24"><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8L19 13"/><path d="M15 9h0"/><path d="M17.8 6.2L19 5"/><path d="M3 21l9-9"/><path d="M12.2 6.2L11 5"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></symbol>
+    <symbol id="i-network" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="6"/><rect x="16" y="16" width="6" height="6"/><rect x="2" y="16" width="6" height="6"/><path d="M5 16v-2a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2"/><path d="M12 8v6"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-book-open" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+    <symbol id="i-infinity" viewBox="0 0 24 24"><path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.739-8z"/></symbol>
+    <symbol id="i-feather" viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M12 14l4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></symbol>
+  </defs>
+</svg>
 
 <div class="nebula"></div>
 <div class="grid-overlay"></div>
@@ -970,7 +1091,7 @@ h1.hero-h {
   </p>
   <div class="btn-row">
     <a href="https://github.com/Verstige/numin" class="btn-primary" data-skin-text="primary">Start free trial →</a>
-    <a href="#channels" class="btn-ghost" data-skin-text="secondary">▶ See how it works</a>
+    <a href="#channels" class="btn-ghost" data-skin-text="secondary"><svg class="icon icon-sm" style="margin-right:6px;vertical-align:-0.1em"><use href="#i-play"/></svg><span data-skin-text="secondary-text">See how it works</span></a>
   </div>
   <div class="agent-strip">
     <span class="strip-label">Active</span>
@@ -1033,25 +1154,25 @@ h1.hero-h {
   </p>
   <div class="channels-grid">
     <div class="ch-card">
-      <div class="ch-icon">💬</div>
+      <div class="ch-icon"><svg class="icon icon-lg"><use href="#i-message-circle"/></svg></div>
       <h3>iMessage</h3>
       <p>Text from your iPhone, iPad, or Mac. Native iMessage, end-to-end encrypted, no friction.</p>
       <div class="ch-example">"Hey ARIA, what's on my plate today?"</div>
     </div>
     <div class="ch-card">
-      <div class="ch-icon">🟢</div>
+      <div class="ch-icon"><svg class="icon icon-lg"><use href="#i-message-circle"/></svg></div>
       <h3>WhatsApp</h3>
       <p>Message from anywhere in the world. Your agents reply instantly, no app switching.</p>
       <div class="ch-example">"Book me a flight to Lisbon next Tuesday."</div>
     </div>
     <div class="ch-card">
-      <div class="ch-icon">✈️</div>
+      <div class="ch-icon"><svg class="icon icon-lg"><use href="#i-send"/></svg></div>
       <h3>Telegram</h3>
       <p>Full conversation history, file sharing, voice notes. Works on every device.</p>
       <div class="ch-example">"Send me the client deck in PDF."</div>
     </div>
     <div class="ch-card">
-      <div class="ch-icon">🌐</div>
+      <div class="ch-icon"><svg class="icon icon-lg"><use href="#i-globe"/></svg></div>
       <h3>Web</h3>
       <p>Full chat workspace in your browser. Drag-and-drop files, voice, screen share.</p>
       <div class="ch-example">"Walk me through last week's metrics."</div>
@@ -1071,37 +1192,37 @@ h1.hero-h {
   </p>
   <div class="cloud-stack" data-skin-show="cloud">
     <div class="cs-card">
-      <div class="cs-icon">🖥️</div>
+      <div class="cs-icon"><svg class="icon icon-lg"><use href="#i-monitor"/></svg></div>
       <h3>Dedicated Mac</h3>
       <p>An Apple Silicon machine provisioned for you alone. Persistent state, your files, your environment.</p>
       <div class="cs-spec"><span class="cs-spec-tag">Apple Silicon</span><span class="cs-spec-tag">16GB+ RAM</span><span class="cs-spec-tag">macOS</span></div>
     </div>
     <div class="cs-card">
-      <div class="cs-icon">🔒</div>
+      <div class="cs-icon"><svg class="icon icon-lg"><use href="#i-shield"/></svg></div>
       <h3>Isolated by default</h3>
       <p>Your cloud Mac is yours alone. No shared resources, no noisy neighbors, no leakage between customers.</p>
       <div class="cs-spec"><span class="cs-spec-tag">Private</span><span class="cs-spec-tag">Encrypted disk</span></div>
     </div>
     <div class="cs-card">
-      <div class="cs-icon">⚡</div>
+      <div class="cs-icon"><svg class="icon icon-lg"><use href="#i-zap"/></svg></div>
       <h3>Provisioned in minutes</h3>
       <p>Skip the unboxing. Skip the install. Sign up and your agent is online before your coffee gets cold.</p>
       <div class="cs-spec"><span class="cs-spec-tag">&lt; 5 min setup</span></div>
     </div>
     <div class="cs-card">
-      <div class="cs-icon">🌍</div>
+      <div class="cs-icon"><svg class="icon icon-lg"><use href="#i-globe"/></svg></div>
       <h3>Access from any device</h3>
       <p>Browser on any laptop. iMessage on your phone. SSH if you want. Your cloud Mac is reachable everywhere.</p>
       <div class="cs-spec"><span class="cs-spec-tag">Web</span><span class="cs-spec-tag">iMessage</span><span class="cs-spec-tag">SSH</span></div>
     </div>
     <div class="cs-card">
-      <div class="cs-icon">🔄</div>
+      <div class="cs-icon"><svg class="icon icon-lg"><use href="#i-clock"/></svg></div>
       <h3>Always on</h3>
       <p>Runs 24/7. Monitors your business, processes tasks, briefs you in the morning. Never sleeps, never takes a day off.</p>
       <div class="cs-spec"><span class="cs-spec-tag">24/7 uptime</span></div>
     </div>
     <div class="cs-card">
-      <div class="cs-icon">📦</div>
+      <div class="cs-icon"><svg class="icon icon-lg"><use href="#i-rotate-ccw"/></svg></div>
       <h3>Snapshots &amp; rollback</h3>
       <p>Every change is snapshotted. Roll back to any point in time. Experiment without fear.</p>
       <div class="cs-spec"><span class="cs-spec-tag">Versioned</span><span class="cs-spec-tag">Reversible</span></div>
@@ -1109,25 +1230,25 @@ h1.hero-h {
   </div>
   <div class="cloud-stack" data-skin-show="local">
     <div class="cs-card">
-      <div class="cs-icon">💻</div>
+      <div class="cs-icon"><svg class="icon icon-lg"><use href="#i-laptop"/></svg></div>
       <h3>Your Mac, your data</h3>
       <p>Runs on the Mac you already own. All processing, all storage, all memory stays on your machine. Period.</p>
       <div class="cs-spec"><span class="cs-spec-tag">Apple Silicon</span><span class="cs-spec-tag">M1+</span></div>
     </div>
     <div class="cs-card">
-      <div class="cs-icon">🔌</div>
+      <div class="cs-icon"><svg class="icon icon-lg"><use href="#i-plug"/></svg></div>
       <h3>One-command install</h3>
       <p>curl | bash. 30 seconds. Done. Numin starts automatically and runs in the background.</p>
       <div class="cs-spec"><span class="cs-spec-tag">~30s setup</span></div>
     </div>
     <div class="cs-card">
-      <div class="cs-icon">📡</div>
+      <div class="cs-icon"><svg class="icon icon-lg"><use href="#i-wifi-off"/></svg></div>
       <h3>Offline-capable</h3>
       <p>Once your agent has the context it needs, it can keep working even if your internet drops. No cloud dependency.</p>
       <div class="cs-spec"><span class="cs-spec-tag">Offline-capable</span></div>
     </div>
     <div class="cs-card">
-      <div class="cs-icon">🧠</div>
+      <div class="cs-icon"><svg class="icon icon-lg"><use href="#i-brain"/></svg></div>
       <h3>Memory that grows</h3>
       <p>Your agent builds a permanent memory of your business — clients, decisions, patterns. It never forgets.</p>
       <div class="cs-spec"><span class="cs-spec-tag">Persistent</span></div>
@@ -1166,17 +1287,17 @@ h1.hero-h {
   </p>
   <div class="cards-row">
     <div class="card">
-      <div class="card-icon">◈</div>
+      <div class="card-icon"><svg class="icon icon-lg"><use href="#i-layers"/></svg></div>
       <div class="card-title">Memory that grows</div>
       <div class="card-body">Numin learns your business from every conversation, every task, every decision. The longer it runs, the sharper it gets.</div>
     </div>
     <div class="card">
-      <div class="card-icon">▲</div>
+      <div class="card-icon"><svg class="icon icon-lg"><use href="#i-zap"/></svg></div>
       <div class="card-title">Agents that act</div>
       <div class="card-body">Not chatbots that suggest — agents that execute. Send email, update CRM, book meeting, close ticket. While you sleep.</div>
     </div>
     <div class="card">
-      <div class="card-icon">⬡</div>
+      <div class="card-icon"><svg class="icon icon-lg"><use href="#i-wand"/></svg></div>
       <div class="card-title">Trained on you</div>
       <div class="card-body">Your products, your clients, your voice. Numin doesn't answer like a generic AI. It answers like your team.</div>
     </div>
@@ -1199,28 +1320,28 @@ h1.hero-h {
       <div class="xp-tagline">A tool you open, type into, copy-paste from, and close.</div>
       <div class="xp-rows">
         <div class="xp-row">
-          <div class="ico">×</div>
+          <div class="ico"><svg class="icon icon-sm"><use href="#i-x"/></svg></div>
           <div>
             <div class="xp-row-title">Forgets you</div>
             <div class="xp-row-body">Every conversation starts from zero. No memory of your clients, your projects, your past decisions.</div>
           </div>
         </div>
         <div class="xp-row">
-          <div class="ico">×</div>
+          <div class="ico"><svg class="icon icon-sm"><use href="#i-x"/></svg></div>
           <div>
             <div class="xp-row-title">Suggests, doesn't act</div>
             <div class="xp-row-body">It gives you text. You still have to copy, paste, send, update, schedule, follow up.</div>
           </div>
         </div>
         <div class="xp-row">
-          <div class="ico">×</div>
+          <div class="ico"><svg class="icon icon-sm"><use href="#i-x"/></svg></div>
           <div>
             <div class="xp-row-title">One-size-fits-all</div>
             <div class="xp-row-body">Same model, same answers, same generic tone for everyone who uses it.</div>
           </div>
         </div>
         <div class="xp-row">
-          <div class="ico">×</div>
+          <div class="ico"><svg class="icon icon-sm"><use href="#i-x"/></svg></div>
           <div>
             <div class="xp-row-title">Waits for you</div>
             <div class="xp-row-body">Completely passive. Nothing happens unless you open it and type. Nothing.</div>
@@ -1234,28 +1355,28 @@ h1.hero-h {
       <div class="xp-tagline">A teammate that lives in your tools, knows your business, and gets things done.</div>
       <div class="xp-rows">
         <div class="xp-row">
-          <div class="ico">✓</div>
+          <div class="ico"><svg class="icon icon-sm"><use href="#i-check"/></svg></div>
           <div>
             <div class="xp-row-title">Knows you forever</div>
             <div class="xp-row-body">Permanent memory of your business. Every client, every decision, every preference — remembered, retrieved, applied.</div>
           </div>
         </div>
         <div class="xp-row">
-          <div class="ico">✓</div>
+          <div class="ico"><svg class="icon icon-sm"><use href="#i-check"/></svg></div>
           <div>
             <div class="xp-row-title">Closes the loop</div>
             <div class="xp-row-body">Sends the email. Updates the CRM. Books the meeting. Posts the ticket. You just told it what you wanted done.</div>
           </div>
         </div>
         <div class="xp-row">
-          <div class="ico">✓</div>
+          <div class="ico"><svg class="icon icon-sm"><use href="#i-check"/></svg></div>
           <div>
             <div class="xp-row-title">Six specialists</div>
             <div class="xp-row-body">One for research. One for sales. One for ops. One for content. One for support. One orchestrator. Each owns a domain.</div>
           </div>
         </div>
         <div class="xp-row">
-          <div class="ico">✓</div>
+          <div class="ico"><svg class="icon icon-sm"><use href="#i-check"/></svg></div>
           <div>
             <div class="xp-row-title">Always on</div>
             <div class="xp-row-body">24/7. Monitors overnight. Triages your inbox. Briefs you in the morning. Flags what's urgent. Drafts the rest.</div>
@@ -1274,37 +1395,37 @@ h1.hero-h {
   </p>
   <div class="wf-grid">
     <div class="wf-card">
-      <div class="wf-emoji">🚀</div>
+      <div class="wf-emoji"><svg class="icon icon-2xl"><use href="#i-rocket"/></svg></div>
       <h3>For founders &amp; solo operators</h3>
       <p>You're the bottleneck. Numin takes the recurring operations off your plate — email, scheduling, follow-ups, invoicing, research — so you can focus on the work only you can do.</p>
       <div class="wf-tags"><span class="wf-tag">Inbox triage</span><span class="wf-tag">Calendar</span><span class="wf-tag">CRM updates</span><span class="wf-tag">Research</span></div>
     </div>
     <div class="wf-card">
-      <div class="wf-emoji">🏢</div>
+      <div class="wf-emoji"><svg class="icon icon-2xl"><use href="#i-building"/></svg></div>
       <h3>For agencies &amp; service teams</h3>
       <p>Six specialized agents as your team. Client comms, content production, project ops, lead gen — running parallel workstreams without hiring another body.</p>
       <div class="wf-tags"><span class="wf-tag">Client comms</span><span class="wf-tag">Content</span><span class="wf-tag">Project ops</span><span class="wf-tag">Reporting</span></div>
     </div>
     <div class="wf-card">
-      <div class="wf-emoji">🎨</div>
+      <div class="wf-emoji"><svg class="icon icon-2xl"><use href="#i-palette"/></svg></div>
       <h3>For creative systems &amp; studios</h3>
       <p>Brief intake, asset versioning, copy iteration, scheduling across channels. Agents that understand your creative pipeline and run the production layer.</p>
       <div class="wf-tags"><span class="wf-tag">Briefs</span><span class="wf-tag">Iteration</span><span class="wf-tag">Publishing</span><span class="wf-tag">Asset ops</span></div>
     </div>
     <div class="wf-card">
-      <div class="wf-emoji">📊</div>
+      <div class="wf-emoji"><svg class="icon icon-2xl"><use href="#i-bar-chart"/></svg></div>
       <h3>For sales &amp; revenue teams</h3>
       <p>Lead enrichment, outreach sequences, pipeline updates, meeting prep, follow-ups. Sales agents that work the top of the funnel while your reps close.</p>
       <div class="wf-tags"><span class="wf-tag">Leads</span><span class="wf-tag">Outreach</span><span class="wf-tag">Pipeline</span><span class="wf-tag">Forecasting</span></div>
     </div>
     <div class="wf-card">
-      <div class="wf-emoji">🧠</div>
+      <div class="wf-emoji"><svg class="icon icon-2xl"><use href="#i-brain"/></svg></div>
       <h3>For enterprise &amp; operations</h3>
       <p>Internal knowledge retrieval, ticket routing, vendor coordination, compliance checks. Enterprise workflows that finally have an automation layer that understands context.</p>
       <div class="wf-tags"><span class="wf-tag">Knowledge</span><span class="wf-tag">Tickets</span><span class="wf-tag">Vendors</span><span class="wf-tag">Compliance</span></div>
     </div>
     <div class="wf-card">
-      <div class="wf-emoji">🌐</div>
+      <div class="wf-emoji"><svg class="icon icon-2xl"><use href="#i-globe"/></svg></div>
       <h3>For projects &amp; communities</h3>
       <p>Community moderation, member onboarding, content calendars, event coordination. A persistent operator for any project that needs to keep moving between human check-ins.</p>
       <div class="wf-tags"><span class="wf-tag">Community</span><span class="wf-tag">Onboarding</span><span class="wf-tag">Events</span><span class="wf-tag">Content</span></div>
@@ -1393,32 +1514,32 @@ h1.hero-h {
   <p class="body-text">Most AI tools rent you access to someone else's model running on someone else's servers. Numin is the opposite. You own the runtime, you own the data, and you can leave anytime.</p>
   <div class="own-grid">
     <div class="own-card">
-      <div class="own-icon">💻</div>
+      <div class="own-icon"><svg class="icon icon-xl"><use href="#i-laptop"/></svg></div>
       <h3>Your Mac</h3>
       <p>On Local, your agent runs on your physical hardware. On Cloud, your agent runs on a dedicated cloud Mac that is yours alone. Either way, you own the runtime — not a shared instance.</p>
     </div>
     <div class="own-card">
-      <div class="own-icon">🔒</div>
+      <div class="own-icon"><svg class="icon icon-xl"><use href="#i-lock"/></svg></div>
       <h3>Your data</h3>
       <p>Your business data, your conversations, your memory — all of it stays on your machine (or your cloud Mac). We never train anyone else's model on your data. We can't, because we never have access to it.</p>
     </div>
     <div class="own-card">
-      <div class="own-icon">🧠</div>
+      <div class="own-icon"><svg class="icon icon-xl"><use href="#i-brain"/></svg></div>
       <h3>Your agent</h3>
       <p>The skills, integrations, and customizations your agent learns are yours. Cancel your subscription tomorrow and your agent keeps running on your Mac. The knowledge doesn't disappear.</p>
     </div>
     <div class="own-card">
-      <div class="own-icon">🚪</div>
+      <div class="own-icon"><svg class="icon icon-xl"><use href="#i-log-out"/></svg></div>
       <h3>No lock-in</h3>
       <p>No proprietary data formats. No proprietary APIs. Your agent talks to your tools through standard protocols. Switch LLMs, switch channels, switch deployment — all without losing anything.</p>
     </div>
     <div class="own-card">
-      <div class="own-icon">📦</div>
+      <div class="own-icon"><svg class="icon icon-xl"><use href="#i-package"/></svg></div>
       <h3>Open architecture</h3>
-      <p>Built on Hermes Agent — an open agentic platform. Your codebase, your integration points, your documentation. You can read it, modify it, or hire someone else to extend it.</p>
+      <p>Built on an open agentic platform. Your codebase, your integration points, your documentation. You can read it, modify it, or hire someone else to extend it.</p>
     </div>
     <div class="own-card">
-      <div class="own-icon">🌍</div>
+      <div class="own-icon"><svg class="icon icon-xl"><use href="#i-globe"/></svg></div>
       <h3>Portable</h3>
       <p>Take your agent and move it anywhere. From your Mac to your cloud Mac, from one cloud provider to another, from one LLM to another. It's your agent. It goes where you go.</p>
     </div>
@@ -1625,7 +1746,7 @@ h1.hero-h {
     </div>
     <div class="faq-item">
       <button class="faq-q">Which LLM does Numin use?</button>
-      <div class="faq-a">Numin is built on the Hermes Agent platform and supports multiple LLM providers. By default it uses MiniMax for cost efficiency. You can bring your own API key (OpenAI, Anthropic, or any provider Hermes supports) and we'll wire it up. Enterprise customers can route to private models.</div>
+      <div class="faq-a">Numin is built on our own open agentic platform and supports multiple LLM providers. By default it uses MiniMax for cost efficiency. You can bring your own API key (OpenAI, Anthropic, or any provider Numin supports) and we'll wire it up. Enterprise customers can route to private models.</div>
     </div>
     <div class="faq-item">
       <button class="faq-q">Can I switch plans later?</button>
@@ -1662,15 +1783,15 @@ h1.hero-h {
   <p class="cta-sub" data-skin-text="ctaSub">14-day free trial. Runs on your Mac. No cloud required.</p>
   <div class="btn-row" style="margin-bottom:0">
     <a href="https://github.com/Verstige/numin" class="btn-primary" data-skin-text="primary">Start free trial →</a>
-    <a href="#channels" class="btn-ghost" data-skin-text="secondary">▶ See how it works</a>
+    <a href="#channels" class="btn-ghost" data-skin-text="secondary"><svg class="icon icon-sm" style="margin-right:6px;vertical-align:-0.1em"><use href="#i-play"/></svg><span data-skin-text="secondary-text">See how it works</span></a>
   </div>
   <div class="cta-channels">
-    <span>💬 iMessage</span>
-    <span>🟢 WhatsApp</span>
-    <span>✈️ Telegram</span>
-    <span>🌐 Web</span>
+    <span><svg class="icon icon-md"><use href="#i-message-circle"/></svg> iMessage</span>
+    <span><svg class="icon icon-md"><use href="#i-message-circle"/></svg> WhatsApp</span>
+    <span><svg class="icon icon-md"><use href="#i-send"/></svg> Telegram</span>
+    <span><svg class="icon icon-md"><use href="#i-globe"/></svg> Web</span>
   </div>
-  <p class="cta-note" data-skin-text="ctaNote">No credit card · Apple Silicon Mac or your private cloud computer · Hermes-powered</p>
+  <p class="cta-note" data-skin-text="ctaNote">No credit card · Apple Silicon Mac or your private cloud computer · Always on</p>
 </section>
 
 <footer class="footer">
@@ -1723,7 +1844,7 @@ const SKIN_COPY = {
     'line2-bright': 'on your Mac.',
     sub: 'Numin deploys six specialized AI agents that run your entire business — operations, sales, support, and communications — 24/7. Built for entrepreneurs, CEOs, and operators. Text them on iMessage, WhatsApp, Telegram, or web.',
     primary: 'Start free trial →',
-    secondary: '▶ See how it works',
+    secondary: 'See how it works',
     ctaSub: '14-day free trial. Runs on your Mac. No cloud required.',
     ctaNote: 'No credit card · Apple Silicon Mac or your private cloud computer · Hermes-powered',
     eyebrow: 'The Numin advantage',
@@ -1742,7 +1863,7 @@ const SKIN_COPY = {
     'line2-bright': 'on your cloud Mac.',
     sub: 'Get the full Numin experience without buying a Mac. We provision a dedicated cloud Mac, your agent is online in minutes. Reach it from iMessage, WhatsApp, Telegram, or any browser. Built for entrepreneurs, CEOs, and operators.',
     primary: 'Provision your agent →',
-    secondary: '▶ Watch cloud demo',
+    secondary: 'Watch cloud demo',
     ctaSub: '14-day free trial. Browser access. Your dedicated cloud computer.',
     ctaNote: 'No credit card · Any device · Apple Silicon in the cloud · Hermes-powered',
     eyebrow: 'The cloud advantage',
