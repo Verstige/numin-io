@@ -7,7 +7,9 @@ import { FirebaseAuthProvider } from "@/contexts/FirebaseAuthContext";
 import './lib/debug-firebase'; // Load Firebase debugging utilities
 import ProtectedRoute from "@/components/ProtectedRoute";
 import LandingPage from "./components/LandingPage";
+import NuminLanding from "./components/NuminLanding";
 import Index from "./pages/Index";
+import "./landing.css";
 import NotFound from "./app/not-found";
 import DemoWorkspace from "./components/DemoWorkspace";
 import NexusDashboard from "./components/NexusDashboard";
@@ -61,7 +63,7 @@ const App = () => {
             }}
           >
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<NuminLanding />} />
             <Route path="/workspace" element={
               <ProtectedRoute>
                 <Index />
@@ -99,7 +101,7 @@ const App = () => {
         <Route path="/contacts-test" element={<ContactsTest />} />
             <Route path="/demo" element={<DemoWorkspace />} />
             <Route path="/nexus-demo" element={<NexusDemo />} />
-            <Route path="/home" element={<LandingPage />} />
+            <Route path="/home" element={<NuminLanding />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1427,3 +1427,211 @@
     .agent-strip { gap: 4px; }
     .agent-pill { font-size: 0.58rem; padding: 4px 8px; }
 }
+
+
+/* ══════════════════════════════════════════
+   HOME / CLOUD TAB TOGGLE + SKIN SWITCH
+   The page root gets `skin-home` or `skin-cloud`.
+   Both skins override `--accent` via inline style,
+   so this CSS only needs to handle tab toggle layout
+   and ensure `.skin-cloud` swaps the planet + orbs.
+══════════════════════════════════════════ */
+.lp-tab-toggle {
+    position: relative;
+    display: inline-flex;
+    gap: 6px;
+    padding: 6px;
+    margin-bottom: 36px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 100px;
+    backdrop-filter: blur(12px);
+    animation: reveal-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    z-index: 5;
+}
+
+.lp-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    border-radius: 100px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #acb5c4;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.25s, background 0.25s, border-color 0.25s, box-shadow 0.25s;
+    position: relative;
+}
+
+.lp-tab:hover {
+    color: #f7f9fc;
+}
+
+.lp-tab.active {
+    color: #050707;
+    background: linear-gradient(135deg, var(--tab-accent, #C9A84C), var(--accent-light, #f0d078));
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+
+.lp-tab-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--tab-accent, #C9A84C);
+    flex-shrink: 0;
+    box-shadow: 0 0 8px var(--tab-accent, #C9A84C);
+}
+
+.lp-tab.active .lp-tab-dot {
+    background: #050707;
+    box-shadow: none;
+}
+
+.lp-tab-label {
+    letter-spacing: 0.01em;
+}
+
+.lp-tab-sub {
+    font-size: 0.72rem;
+    font-weight: 450;
+    opacity: 0.7;
+    color: inherit;
+}
+
+.lp-tab.active .lp-tab-sub {
+    color: rgba(5, 7, 7, 0.65);
+    opacity: 1;
+}
+
+.lp-nav-logo-dot {
+    color: var(--accent, #C9A84C);
+}
+
+/* Cloud skin overrides — swaps planet + orb colors */
+.skin-cloud .planet-main {
+    background: linear-gradient(175deg, var(--accent, #3e9cff) 0%, var(--accent-light, #7ec3ff) 50%, #1a3a6e 100%);
+    box-shadow: 0 0 120px rgba(62, 156, 255, 0.25), 0 0 240px rgba(126, 195, 255, 0.12);
+}
+
+.skin-cloud .planet-small {
+    border-color: rgba(62, 156, 255, 0.3);
+    box-shadow: 0 0 40px rgba(62, 156, 255, 0.18);
+}
+
+.skin-cloud .hero-orb-1 {
+    background: radial-gradient(circle, rgba(62, 156, 200, 0.14), transparent 70%);
+}
+.skin-cloud .hero-orb-2 {
+    background: radial-gradient(circle, rgba(126, 195, 255, 0.1), transparent 70%);
+}
+.skin-cloud .hero-orb-3 {
+    background: radial-gradient(circle, rgba(62, 156, 255, 0.08), transparent 70%);
+}
+
+.skin-cloud .orbit-arc-1,
+.skin-cloud .orbit-arc-1::after {
+    border-color: rgba(62, 156, 255, 0.1);
+    background: rgba(62, 156, 255, 0.7);
+    box-shadow: 0 0 8px rgba(62, 156, 255, 0.5);
+}
+
+.skin-cloud .hero-badge-dot {
+    background: linear-gradient(135deg, var(--accent, #3e9cff), var(--accent-light, #7ec3ff));
+}
+
+.skin-cloud .lp-dashboard-preview::before {
+    background: linear-gradient(90deg, transparent, rgba(62, 156, 255, 0.7), rgba(126, 195, 255, 0.9), rgba(62, 156, 255, 0.7), transparent);
+}
+
+.skin-cloud .audience-heading .cyan,
+.skin-cloud .advantage-eyebrow,
+.skin-cloud .bento-eyebrow,
+.skin-cloud .bar.active,
+.skin-cloud .lp-footer-logo span {
+    color: var(--accent, #3e9cff);
+}
+
+.skin-cloud .audience-tag .dot,
+.skin-cloud .advantage-card .card-bullet::before {
+    background: var(--accent, #3e9cff);
+}
+
+.skin-cloud .advantage-card:hover,
+.skin-cloud .bento-cell:hover {
+    border-color: rgba(62, 156, 255, 0.22);
+}
+
+.skin-cloud .bento-check-item::before {
+    background: rgba(62, 156, 255, 0.1);
+    border-color: rgba(62, 156, 255, 0.22);
+    color: var(--accent, #3e9cff);
+}
+
+.skin-cloud .bar {
+    background: rgba(62, 156, 255, 0.18);
+}
+.skin-cloud .bar.active {
+    background: linear-gradient(180deg, var(--accent, #3e9cff), var(--accent-light, #7ec3ff));
+}
+
+.skin-cloud .cta-planet-main {
+    background: linear-gradient(175deg, var(--accent-light, #7ec3ff) 0%, var(--accent, #3e9cff) 45%, #1a3560 100%);
+    box-shadow: 0 0 140px rgba(62, 156, 255, 0.22), 0 0 280px rgba(126, 195, 255, 0.12);
+}
+
+.skin-cloud .cta-planet-small {
+    border-color: rgba(62, 156, 255, 0.35);
+    box-shadow: 0 0 40px rgba(62, 156, 255, 0.22);
+}
+
+.skin-cloud .social-icon:hover {
+    border-color: rgba(62, 156, 255, 0.4);
+    color: var(--accent, #3e9cff);
+}
+
+.skin-cloud .agent-pill:hover {
+    border-color: rgba(62, 156, 255, 0.28);
+}
+
+.skin-cloud .agent-pill-dot.active {
+    background: var(--accent, #3e9cff);
+    box-shadow: 0 0 6px rgba(62, 156, 255, 0.6);
+}
+
+.skin-cloud .timer-mock {
+    border-color: rgba(62, 156, 255, 0.22);
+    box-shadow: 0 0 40px rgba(62, 156, 255, 0.08), inset 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.skin-cloud .audience-tag.active {
+    background: rgba(62, 156, 255, 0.08);
+    border-color: rgba(62, 156, 255, 0.22);
+}
+
+/* Smooth skin transitions on the planet + orbs */
+.planet-main, .planet-small, .hero-orb, .cta-planet-main, .cta-planet-small {
+    transition: background 0.6s ease, box-shadow 0.6s ease, border-color 0.6s ease;
+}
+
+/* Mobile tab toggle */
+@media (max-width: 768px) {
+    .lp-tab-toggle {
+        flex-direction: column;
+        border-radius: 24px;
+        padding: 8px;
+        width: calc(100% - 40px);
+        max-width: 340px;
+    }
+    .lp-tab {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 18px;
+    }
+    .lp-tab-sub {
+        display: none;
+    }
+}
