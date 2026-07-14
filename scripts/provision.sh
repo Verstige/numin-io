@@ -91,7 +91,7 @@ ORGO_RESP=$(curl -sS -X POST "https://www.orgo.ai/api/computers" \
   -d "$(printf '{
     "workspace_id": "%s",
     "name": "%s",
-    "template_ref": "system/hermes-agent@1.0.0",
+    "template_ref": "system/munro-code@1.0.0",
     "ram": %s,
     "cpu": %s,
     "disk_size_gb": %s,
