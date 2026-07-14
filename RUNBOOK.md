@@ -8,11 +8,18 @@ This is the source of truth for what's shipped, what's pending, and what decisio
 
 ## What is Munro
 
-Munro is an AI agent platform. Customers buy a subscription, get a private virtual computer running their agent, wire it to one of four messaging channels, and the agent runs 24/7 doing work for them. The agent is white-labeled — the customer never sees the LLM behind it. Customers name their own agent.
+Munro is an AI agent platform. Customers buy a subscription; we provision a private Linux cloud computer running the Hermes agent, wire it to one of four messaging channels (iMessage / Telegram / WhatsApp / Discord), and the agent runs 24/7 doing work for them. The customer never sees the LLM behind it (we default to MiniMax for cost; you can bring your own key). Customers name their own agent.
 
 The brand promise: Munro **finds the signal in the noise.** The platform markets six inherited disciplines (scored decisions, liveness, separate reviewer, real "done" definition, reusable code, layered memory) that ship as defaults — no opt-in required.
 
 The brand mark is a **constellation** — peak + cardinal ticks + focal dot, gold `#C9A84C` on near-black `#0D0D0F`.
+
+**Infra reality (verified July 2026 against Orgo's docs):**
+
+- Cloud box is Linux. Not Mac. (Customers can install the DIY tier on their own Mac if they want Apple.)
+- Boots in <500ms.
+- Comes pre-installed with Hermes via Orgo's curated `system/hermes-agent@1.0.0` template — no manual bake needed.
+- Orgo pricing: Hacker $29, Startup $99, Scale $399 (per-month + AI credits).
 
 ---
 
@@ -140,27 +147,38 @@ Recommended: **Vercel** (free tier covers v1, generous Next.js support if we wra
 
 Alternatively: **Railway** if you want everything self-hosted on one provider with VitaTech/Verstige already there.
 
-### 6. Orgo base-image bake
+### 6. Orgo credentials + first workspace
 
-`scripts/provision.sh` references `${MUNRO_BASE_IMAGE:-munro-base-v1}` — a pre-baked OS image with the Hermes agent already installed.
+**No image bake needed.** Orgo ships Hermes pre-installed via curated templates.
 
-**One-time setup procedure:**
+**Required setup (one-time):**
 
-1. Provision a fresh Orgo box
-2. SSH in
-3. Install Hermes / Munro agent code
-4. Configure default Telegram bot skeleton
-5. Snapshot via Orgo API → save as `munro-base-v1`
-6. Document the procedure so you can rebuild when the agent code updates
+1. Create an Orgo account at https://www.orgo.ai/start and grab an API key
+2. Create a `munro` workspace: `POST /api/workspaces` with `{"name": "munro"}`
+3. Capture the workspace_id — env var `ORGO_WORKSPACE_ID`
+4. Set env vars: `ORGO_API_KEY`, `ORGO_WORKSPACE_ID`, `TELEGRAM_BOT_TOKEN` (when wiring), `MUNRO_OPS_BOT_TOKEN` + `MUNRO_OPS_CHAT_ID` (for the operator-DM), `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` (for the customer record)
 
-Without this, every new customer's box installs from scratch (~5 minutes per customer). With the baked image, ~30 seconds.
+The provisioning script (`scripts/provision.sh`) handles the full flow: creates the computer from the curated `system/hermes-agent@1.0.0` template (boots in <500ms with Hermes pre-installed), polls for running status, captures both `id` and stable `instance_id`, wires the channel manually, writes a Supabase record, and DMs you.
+
+**Important:** Orgo runs Linux only — no Mac/Apple Silicon. The landing copy reflects this: "a private cloud computer" not "an Apple Silicon Mac mini". The local install (`# DIY Local`) is the macOS path.
+
+**Orgo pricing (per docs, July 2026):**
+
+- **Hacker** $29/mo + $5 AI credits · 1 computer · solo builders
+- **Startup** $99/mo + $10 AI credits · 4 computers · small teams
+- **Scale** $399/mo + $50 AI credits · 16 computers · production
+
+For Munro's solo customer box ($99/mo + $499 setup), the Solo tier maps cleanly to Orgo's Hacker plan at $29/mo (covered by margin). The $99 to Munro, the customer gets the box + integration + human ops. For business tier, 2 computers maps to Startup. Scale is for teams running multiple customers on one box.
+
+**Hardware options on Orgo:** vCPU 1/2/4/8/16, RAM 4/8/16/32/64 GB, disk up to plan limit. Spect recommends: Solo (2vCPU/8GB/40GB), Business (4vCPU/16GB/80GB).
 
 ### 7. Tier structure decision
 
 Locked value-prop is `$499 setup + $99/mo`. The pricing section on the live site currently shows **5 tiers** ranging $0–$2,499. Recommendation:
 
-- **Keep 2 tiers**: DIY (free, your API key) + Managed ($99/mo + $499 setup)
+- **Keep 2 tiers**: DIY (free, your API key, you bring your own LLM) + Managed ($99/mo + $499 setup)
 - Drop Solo/Pro/Business/Enterprise until real demand forces them back
+- Orgo costs scale well: $29/mo Hacker plan (1 computer) covers the Solo tier with margin; $99/mo Startup covers Business
 
 Decision deferred to a future session.
 
