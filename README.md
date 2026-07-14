@@ -1,73 +1,50 @@
-# Welcome to your Lovable project
+# Munro
 
-## Project info
+Munro is an AI agent platform. You buy a subscription, we provision a private virtual computer running your agent, wire it to your messaging app of choice, and your agent does work for you 24/7.
 
-**URL**: https://lovable.dev/projects/30946f06-c86b-46a0-8e9a-db4c8c59efdb
+It learns your voice. Every week we ship new skills you can teach it.
 
-## How can I edit this code?
+## Quick start
 
-There are several ways of editing your application.
+- **Landing page** (live): `https://verstige.github.io/numin-io/`
+- **Runbook** (the source of truth for what's built, what's pending, and what blocks revenue): [`RUNBOOK.md`](./RUNBOOK.md)
 
-**Use Lovable**
+## Repo layout
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/30946f06-c86b-46a0-8e9a-db4c8c59efdb) and start prompting.
+```
+docs/                ← the live marketing landing (single self-contained HTML)
+  index.html
 
-Changes made via Lovable will be committed automatically to this repo.
+dashboard/           ← customer-facing UI (host separately when accounts ready)
+  index.html
 
-**Use your preferred IDE**
+admin/               ← operations UI for Julylan (noindex, gated by IP/header)
+  index.html
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+onboarding/          ← post-purchase intake form (6 steps, sends to Formspree/Supabase)
+  index.html
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+scripts/             ← operations
+  provision.sh       ← per-customer setup (Orgo + Hermes + channel + Supabase + Telegram DM)
 
-Follow these steps:
+legal/               ← ToS / Privacy / Refund policy templates
+  TERMS-OF-SERVICE.md
+  PRIVACY-POLICY.md
+  REFUND-POLICY.md
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+src/                 ← legacy Vite + Firebase app from earlier prototype (kept for reference)
 ```
 
-**Edit a file directly in GitHub**
+## Brand
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- Name: **Munro**
+- Tagline: _The AI agent that knows your business_
+- Color: gold `#C9A84C` on black `#0D0D0F`
 
-**Use GitHub Codespaces**
+## What's NOT in the repo
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- API keys, secrets, billing creds — none. Use env vars or your local password manager.
+- Customer records — those live in Supabase, not git.
+- Provisioned Orgo boxes — those live in Orgo, not git.
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/30946f06-c86b-46a0-8e9a-db4c8c59efdb) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+See `RUNBOOK.md` for the deploy checklist.

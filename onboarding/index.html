@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Set up your Munro</title>
+  <meta name="description" content="A few questions so your Munro comes out sharp on day one." />
+  <style>
+    :root { --bg: #0D0D0F; --bg-2: #141418; --bg-3: #1a1a20; --border: rgba(255,255,255,0.08); --text: #ECECEC; --text-mid: #a0a0a8; --text-mute: #6a6a72; --accent: #C9A84C; --accent-rgb: 201,168,76; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 32px; border-bottom: 1px solid var(--border); background: var(--bg-2); }
+    .nav-brand { font-size: 1.1rem; font-weight: 800; letter-spacing: -.02em; }
+    .nav-brand .dot { color: var(--accent); }
+    .main { max-width: 720px; margin: 0 auto; padding: 60px 24px 100px; }
+    .eyebrow { font-size: .7rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin: 0 0 16px; }
+    .lede { color: var(--text-mid); font-size: 1.05rem; line-height: 1.6; margin: 0 0 48px; }
+    .step { margin-bottom: 56px; padding-bottom: 56px; border-bottom: 1px solid var(--border); }
+    .step:last-of-type { border-bottom: none; }
+    .step-num { font-size: .7rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--text-mute); margin-bottom: 14px; font-family: ui-monospace, monospace; }
+    .step h2 { font-size: 1.3rem; font-weight: 700; letter-spacing: -.01em; margin: 0 0 6px; }
+    .step p { font-size: .9rem; color: var(--text-mid); line-height: 1.6; margin: 0 0 24px; }
+    .input, .textarea { width: 100%; padding: 14px 16px; background: var(--bg-2); color: var(--text); border: 1px solid var(--border); border-radius: 12px; font-family: inherit; font-size: .95rem; }
+    .input:focus, .textarea:focus { outline: none; border-color: rgba(var(--accent-rgb), .5); }
+    .textarea { min-height: 100px; resize: vertical; }
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill-input { display: none; }
+    .pill-label { display: inline-block; padding: 8px 14px; border: 1px solid var(--border); border-radius: 90px; font-size: .82rem; color: var(--text-mid); cursor: pointer; transition: all .2s; user-select: none; background: var(--bg-2); }
+    .pill-label:hover { border-color: rgba(var(--accent-rgb), .3); color: var(--text); }
+    .pill-input:checked + .pill-label { background: rgba(var(--accent-rgb), .15); border-color: var(--accent); color: var(--accent); }
+    .submit-btn { padding: 14px 28px; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: filter .2s; }
+    .submit-btn:hover { filter: brightness(1.1); }
+    .skip-btn { padding: 14px 20px; background: transparent; color: var(--text-mid); border: none; cursor: pointer; margin-left: 12px; font-size: .9rem; }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-brand">Munro<span class="dot">.</span></a>
+  <span style="font-size:.85rem;color:var(--text-mute)">Step 1 of 1 · ~3 min</span>
+</nav>
+
+<main class="main">
+
+  <div class="eyebrow">WELCOME</div>
+  <h1>Tell us about your business.</h1>
+  <p class="lede">A few questions so your Munro comes out sharp on day one. The more you share, the faster it gets to be useful.</p>
+
+  <form id="onboard" action="https://formspree.io/f/your-form-id" method="POST">
+
+    <div class="step">
+      <div class="step-num">STEP 01 / 06</div>
+      <h2>What do you do?</h2>
+      <p>A 1-sentence description of your business or work. We'll turn this into context your agent remembers.</p>
+      <textarea class="textarea" name="business_description" required placeholder="e.g. I run a 4-person agency doing brand identity work for B2B SaaS companies..."></textarea>
+    </div>
+
+    <div class="step">
+      <div class="step-num">STEP 02 / 06</div>
+      <h2>What do you want help with first?</h2>
+      <p>Pick the top 3 things you're hoping your agent handles. You can change this anytime.</p>
+      <div class="pills">
+        <input type="checkbox" name="goals" value="email-triage" id="g1" class="pill-input" />
+        <label for="g1" class="pill-label">Email triage</label>
+
+        <input type="checkbox" name="goals" value="calendar" id="g2" class="pill-input" />
+        <label for="g2" class="pill-label">Calendar + scheduling</label>
+
+        <input type="checkbox" name="goals" value="research" id="g3" class="pill-input" />
+        <label for="g3" class="pill-label">Research briefs</label>
+
+        <input type="checkbox" name="goals" value="writing" id="g4" class="pill-input" />
+        <label for="g4" class="pill-label">Writing / content</label>
+
+        <input type="checkbox" name="goals" value="crm" id="g5" class="pill-input" />
+        <label for="g5" class="pill-label">CRM updates</label>
+
+        <input type="checkbox" name="goals" value="support" id="g6" class="pill-input" />
+        <label for="g6" class="pill-label">Customer support</label>
+
+        <input type="checkbox" name="goals" value="ops" id="g7" class="pill-input" />
+        <label for="g7" class="pill-label">General ops / admin</label>
+
+        <input type="checkbox" name="goals" value="data" id="g8" class="pill-input" />
+        <label for="g8" class="pill-label">Data + reporting</label>
+
+        <input type="checkbox" name="goals" value="finance" id="g9" class="pill-input" />
+        <label for="g9" class="pill-label">Finance / invoicing</label>
+
+        <input type="checkbox" name="goals" value="coding" id="g10" class="pill-input" />
+        <label for="g10" class="pill-label">Coding / engineering</label>
+
+        <input type="checkbox" name="goals" value="other" id="g11" class="pill-input" />
+        <label for="g11" class="pill-label">Something else</label>
+      </div>
+      <textarea class="textarea" name="goals_text" placeholder="Anything specific about these goals? (optional)" style="margin-top: 16px;"></textarea>
+    </div>
+
+    <div class="step">
+      <div class="step-num">STEP 03 / 06</div>
+      <h2>What are you using right now?</h2>
+      <p>This tells us how to position day-one behavior so your Munro feels familiar instead of jarring.</p>
+      <div class="pills">
+        <input type="checkbox" name="current_stack" value="claude" id="s1" class="pill-input" />
+        <label for="s1" class="pill-label">Claude (web + code)</label>
+
+        <input type="checkbox" name="current_stack" value="chatgpt" id="s2" class="pill-input" />
+        <label for="s2" class="pill-label">ChatGPT</label>
+
+        <input type="checkbox" name="current_stack" value="gemini" id="s3" class="pill-input" />
+        <label for="s3" class="pill-label">Gemini</label>
+
+        <input type="checkbox" name="current_stack" value="grok" id="s4" class="pill-input" />
+        <label for="s4" class="pill-label">Grok</label>
+
+        <input type="checkbox" name="current_stack" value="cursor" id="s5" class="pill-input" />
+        <label for="s5" class="pill-label">Cursor</label>
+
+        <input type="checkbox" name="current_stack" value="raycast" id="s6" class="pill-input" />
+        <label for="s6" class="pill-label">Raycast AI</label>
+
+        <input type="checkbox" name="current_stack" value="none" id="s7" class="pill-input" />
+        <label for="s7" class="pill-label">None of these</label>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">STEP 04 / 06</div>
+      <h2>What\'s broken right now?</h2>
+      <p>What keeps breaking, eating your time, or being more annoying than it should be? Your agent\'s priorities come from this.</p>
+      <textarea class="textarea" name="pain_points" required placeholder="Things like: inbox overflow, scheduling back-and-forth, losing track of leads, forgetting to follow up, copying emails into 4 tools..."></textarea>
+    </div>
+
+    <div class="step">
+      <div class="step-num">STEP 05 / 06</div>
+      <h2>How much are you paying for AI tools today?</h2>
+      <p>Clude $20, ChatGPT $20, Cursor $20 — we want to know so we can prove Munro saves you money within 30 days.</p>
+      <input class="input" name="current_ai_spend" type="number" min="0" placeholder="e.g. 60" />
+      <p style="margin-top: 12px;">$ <span style="color: var(--text-mute);">/month</span></p>
+    </div>
+
+    <div class="step">
+      <div class="step-num">STEP 06 / 06</div>
+      <h2>Where do you want to talk to your agent?</h2>
+      <p>Pick the channel that\'ll be your main. We wire the others later if you want them.</p>
+      <div class="pills">
+        <input type="radio" name="primary_channel" value="telegram" id="c1" class="pill-input" />
+        <label for="c1" class="pill-label">Telegram</label>
+
+        <input type="radio" name="primary_channel" value="imessage" id="c2" class="pill-input" />
+        <label for="c2" class="pill-label">iMessage</label>
+
+        <input type="radio" name="primary_channel" value="discord" id="c3" class="pill-input" />
+        <label for="c3" class="pill-label">Discord</label>
+
+        <input type="radio" name="primary_channel" value="whatsapp" id="c4" class="pill-input" />
+        <label for="c4" class="pill-label">WhatsApp</label>
+
+        <input type="radio" name="primary_channel" value="web" id="c5" class="pill-input" />
+        <label for="c5" class="pill-label">Web console only</label>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; margin-top: 60px;">
+      <button type="submit" class="submit-btn">Send to setup →</button>
+      <button type="button" class="skip-btn" onclick="document.getElementById('onboard').submit();">Skip and finish later</button>
+    </div>
+    <p style="font-size: .75rem; color: var(--text-mute); margin-top: 24px;">Your answers are kept private and only used to configure your agent. You can edit any of this from your dashboard later.</p>
+
+  </form>
+
+</main>
+
+</body>
+</html>

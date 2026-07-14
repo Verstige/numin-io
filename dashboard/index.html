@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Munro Dashboard</title>
+  <meta name="description" content="Manage your Munro AI agent. Billing, agent access, and the skills marketplace." />
+  <link rel="icon" href="favicon.ico" />
+  <style>
+    :root {
+      --bg: #0D0D0F;
+      --bg-2: #141418;
+      --bg-3: #1a1a20;
+      --border: rgba(255,255,255,0.08);
+      --text: #ECECEC;
+      --text-mid: #a0a0a8;
+      --text-mute: #6a6a72;
+      --accent: #C9A84C;
+      --accent-rgb: 201,168,76;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 32px; border-bottom: 1px solid var(--border); background: var(--bg-2); }
+    .nav-brand { font-size: 1.1rem; font-weight: 800; letter-spacing: -.02em; }
+    .nav-brand .dot { color: var(--accent); }
+    .nav-user { font-size: .85rem; color: var(--text-mid); }
+    .main { max-width: 1100px; margin: 0 auto; padding: 48px 32px; }
+    h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; margin: 0 0 8px; }
+    .lede { color: var(--text-mid); font-size: 1rem; margin: 0 0 40px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 48px; }
+    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 20px; padding: 28px; transition: border-color .3s, transform .3s; }
+    .card:hover { border-color: rgba(var(--accent-rgb), .35); transform: translateY(-2px); }
+    .card-eyebrow { font-size: .65rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; font-family: ui-monospace, monospace; }
+    .card h3 { font-size: 1.05rem; font-weight: 700; margin: 0 0 6px; }
+    .card p { font-size: .85rem; color: var(--text-mid); line-height: 1.5; margin: 0 0 16px; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-weight: 600; font-size: .85rem; background: var(--accent); color: var(--bg); border: 1px solid var(--accent); transition: filter .2s; }
+    .btn:hover { filter: brightness(1.1); }
+    .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+    .btn-ghost:hover { border-color: rgba(var(--accent-rgb), .5); background: rgba(var(--accent-rgb), .05); }
+    .skill-card { background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 24px; transition: border-color .3s; }
+    .skill-card:hover { border-color: rgba(var(--accent-rgb), .25); }
+    .skill-head { display: flex; justify-content: space-between; align-items: start; gap: 16px; margin-bottom: 12px; }
+    .skill-card h4 { font-size: 1rem; font-weight: 700; margin: 0; }
+    .skill-card .skill-sum { font-size: .85rem; color: var(--text-mid); line-height: 1.5; margin: 0 0 16px; }
+    .skill-meta { display: flex; gap: 8px; font-size: .65rem; color: var(--text-mute); margin-bottom: 16px; font-family: ui-monospace, monospace; }
+    .skill-meta span { padding: 3px 8px; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 6px; }
+    .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .feed-tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(var(--accent-rgb), .1); border: 1px solid rgba(var(--accent-rgb), .3); border-radius: 90px; font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-left: 8px; }
+    .feed-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .m-empty { padding: 60px 20px; text-align: center; color: var(--text-mute); font-size: .9rem; }
+    .badge-mute { display: inline-block; padding: 4px 10px; background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 90px; font-size: .65rem; color: var(--text-mid); font-family: ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="index.html" class="nav-brand">Munro<span class="dot">.</span></a>
+    <span class="nav-user">signed in as julylan@example.com</span>
+  </nav>
+
+  <main class="main">
+
+    <h1>Welcome back, Julylan.</h1>
+    <p class="lede">Your agent has been running for 18 days. Here's where to pick up.</p>
+
+    <div class="grid">
+
+      <!-- Quick connect card -->
+      <div class="card">
+        <div class="card-eyebrow">YOUR AGENT</div>
+        <h3>Connect to your Munro</h3>
+        <p>Open the virtual desktop where your agent runs and the channels where it talks to you.</p>
+        <div style="display:flex; gap:8px; flex-wrap: wrap;">
+          <a href="https://app.orgo.ai/" class="btn">Open Virtual Desktop</a>
+          <a href="https://t.me/munro_julylan_bot" class="btn btn-ghost">Open in Telegram</a>
+          <a href="https://imessage.example/" class="btn btn-ghost">Open in iMessage</a>
+        </div>
+      </div>
+
+      <!-- Billing card -->
+      <div class="card">
+        <div class="card-eyebrow">BILLING</div>
+        <h3>Manage subscription</h3>
+        <p>Solo plan · $99/mo · next charge Jul 28, 2026. Update card, change tier, or cancel in the Stripe portal.</p>
+        <a href="https://billing.stripe.com/p/login/test_yourportal" class="btn">Manage Billing</a>
+      </div>
+
+    </div>
+
+    <!-- Skills marketplace -->
+    <h2 style="font-size: 1.4rem; font-weight: 800; letter-spacing: -.02em; margin: 0 0 8px;">
+      Skill marketplace
+      <span class="feed-tag"><span class="dot"></span> 3 NEW THIS WEEK</span>
+    </h2>
+    <p class="lede" style="margin-bottom: 24px;">Every card is a skill your agent can learn. Click <strong>Teach my Munro</strong> to send the source. Your agent reads it and the capability sticks — forever.</p>
+
+    <div class="skills-grid">
+
+      <div class="skill-card">
+        <div class="skill-head">
+          <h4>Daily Briefing</h4>
+          <span class="feed-tag"><span class="dot"></span>NEW</span>
+        </div>
+        <p class="skill-sum">A 7am summary of meetings, deadlines, what's urgent, what to ignore. Reads your calendar, email, last night's open tasks.</p>
+        <div class="skill-meta"><span>COMPOSE</span><span>ASYNC DAILY</span></div>
+        <button class="btn" data-skill="daily-briefing">Teach my Munro</button>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-head">
+          <h4>Inbox Conflict Resolver</h4>
+          <span class="feed-tag"><span class="dot"></span>NEW</span>
+        </div>
+        <p class="skill-sum">Detects when two threads contradict or ask for the same thing twice, drafts a single clean reply and a follow-up for the older thread.</p>
+        <div class="skill-meta"><span>EMAIL OPS</span><span>OPT-IN</span></div>
+        <button class="btn" data-skill="inbox-resolver">Teach my Munro</button>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-head">
+          <h4>Voice-Match Drafter</h4>
+          <span class="feed-tag"><span class="dot"></span>NEW</span>
+        </div>
+        <p class="skill-sum">Reads 5 of your past emails and learns the cadence, length, formality of your style. Drafts in your voice, not agent-voice.</p>
+        <div class="skill-meta"><span>CONTENT</span><span>OPT-IN</span></div>
+        <button class="btn" data-skill="voice-match">Teach my Munro</button>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-head">
+          <h4>Calendar Conflict Resolver</h4>
+        </div>
+        <p class="skill-sum">Auto-detects when two meetings overlap or two events need you in two places at once. Pushes the lower-priority one.</p>
+        <div class="skill-meta"><span>GOOGLE CAL</span><span>ACTIVE</span></div>
+        <button class="btn btn-ghost" disabled>Already active</button>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-head">
+          <h4>Workflow Composer</h4>
+        </div>
+        <p class="skill-sum">Tell it "when X happens, do Y" and it builds the trigger, picks the tools, ships the workflow. No code from you.</p>
+        <div class="skill-meta"><span>NO-CODE</span><span>ACTIVE</span></div>
+        <button class="btn btn-ghost" disabled>Already active</button>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-head">
+          <h4>Contact Memory</h4>
+        </div>
+        <p class="skill-sum">Builds a private contact graph from your email + Telegram. Remembers who you talked to, about what, and where you left off.</p>
+        <div class="skill-meta"><span>RELATIONSHIPS</span><span>ACTIVE</span></div>
+        <button class="btn btn-ghost" disabled>Already active</button>
+      </div>
+
+    </div>
+
+    <p style="color: var(--text-mute); font-size: .78rem; margin-top: 24px; text-align: center;">
+      A new skill ships every week. <a href="#feed" style="color: var(--accent);">See the full skill feed →</a>
+    </p>
+
+    <!-- Recently taught (activity log) -->
+    <h2 style="font-size: 1.1rem; font-weight: 800; letter-spacing: -.02em; margin: 60px 0 16px;">Recent activity</h2>
+    <div style="background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 8px 20px;">
+      <div style="display:flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border);">
+        <span style="font-size: .85rem;">Workflow Composer activated</span>
+        <span class="badge-mute">JUL 13</span>
+      </div>
+      <div style="display:flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border);">
+        <span style="font-size: .85rem;">Voice-Match Drafter learned</span>
+        <span class="badge-mute">JUL 12</span>
+      </div>
+      <div style="display:flex; justify-content: space-between; align-items: center; padding: 14px 0;">
+        <span style="font-size: .85rem;">Munro provisioned · welcome</span>
+        <span class="badge-mute">JUL 11</span>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    document.querySelectorAll('.btn[data-skill]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const skill = btn.dataset.skill;
+        btn.textContent = 'Sending to your Munro...';
+        btn.disabled = true;
+        // In production: POST /api/skills/learn { skill, source: "<repo URL>" }
+        // For now, demo mock:
+        setTimeout(() => {
+          btn.classList.remove('btn');
+          btn.classList.add('btn', 'btn-ghost');
+          btn.textContent = 'Teaching in progress...';
+        }, 600);
+        setTimeout(() => {
+          btn.textContent = 'Learned ✓';
+        }, 2400);
+      });
+    });
+  </script>
+
+</body>
+</html>

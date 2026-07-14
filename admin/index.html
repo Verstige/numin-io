@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Munro Admin</title>
+  <meta name="description" content="Munro admin dashboard — manage customers and publish skills." />
+  <meta name="robots" content="noindex, nofollow" />
+  <style>
+    :root { --bg: #0D0D0F; --bg-2: #141418; --border: rgba(255,255,255,0.08); --text: #ECECEC; --text-mid: #a0a0a8; --text-mute: #6a6a72; --accent: #C9A84C; --accent-rgb: 201,168,76; --green: #4ade80; --red: #f87171; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .sidebar { display: none; } }
+    .sidebar { background: var(--bg-2); border-right: 1px solid var(--border); padding: 24px 0; }
+    .sb-brand { padding: 0 24px 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; font-size: 1rem; font-weight: 800; }
+    .sb-brand .dot { color: var(--accent); }
+    .sb-section { padding: 16px 24px; }
+    .sb-section h4 { font-size: .65rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--text-mute); margin: 0 0 12px; }
+    .sb-link { display: block; padding: 10px 12px; border-radius: 10px; color: var(--text-mid); font-size: .9rem; margin-bottom: 4px; transition: background .2s, color .2s; }
+    .sb-link:hover, .sb-link.active { background: rgba(var(--accent-rgb), .08); color: var(--accent); }
+    .sb-link.active { background: rgba(var(--accent-rgb), .12); }
+    .main { padding: 40px; max-width: 1100px; }
+    h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; margin: 0 0 8px; }
+    .lede { color: var(--text-mid); font-size: 1rem; margin: 0 0 32px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 48px; }
+    @media (max-width: 768px) { .stats { grid-template-columns: 1fr 1fr; } }
+    .stat { background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+    .stat-num { font-size: 2rem; font-weight: 900; letter-spacing: -.03em; color: var(--accent); margin-bottom: 4px; }
+    .stat-label { font-size: .75rem; color: var(--text-mid); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
+    .panel { background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 24px; overflow: hidden; }
+    .panel-head { padding: 20px 28px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .panel-head h3 { font-size: .9rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: .12em; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 16px 28px; text-align: left; border-bottom: 1px solid var(--border); font-size: .85rem; }
+    th { font-size: .65rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-mute); }
+    tr:last-child td { border-bottom: none; }
+    .pill { display: inline-block; padding: 4px 10px; border-radius: 90px; font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .pill-active { background: rgba(74, 222, 128, .12); color: var(--green); border: 1px solid rgba(74, 222, 128, .3); }
+    .pill-pending { background: rgba(250, 204, 21, .12); color: #fbbf24; border: 1px solid rgba(250, 204, 21, .3); }
+    .pill-cancel { background: rgba(248, 113, 113, .12); color: var(--red); border: 1px solid rgba(248, 113, 113, .3); }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: .8rem; background: var(--accent); color: var(--bg); border: 1px solid var(--accent); cursor: pointer; }
+    .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+    .form-row { padding: 24px 28px; }
+    .form-row label { display: block; font-size: .75rem; font-weight: 600; color: var(--text-mid); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .1em; }
+    .form-row input, .form-row textarea { width: 100%; padding: 12px 14px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: .9rem; }
+    .form-row input:focus, .form-row textarea:focus { outline: none; border-color: rgba(var(--accent-rgb), .5); }
+    .form-row textarea { min-height: 100px; resize: vertical; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 768px) { .row-2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sb-brand">Munro<span class="dot">.</span> <span style="color:var(--text-mute); font-weight: 500;">Admin</span></div>
+    <div class="sb-section">
+      <h4>Overview</h4>
+      <a href="#" class="sb-link active">Dashboard</a>
+      <a href="#customers" class="sb-link">Customers</a>
+    </div>
+    <div class="sb-section">
+      <h4>Library</h4>
+      <a href="#skills" class="sb-link">All Skills</a>
+      <a href="#publish" class="sb-link">Publish New</a>
+      <a href="#feed" class="sb-link">Skill Feed</a>
+    </div>
+    <div class="sb-section">
+      <h4>Systems</h4>
+      <a href="https://verstige.github.io/numin-io/" class="sb-link" target="_blank">View Live Site ↗</a>
+      <a href="https://stripe.com/dashboard" class="sb-link" target="_blank">Stripe Dashboard ↗</a>
+      <a href="https://app.supabase.com" class="sb-link" target="_blank">Supabase Dashboard ↗</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <h1>Operations dashboard</h1>
+    <p class="lede">The whole business at a glance. New customers land here when Stripe webhook fires.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-num">12</div><div class="stat-label">Active customers</div></div>
+      <div class="stat"><div class="stat-num">$1,188</div><div class="stat-label">MRR</div></div>
+      <div class="stat"><div class="stat-num">3</div><div class="stat-label">Pending setup</div></div>
+      <div class="stat"><div class="stat-num">0</div><div class="stat-label">Churn this month</div></div>
+    </div>
+
+    <!-- Recent customers -->
+    <div class="panel" id="customers">
+      <div class="panel-head"><h3>Recent customers</h3><a href="#" class="btn btn-ghost">View all</a></div>
+      <table>
+        <thead><tr><th>Customer</th><th>Tier</th><th>Status</th><th>Joined</th></tr></thead>
+        <tbody>
+          <tr><td>julie.miller@example.com</td><td>Solo · $99/mo</td><td><span class="pill pill-pending">Pending setup</span></td><td>2h ago</td></tr>
+          <tr><td>marcus@orbital.io</td><td>Pro · $200/mo</td><td><span class="pill pill-active">Active</span></td><td>2 days ago</td></tr>
+          <tr><td>ama@sundown.studio</td><td>Solo · $99/mo</td><td><span class="pill pill-active">Active</span></td><td>5 days ago</td></tr>
+          <tr><td>trevor@harbor.dev</td><td>Solo · $99/mo</td><td><span class="pill pill-active">Active</span></td><td>1 week ago</td></tr>
+          <tr><td>stephanie@normco.co</td><td>Business · $500/mo</td><td><span class="pill pill-active">Active</span></td><td>2 weeks ago</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Publish new skill -->
+    <div class="panel" id="publish">
+      <div class="panel-head"><h3>Publish new skill to all customers</h3><span style="font-size:.7rem;color:var(--text-mute)">Broadcasts to every customer's dashboard on save</span></div>
+      <div class="form-row">
+        <label>Skill name (what customers see)</label>
+        <input type="text" placeholder="e.g. Daily Briefing" id="skill-name" />
+      </div>
+      <div class="form-row">
+        <label>One-line summary (in plain language)</label>
+        <input type="text" placeholder="A 7am summary of meetings, deadlines, what's urgent. You wake up informed." id="skill-sum" />
+      </div>
+      <div class="form-row">
+        <div class="row-2">
+          <div>
+            <label>GitHub repo URL</label>
+            <input type="url" placeholder="https://github.com/you/the-source-repo" id="skill-url" />
+          </div>
+          <div>
+            <label>Category</label>
+            <input type="text" placeholder="EMAIL OPS / CALENDAR / CONTENT / RESEARCH" id="skill-cat" />
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Internal notes (not shown to customers)</label>
+        <textarea placeholder="Anything you want to remember about this skill — where it came from, what it does internally, why you built it." id="skill-notes"></textarea>
+      </div>
+      <div class="form-row" style="display:flex; gap: 12px; align-items: center; border-top: 1px solid var(--border);">
+        <button class="btn" id="publish-skill">Publish to all customers</button>
+        <label style="display:flex; align-items:center; gap:8px; font-size:.85rem; color: var(--text-mid);">
+          <input type="checkbox" id="weekly-drop" checked /> Mark as part of this week's drop
+        </label>
+      </div>
+    </div>
+
+    <!-- Skills library -->
+    <div class="panel" id="skills">
+      <div class="panel-head"><h3>Skills library</h3><span style="font-size:.7rem;color:var(--text-mute)">17 skills · 3 active for this customer's setup</span></div>
+      <table>
+        <thead><tr><th>Name</th><th>Category</th><th>Status</th><th>Adoption</th></tr></thead>
+        <tbody>
+          <tr><td>Workflow Composer</td><td>NO-CODE</td><td><span class="pill pill-active">Live</span></td><td>11 / 12</td></tr>
+          <tr><td>Voice-Match Drafter</td><td>CONTENT</td><td><span class="pill pill-active">Live</span></td><td>9 / 12</td></tr>
+          <tr><td>Daily Briefing</td><td>COMPOSE</td><td><span class="pill pill-active">Live</span></td><td>8 / 12</td></tr>
+          <tr><td>Inbox Conflict Resolver</td><td>EMAIL OPS</td><td><span class="pill pill-active">Live</span></td><td>7 / 12</td></tr>
+          <tr><td>Calendar Conflict Resolver</td><td>GOOGLE CAL</td><td><span class="pill pill-active">Live</span></td><td>11 / 12</td></tr>
+          <tr><td>Contact Memory</td><td>RELATIONSHIPS</td><td><span class="pill pill-active">Live</span></td><td>5 / 12</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  document.getElementById('publish-skill').addEventListener('click', () => {
+    const name = document.getElementById('skill-name').value.trim();
+    const sum = document.getElementById('skill-sum').value.trim();
+    const url = document.getElementById('skill-url').value.trim();
+    if (!name || !sum || !url) {
+      alert('Name, summary, and repo URL are required.');
+      return;
+    }
+    // In production: POST /api/skills { name, sum, url, notes, weeklyDrop }
+    alert('Publishing ' + name + ' to all customers\n\n(This demo does not persist; in production, this hits the database and broadcasts.)');
+  });
+</script>
+
+</body>
+</html>
