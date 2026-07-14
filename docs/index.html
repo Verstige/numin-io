@@ -1148,6 +1148,15 @@ h1.hero-h {
   padding: 0;
   isolation: isolate;
 }
+.stack-sticky {
+  position: sticky;
+  top: 70px;
+  height: calc(100vh - 70px);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 /* Stacked-deck: cards are positioned absolutely in a vertical stack.
    The top card is at the center; subsequent cards are offset slightly
    down + to the side so you can see the "deck" visual. */
@@ -1247,8 +1256,24 @@ h1.hero-h {
   pointer-events: none;
 }
 @media (max-width: 768px) {
-  .stack { padding: 20px 0 80px; }
-  .stack-sticky { top: 70px; height: calc(100vh - 70px); padding: 0 16px; }
+  /* Mobile: kill the sticky deck illusion entirely.
+     Each card becomes a normal block in flow — readable, scannable. */
+  .stack { padding: 60px 0 80px; }
+  .stack-sticky {
+    position: static !important; top: auto !important; height: auto !important;
+    min-height: 0 !important; display: block !important; padding: 0 !important;
+  }
+  .stack-card {
+    position: static !important; top: auto !important; left: auto !important;
+    transform: none !important; width: 100% !important; max-width: 100% !important;
+    opacity: 1 !important; pointer-events: auto !important;
+    margin-bottom: 16px !important; padding: 28px 24px !important;
+    border-radius: 20px !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+  }
+  .stack .stack-card.passed, .stack .stack-card.exit, .stack .stack-card.active {
+    transform: none !important; opacity: 1 !important; z-index: auto !important;
+  }
   .stack-card { padding: 24px 22px; border-radius: 20px; }
   .stack-card h3 { font-size: 1.25rem; }
   .stack-card p { font-size: 0.9rem; }
