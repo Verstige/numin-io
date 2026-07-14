@@ -2484,6 +2484,126 @@ h1.hero-h {
   </div>
 </section>
 
+<section class="inherited" id="inherited">
+  <style>
+    .inherited { background: var(--bg); padding: 140px 52px; position: relative; z-index: 1; }
+    .inherited-head { text-align: center; max-width: 800px; margin: 0 auto 64px; }
+    .inherited-head .body-text { margin-left: auto; margin-right: auto; }
+    .inherited-statement {
+      max-width: 880px; margin: 0 auto 80px; padding: 40px 48px;
+      border: 1px solid rgba(var(--accent-rgb), 0.25);
+      border-radius: 24px;
+      background: linear-gradient(160deg, rgba(var(--accent-rgb), 0.04) 0%, transparent 100%);
+      position: relative;
+    }
+    .inherited-statement::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.6;
+    }
+    .inherited-statement h3 {
+      font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em;
+      line-height: 1.25; margin: 0 0 14px; color: var(--text);
+    }
+    .inherited-statement p {
+      font-size: 1rem; line-height: 1.6; color: var(--text-mid); margin: 0;
+    }
+    .inherited-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+      max-width: 1100px; margin: 0 auto;
+    }
+    @media (max-width: 768px) { .inherited-grid { grid-template-columns: 1fr; } }
+    .in-card {
+      border: 1px solid var(--border); border-radius: 20px;
+      background: var(--bg-2); padding: 32px;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .in-card:hover { border-color: rgba(var(--accent-rgb), 0.3); transform: translateY(-3px); }
+    .in-num {
+      font-family: ui-monospace, monospace;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em;
+      color: var(--accent); margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+    .in-card h4 {
+      font-size: 1.1rem; font-weight: 700; letter-spacing: -.01em;
+      margin: 0 0 10px;
+    }
+    .in-card p {
+      font-size: 0.88rem; color: var(--text-mid); line-height: 1.6;
+      margin: 0;
+    }
+    .in-foot {
+      text-align: center; max-width: 720px; margin: 64px auto 0;
+    }
+    .in-foot p {
+      font-size: 1rem; color: var(--text-mid); line-height: 1.6;
+    }
+    .in-foot strong { color: var(--text); font-weight: 600; }
+    @media (max-width: 768px) {
+      .inherited { padding: 80px 16px; }
+      .inherited-statement { padding: 28px 24px; }
+      .inherited-statement h3 { font-size: 1.25rem; }
+    }
+  </style>
+
+  <div class="inherited-head">
+    <div class="eyebrow" style="justify-content:center">Built once. Free for everyone.</div>
+    <h2 class="h2">Every Munro inherits six disciplines.<br><span class="dim">You don&rsquo;t have to turn them on.</span></h2>
+    <p class="body-text center-h">Most AI agents answer you. Munro is built to be <em>right</em>. The difference is six disciplines we ship as defaults. They were hard to build. Your agent gets them on day one.</p>
+  </div>
+
+  <div class="inherited-statement">
+    <h3>Why most agents fail at the same five things.</h3>
+    <p>They guess when they should check. They lose context between runs. They write one-off scripts that rot. They answer with confidence they didn&rsquo;t earn. You can&rsquo;t tell when they&rsquo;re stuck, and they can&rsquo;t explain what they did yesterday. Munro was built to fix all five.</p>
+  </div>
+
+  <div class="inherited-grid">
+
+    <div class="in-card">
+      <div class="in-num">DISCIPLINE 01</div>
+      <h4>Scored decisions, not vibes.</h4>
+      <p>When your agent picks the right tool for a job, it doesn&rsquo;t guess. It scores 7 dimensions &mdash; task fit, output quality, reliability, cost &mdash; and logs the winner with the alternatives it rejected and why. You can audit any decision it&rsquo;s ever made.</p>
+    </div>
+
+    <div class="in-card">
+      <div class="in-num">DISCIPLINE 02</div>
+      <h4>Liveness you can feel.</h4>
+      <p>Every multi-step task broadcasts checkpoints. In progress. Awaiting you. Completed. You never stare at a screen wondering if it&rsquo;s stuck. The agent tells you where it is, in plain English, the moment it gets there.</p>
+    </div>
+
+    <div class="in-card">
+      <div class="in-num">DISCIPLINE 03</div>
+      <h4>The reviewer is never the writer.</h4>
+      <p>The agent that wrote your email will defend it. The agent that reviewed it won&rsquo;t. Every non-trivial output gets graded by a different agent on three axes &mdash; accurate, complete, constructive &mdash; with severity tiers and concrete fix suggestions. Hallucinated confidence doesn&rsquo;t pass.</p>
+    </div>
+
+    <div class="in-card">
+      <div class="in-num">DISCIPLINE 04</div>
+      <h4>A real definition of &ldquo;done.&rdquo;</h4>
+      <p>Before any task is marked complete, your agent scores it on completeness, consistency, clarity, correctness, presentation, and safety. Below a threshold it goes back into the loop. Above it, it ships. The bar is real &mdash; not a confidence statement.</p>
+    </div>
+
+    <div class="in-card">
+      <div class="in-num">DISCIPLINE 05</div>
+      <h4>Reusable code. Never one-off rot.</h4>
+      <p>When your agent writes a script, it classifies the gap &mdash; one-off, recurring, or missing tool &mdash; and writes accordingly. Recurring needs become real tools. Tools are idempotent, scoped, and logged. The codebase compounds instead of leaking.</p>
+    </div>
+
+    <div class="in-card">
+      <div class="in-num">DISCIPLINE 06</div>
+      <h4>Memory across days, not just within sessions.</h4>
+      <p>Project knowledge is classified into three layers &mdash; what exists, how to use it, how it works &mdash; and persisted in your agent&rsquo;s memory. New runs start with the context of every run before. Your agent doesn&rsquo;t forget on Monday what it learned on Friday.</p>
+    </div>
+
+  </div>
+
+  <div class="in-foot">
+    <p>You don&rsquo;t see these in the dashboard. You don&rsquo;t have to turn them on. You feel them when <strong>your agent stops being a chatbot and starts being a coworker.</strong></p>
+  </div>
+</section>
+
+
 <section class="vscc" id="vs-claude">
   <div class="vscc-h">
     <div class="eyebrow" style="justify-content:center">The honest comparison</div>
