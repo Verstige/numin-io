@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Munro — The AI agent that knows your business</title>
+<title>Munro — The AI agent on MiniMax. More tokens than Claude Code. Lower price.</title>
   <link rel="icon" href="brand/munro-favicon.svg" type="image/svg+xml">
   <link rel="icon" href="brand/munro-favicon.png" type="image/png" sizes="32x32">
   <link rel="icon" href="brand/munro-appicon.png" type="image/png" sizes="192x192">
@@ -511,6 +511,125 @@ h1.hero-h {
 .composio-flow-sub { font-size: 0.75rem; color: var(--text-mute); margin-top: 2px; }
 .composio-flow-arrow { color: var(--accent); font-size: 1.5rem; opacity: 0.5; }
 .composio-flow-arrow svg { width: 32px; height: 32px; }
+
+
+  
+  /* Built-powered-by badge */
+  .built-powered {
+    margin-top: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    background: rgba(201, 168, 76, 0.06);
+    border: 1px solid rgba(201, 168, 76, 0.18);
+    border-radius: 100px;
+    font-size: 13px;
+  }
+  .built-powered-by {
+    color: #6a6a72;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .built-powered-name {
+    color: #C9A84C;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    font-size: 15px;
+  }
+  .built-powered-sub {
+    color: #a0a0a8;
+    font-size: 12px;
+    padding-left: 12px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+/* ====== Pricing comparison table ====== */
+  .pricing-compare {
+    margin-top: 64px;
+    padding: 48px 52px;
+    background: linear-gradient(180deg, rgba(201, 168, 76, 0.05) 0%, rgba(201, 168, 76, 0.02) 100%);
+    border-radius: 20px;
+    border: 1px solid rgba(201, 168, 76, 0.18);
+  }
+  .pricing-compare .compare-h {
+    color: #ECECEC;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .pricing-compare .compare-sub {
+    color: #a0a0a8;
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0 0 28px 0;
+    text-align: center;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .pricing-compare .compare-sub strong {
+    color: #C9A84C;
+    font-weight: 600;
+  }
+  .pricing-compare .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+    color: #ECECEC;
+  }
+  .pricing-compare .compare-table th,
+  .pricing-compare .compare-table td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .pricing-compare .compare-table thead th {
+    font-weight: 700;
+    color: #ECECEC;
+    background: rgba(201, 168, 76, 0.04);
+    border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+  }
+  .pricing-compare .compare-table tbody th {
+    font-weight: 500;
+    color: #a0a0a8;
+  }
+  .pricing-compare .compare-table td {
+    color: #ECECEC;
+  }
+  .pricing-compare .compare-table td:has(strong) {
+    color: #C9A84C;
+  }
+  .pricing-compare .compare-foot {
+    color: #a0a0a8;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-top: 24px;
+    text-align: center;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .pricing-compare .compare-foot strong {
+    color: #ECECEC;
+    font-weight: 700;
+  }
+  @media (max-width: 768px) {
+    .pricing-compare {
+      padding: 32px 16px;
+    }
+    .pricing-compare .compare-table {
+      font-size: 12px;
+    }
+    .pricing-compare .compare-table th,
+    .pricing-compare .compare-table td {
+      padding: 10px 8px;
+    }
+  }
 
 @media (max-width: 768px) {
   .composio { padding: 80px 20px; }
@@ -2922,7 +3041,7 @@ h1.hero-h {
     <span data-skin-text="h2b">Munro</span> <span class="dim" data-skin-text="h2bDim">runs</span><span data-skin-text="h2bSuffix"> your business.</span>
   </h2>
   <p class="body-text" data-skin-text="body">
-    ChatGPT is a conversation. Munro is an operating system. The difference is memory, action, and ownership.
+    ChatGPT is a conversation. Claude Code is a tool. <strong>Powered by MiniMax</strong>, Munro is an operating system &mdash; the difference is memory, action, and ownership.
   </p>
   <div class="cards-row">
     <div class="card">
@@ -3251,11 +3370,16 @@ h1.hero-h {
     <h2 class="h2">Built on a complete<br><span class="dim">intelligence system.</span></h2>
     <p class="body-text center-h" style="margin-left:auto;margin-right:auto">Munro isn't a wrapper around a chatbot. It's a full-stack agentic platform. Scroll to flip through every layer of what's under the hood.</p>
     <div class="built-stats">
-      <div class="built-stat"><div class="built-stat-num">6</div><div class="built-stat-label">Specialized agents</div></div>
+      <div class="built-stat"><div class="built-stat-num">∞</div><div class="built-stat-label">Specialists available</div></div>
       <div class="built-stat"><div class="built-stat-num">7</div><div class="built-stat-label">Channels</div></div>
       <div class="built-stat"><div class="built-stat-num">1000+</div><div class="built-stat-label">Integrations</div></div>
       <div class="built-stat"><div class="built-stat-num">24/7</div><div class="built-stat-label">Always on</div></div>
-      <div class="built-stat"><div class="built-stat-num">∞</div><div class="built-stat-label">Memory</div></div>
+      <div class="built-stat"><div class="built-stat-num">12.5B</div><div class="built-stat-label">Tokens / month</div></div>
+    </div>
+    <div class="built-powered">
+      <span class="built-powered-by">Powered by</span>
+      <span class="built-powered-name">MiniMax</span>
+      <span class="built-powered-sub">M3 &middot; 1M context &middot; multimodal</span>
     </div>
   </div>
   <div class="card-track" id="built-stack-track">
@@ -3543,7 +3667,7 @@ h1.hero-h {
 
 
 
-<section class="pricing" <section class="pricing" id="pricing">
+<section class="pricing" <section class="pricing" <section class="pricing" id="pricing">
   <div class="pricing-head">
     <div class="eyebrow" style="justify-content:center">Pricing</div>
     <h2 class="h2">Pay for what you use.<br><span class="dim">Agents scale with you.</span></h2>
@@ -3552,8 +3676,28 @@ h1.hero-h {
 
   <div class="pricing-grid">
     <div class="price-card">
+      <div class="price-tier">DIY</div>
+      <div class="price-name">Run on your Mac</div>
+      <div class="price-tagline">For technical founders who want full control of the runtime.</div>
+      <div class="price-amount">
+        <span class="price-amount-main">$0</span>
+        <span class="price-amount-period">/month</span>
+      </div>
+      <div class="price-setup"><strong>$499</strong> one-time setup &mdash; we install on your Mac</div>
+      <ul class="price-features">
+        <li>Runs on your Mac, locally &mdash; offline-capable</li>
+        <li>Unlimited specialists &mdash; spin up as many as you need</li>
+        <li>Bring your own API key &mdash; any OpenAI-compatible model</li>
+        <li>GitHub repo + source-code access to your agent</li>
+        <li>Built on MiniMax &mdash; the same model powering our hosted plans</li>
+        <li class="no">No support call &mdash; install only</li>
+      </ul>
+      <a href="#faq" class="price-cta">Start DIY</a>
+    </div>
+
+    <div class="price-card">
       <div class="price-tier">Starter</div>
-      <div class="price-name">Get started</div>
+      <div class="price-name">Hosted solo</div>
       <div class="price-tagline">For solo operators running their first agent.</div>
       <div class="price-amount">
         <span class="price-amount-main">$50</span>
@@ -3563,7 +3707,7 @@ h1.hero-h {
       <ul class="price-features">
         <li>1 dedicated cloud box</li>
         <li>Unlimited specialists &mdash; spin up as many as you need</li>
-        <li>Usage included up to 1.7B tokens / month</li>
+        <li><strong>1.7B tokens / month</strong> &mdash; MiniMax Plus plan</li>
         <li>iMessage + WhatsApp + Telegram + web</li>
         <li>Email support</li>
         <li class="no">Slack support</li>
@@ -3583,14 +3727,16 @@ h1.hero-h {
       <ul class="price-features">
         <li>1 dedicated cloud box</li>
         <li>Unlimited specialists &mdash; spin up as many as you need</li>
-        <li>Usage included up to 5.1B tokens / month</li>
+        <li><strong>5.1B tokens / month</strong> &mdash; MiniMax Max plan</li>
         <li>iMessage + WhatsApp + Telegram + web</li>
         <li>Slack support</li>
         <li>Priority bug fixes</li>
       </ul>
       <a href="#cta" class="price-cta">Start with Pro</a>
     </div>
+  </div>
 
+  <div class="pricing-grid" style="margin-top:16px">
     <div class="price-card">
       <div class="price-tier">Scale</div>
       <div class="price-name">For heavy daily use</div>
@@ -3603,17 +3749,15 @@ h1.hero-h {
       <ul class="price-features">
         <li>1 dedicated cloud box</li>
         <li>Unlimited specialists &mdash; spin up as many as you need</li>
-        <li>Usage included up to 12.5B tokens / month</li>
+        <li><strong>12.5B tokens / month</strong> &mdash; MiniMax Ultra plan</li>
         <li>iMessage + WhatsApp + Telegram + web</li>
         <li>Slack support</li>
-        <li>Concurrent agents &mdash; up to 7 in parallel</li>
+        <li>Up to 7 concurrent agents</li>
         <li>Bring-your-own LLM key &mdash; any OpenAI-compatible provider</li>
       </ul>
       <a href="#cta" class="price-cta">Talk to sales</a>
     </div>
-  </div>
 
-  <div class="pricing-grid" style="margin-top:16px">
     <div class="price-card">
       <div class="price-tier">Enterprise</div>
       <div class="price-name">For organizations</div>
@@ -3632,26 +3776,81 @@ h1.hero-h {
       </ul>
       <a href="#cta" class="price-cta">Contact sales</a>
     </div>
+  </div>
 
-    <div class="price-card">
-      <div class="price-tier">DIY</div>
-      <div class="price-name">Run on your own</div>
-      <div class="price-tagline">For technical founders who want full control of the runtime.</div>
-      <div class="price-amount">
-        <span class="price-amount-main">$0</span>
-        <span class="price-amount-period">/month</span>
-      </div>
-      <div class="price-setup">$499 one-time setup (we install on your Mac)</div>
-      <ul class="price-features">
-        <li>Runs on your Mac, locally</li>
-        <li>Unlimited specialists</li>
-        <li>You bring your own API key (any OpenAI-compatible provider)</li>
-        <li>GitHub repo access</li>
-        <li>Source-code access to your agent</li>
-        <li class="no">No support call &mdash; DIY install</li>
-      </ul>
-      <a href="#faq" class="price-cta">Learn more</a>
-    </div>
+  <div class="pricing-compare">
+    <h3 class="compare-h">More tokens than Claude Code. Lower price.</h3>
+    <p class="compare-sub">Munro runs on <strong>MiniMax</strong>, the same model family that powers the Claude Code competitor &mdash; and we don't gate usage behind Anthropic's capped Pro plan. Here's the math:</p>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>What you pay</th>
+          <th>Claude Code (Pro)</th>
+          <th>Claude Code (Max 5x)</th>
+          <th>Munro Starter</th>
+          <th>Munro Pro</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Monthly</th>
+          <td>$17&ndash;$20</td>
+          <td>from $100</td>
+          <td><strong>$50</strong></td>
+          <td><strong>$99</strong></td>
+        </tr>
+        <tr>
+          <th>Token volume</th>
+          <td>Capped (anthropic-set)</td>
+          <td>5&times; Pro cap</td>
+          <td><strong>1.7B / mo</strong></td>
+          <td><strong>5.1B / mo</strong></td>
+        </tr>
+        <tr>
+          <th>Specialists / agents</th>
+          <td>1 (Claude Code)</td>
+          <td>1 (Claude Code)</td>
+          <td><strong>Unlimited</strong></td>
+          <td><strong>Unlimited</strong></td>
+        </tr>
+        <tr>
+          <th>Dedicated cloud box</th>
+          <td>&times;</td>
+          <td>&times;</td>
+          <td>&check;</td>
+          <td>&check;</td>
+        </tr>
+        <tr>
+          <th>Channel wiring (iMessage, WhatsApp, Telegram, web)</th>
+          <td>&times;</td>
+          <td>&times;</td>
+          <td>&check;</td>
+          <td>&check;</td>
+        </tr>
+        <tr>
+          <th>Persistent memory of your business</th>
+          <td>Limited</td>
+          <td>Limited</td>
+          <td>&check;</td>
+          <td>&check;</td>
+        </tr>
+        <tr>
+          <th>1M context window</th>
+          <td>&check;</td>
+          <td>&check;</td>
+          <td>&check;</td>
+          <td>&check;</td>
+        </tr>
+        <tr>
+          <th>Source-code access</th>
+          <td>&times;</td>
+          <td>&times;</td>
+          <td>&check; (DIY)</td>
+          <td>&check; (BYO)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="compare-foot">Claude Code is a development tool. Munro is a working team member. <strong>Same model family, different posture.</strong> Munro gives you the box, the channels, the specialist agent on top, and the humans behind it &mdash; all included.</p>
   </div>
 
   <div class="pricing-foot">
@@ -3781,7 +3980,7 @@ const SKIN_COPY = {
     h2b: 'Munro',
     h2bDim: 'runs',
     h2bSuffix: ' your business.',
-    body: 'ChatGPT is a conversation. Munro is an operating system. The difference is memory, action, and ownership.',
+    body: 'ChatGPT is a conversation. Claude Code is a tool. <strong>Powered by MiniMax</strong>, Munro is an operating system &mdash; the difference is memory, action, and ownership.',
   },
   cloud: {
     badge: 'FOR ENTREPRENEURS · CEOS · OPERATORS',

@@ -12,6 +12,10 @@ Munro is an AI agent platform. Customers buy a subscription; we provision a priv
 
 The brand promise: Munro **finds the signal in the noise.** The platform markets six inherited disciplines (scored decisions, liveness, separate reviewer, real "done" definition, reusable code, layered memory) that ship as defaults — no opt-in required.
 
+The underlying model is **MiniMax** (M3 · 1M context · multimodal). Munro is positioned against Claude Code (the Anthropic competitor) on token volume &mdash; MiniMax's flagship Token Plan at $50/mo offers 5.1B tokens/mo versus Claude Code Max 5x at $100/mo with capped usage. Munro absorbs MiniMax as its model and adds the box, channels, specialist configuration, and human ops. **Same model family, different posture.**
+
+**Pricing proof-point:** Starter $50/mo / 1.7B tokens vs Claude Code Pro at $17–20/mo (capped). Pro $99/mo / 5.1B tokens vs Claude Code Max 5x from $100/mo (5× cap). The customer-facing comparison table lives on the live site (`#pricing-compare`).
+
 The brand mark is a **constellation** — peak + cardinal ticks + focal dot, gold `#C9A84C` on near-black `#0D0D0F`.
 
 **Infra reality (verified July 2026 against Orgo's docs):**
