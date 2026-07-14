@@ -1027,7 +1027,7 @@ h1.hero-h {
 /* ── Card stack interaction (used by vs-claude, built, compare) ── */
 .stack {
   position: relative;
-  padding: 40px 0 200px;
+  padding: 0;
   isolation: isolate;
 }
 .stack::before {
@@ -1079,46 +1079,63 @@ h1.hero-h {
 }
 .stack-sticky {
   position: sticky;
-  top: 80px;
-  height: calc(100vh - 80px);
+  top: 0;
+  height: 100vh;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 0 52px;
+  padding: 80px 52px 60px; /* top: leave room for nav */
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
 }
+/* Stacked-deck: cards are positioned absolutely in a vertical stack.
+   The top card is at the center; subsequent cards are offset slightly
+   down + to the side so you can see the "deck" visual. */
 .stack-card {
   position: absolute;
-  width: 100%;
+  width: min(800px, 100%);
   max-width: 800px;
-  border-radius: 24px;
+  border-radius: 20px;
   border: 1px solid var(--border);
   background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 100%);
   padding: 40px 36px;
-  /* Default state — JS overrides these based on scroll position */
+  /* Default: future card stacked below & slightly rotated/scaled */
   opacity: 0;
-  transform: translateY(40px) scale(0.96);
-  transition: opacity 0.45s ease-out, transform 0.45s ease-out;
+  transform: translate(-50%, -50%) translateY(0) scale(0.9) rotate(0deg);
+  transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
   will-change: transform, opacity;
+  top: 50%; left: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform-origin: center bottom;
 }
-/* Reduced-motion: respect user preference */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .stack-card { transition: none; }
 }
+/* Card deck visual: each card is offset slightly so you can see it's a stack */
+.stack-card.exit {
+  /* Far below the viewport — part of the future deck */
+  opacity: 0;
+  transform: translate(-50%, -50%) translateY(60px) scale(0.92);
+}
 .stack-card.active {
+  /* Front and center, fully visible */
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translate(-50%, -50%) translateY(0) scale(1) rotate(0deg);
   pointer-events: auto;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(var(--accent-rgb), 0.15);
+  z-index: 100;
 }
 .stack-card.passed {
+  /* Above the viewport — already scrolled past */
   opacity: 0;
-  transform: translateY(-40px) scale(0.96);
+  transform: translate(-50%, -50%) translateY(-80vh) scale(0.92);
 }
-.stack-card.exit {
-  opacity: 0;
-  transform: translateY(60px) scale(0.94);
+/* Subtle card-behind-indicators: show a small portion of the next 2 cards */
+.stack-card.exit:nth-of-type(1) {
+  /* Not used — :nth-of-type targets siblings of same type */
 }
 .stack-progress {
   position: absolute;
@@ -3050,10 +3067,9 @@ window.addEventListener('resize', sizeStacks);
     }
 
     // Calculate scroll progress through the stack.
-    // The section height = cards.length * viewportHeight.
-    // We use the sticky child's bounding rect to drive progress:
-    // - progress = 0 when the sticky child first becomes pinned (top: 80px)
-    // - progress = 1 when the sticky child is about to be released (bottom touches section bottom)
+    // Stacked-deck visual: each card is on top of the others, the active card
+    // is at the center, future cards are peeking out below (in the deck),
+    // past cards have been swiped up out of view.
     let ticking = false;
     function update() {
       const stickyEl = stack.querySelector('.stack-sticky');
@@ -3061,66 +3077,79 @@ window.addEventListener('resize', sizeStacks);
       const stickyRect = stickyEl.getBoundingClientRect();
       const stackRect = stack.getBoundingClientRect();
 
-      // The sticky child pins starting at top: 80px.
-      // We measure progress by how far the sticky child has moved past 80px
-      // from its starting position. The child has scrolled 0px when its top is at 80px.
-      // The child has scrolled (stackHeight - stickyHeight) px when its bottom hits the section's bottom.
-      const pinStartY = 80; // where sticky child starts to pin
+      // Sticky child is `100vh` tall, pinned at top: 0.
+      // Sticky child pins for (stackHeight - stickyHeight) of scroll.
       const stackHeight = stackRect.height;
       const stickyHeight = stickyRect.height;
-      // Total scrollable distance for the sticky child within the section
       const totalScroll = Math.max(1, stackHeight - stickyHeight);
-      // How far the sticky child has scrolled (stickyRect.top decreases as we scroll down)
-      // When stickyRect.top = pinStartY, scrollY=0 (relative). When stickyRect.top = pinStartY - totalScroll, end.
-      const scrolled = Math.max(0, pinStartY - stickyRect.top);
-      // Only show cards when the section is in/near the viewport (within 1 viewport)
+      // How far we've scrolled past the start of the sticky region.
+      // At start: stickyRect.top = 0, scrolled = 0.
+      // At end: stickyRect.top = -totalScroll, scrolled = totalScroll.
+      const scrolled = Math.max(0, -stickyRect.top);
+      // Only show cards when the section is in/near the viewport
       const vh = window.innerHeight;
       const sectionInView = stackRect.top < vh && stackRect.bottom > 0;
       const progress = sectionInView
         ? Math.min(1, scrolled / totalScroll)
         : 0;
 
-      // Map progress 0..1 to card index 0..total-1.
-      // exactIdx is the fractional card position.
+      // Map progress 0..1 to fractional card position (0 to total-1).
+      // exactIdx is the position of the "focus point" in the stack.
+      // exactIdx = 0 means card 0 is the active (top) card.
+      // exactIdx = total - 1 means card N-1 is the active card.
       const exactIdx = progress * (total - 1);
 
-      // Update each card's opacity/transform based on how close it is to the active index
+      // Update each card based on its distance from the focus point.
       cards.forEach((card, i) => {
-        const dist = exactIdx - i;  // -ve = future, 0 = exactly active, +ve = past
-        let opacity, ty, scale;
-        if (dist < -0.05) {
-          // Future card: not yet active
+        const dist = exactIdx - i;
+        // For each card, decide its visual state.
+        // dist < 0: this is a future card (below in the deck)
+        // dist > 1: this is a past card (above, out of view)
+        // 0 <= dist <= 1: this is a card on-screen (active or fading)
+
+        let transform, opacity, zIndex;
+
+        if (dist < -0.1) {
+          // Future card: below the active card in the deck
+          // Show peeking out by translating DOWN and slightly scaling smaller
+          const peek = Math.min(0.3, -dist);  // 0 to 0.3 based on how far in future
+          transform = `translate(-50%, -50%) translateY(${(peek + 0.4) * 100}px) scale(${0.85 - peek * 0.1})`;
+          opacity = Math.max(0, 0.6 - peek * 1.2);
+          zIndex = i;
+        } else if (dist > 1) {
+          // Past card: above the active card, scrolled away
+          transform = `translate(-50%, -50%) translateY(-100vh) scale(0.92)`;
           opacity = 0;
-          ty = 60;
-          scale = 0.94;
-          card.classList.remove('active', 'passed');
-          card.classList.add('exit');
-        } else if (dist > 0.5) {
-          // Past card: already scrolled past
-          opacity = 0;
-          ty = -40;
-          scale = 0.96;
-          card.classList.remove('active', 'exit');
-          card.classList.add('passed');
+          zIndex = 1;
         } else {
-          // Active card or transitioning: visible
+          // Active or transitioning card
+          // dist in [-0.1, 1]: visible
           if (dist < 0) {
-            // Fading in: dist in [-0.05, 0]
-            opacity = (dist + 0.05) / 0.05;
-          } else if (dist < 0.4) {
-            opacity = 1; // fully visible
+            // Fading in (just becoming active)
+            const fadeIn = (dist + 0.1) / 0.1; // 0 to 1
+            opacity = fadeIn;
+            transform = `translate(-50%, -50%) translateY(${(1 - fadeIn) * 30}px) scale(${0.92 + fadeIn * 0.08})`;
+          } else if (dist < 0.6) {
+            // Fully visible in the active position
+            opacity = 1;
+            transform = `translate(-50%, -50%) translateY(${-dist * 8}px) scale(1)`;
+          } else if (dist < 0.9) {
+            // Fading out (going past, but still slightly visible)
+            const fadeOut = 1 - (dist - 0.6) / 0.3;
+            opacity = Math.max(0.3, fadeOut);
+            transform = `translate(-50%, -50%) translateY(${-dist * 20}px) scale(${1 - (1 - fadeOut) * 0.05})`;
           } else {
-            // Fading out: dist in [0.4, 0.5]
-            opacity = 1 - (dist - 0.4) / 0.1;
+            // Fading out fast (going past quickly)
+            const fadeOut = 1 - (dist - 0.9) / 0.1;
+            opacity = Math.max(0, fadeOut);
+            transform = `translate(-50%, -50%) translateY(${-dist * 50}px) scale(${0.95 - (1 - fadeOut) * 0.05})`;
           }
-          opacity = Math.max(0, Math.min(1, opacity));
-          ty = (1 - opacity) * 40;
-          scale = 0.96 + (1 - opacity) * 0.04;
-          card.classList.add('active');
-          card.classList.remove('passed', 'exit');
+          zIndex = 100 + Math.round(dist * 10);
         }
+
+        card.style.transform = transform;
         card.style.opacity = opacity;
-        card.style.transform = `translateY(${ty}px) scale(${scale})`;
+        card.style.zIndex = zIndex;
       });
 
       // Dominant card index for progress bar / label
