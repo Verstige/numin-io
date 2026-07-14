@@ -4,6 +4,14 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Munro — The AI agent that knows your business</title>
+  <link rel="icon" href="brand/munro-favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="brand/munro-favicon.png" type="image/png" sizes="32x32">
+  <link rel="icon" href="brand/munro-appicon.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="brand/munro-appicon.png" sizes="180x180">
+  <link rel="manifest" href="brand/manifest.json">
+  <meta name="theme-color" content="#0D0D0F">
+  <meta name="msapplication-TileColor" content="#0D0D0F">
+  <meta name="msapplication-TileImage" content="brand/munro-appicon.png">
 <meta name="description" content="Six specialized AI agents that run your entire business — operations, sales, support, and communications — 24/7. Text them on iMessage, WhatsApp, Telegram, or web. Local on your Mac, or hosted on your private cloud computer." />
 <meta name="author" content="Munro" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -123,7 +131,13 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   -webkit-backdrop-filter: blur(20px) saturate(1.2);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
-.nav-logo { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; }
+.nav-logo {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 1.1rem; font-weight: 800; letter-spacing: -.02em;
+}
+.nav-logo .nav-mark { display: block; flex-shrink: 0; }
+.nav-logo .nav-mark path { transition: stroke 0.2s; }
+.nav-logo:hover .nav-mark path { stroke: #e0c068; }
 .nav-logo .dot { color: var(--accent); }
 .nav-links { display: flex; gap: 36px; list-style: none; }
 .nav-links a {
@@ -1944,7 +1958,12 @@ h1.hero-h {
 <div class="stars" id="stars"></div>
 
 <nav class="nav">
-  <a href="/" class="nav-logo">munro<span class="dot">.</span></a>
+  <a href="/" class="nav-logo" aria-label="Munro home">
+          <svg class="nav-mark" width="34" height="22" viewBox="0 0 160 100" aria-hidden="true">
+            <path fill="none" stroke="#C9A84C" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" d="M 0 80 L 18 80 L 36 80 L 50 -34 L 64 80 L 76 80 L 92 80"/>
+          </svg>
+          <span>Munro</span>
+        </a>
   <ul class="nav-links">
     <li><a href="#channels">Talk to your agent</a></li>
     <li><a href="#experience">Agent vs chat</a></li>

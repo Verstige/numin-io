@@ -1,0 +1,21 @@
+{
+  "name": "Munro",
+  "short_name": "Munro",
+  "description": "The AI agent that knows your business.",
+  "start_url": "/numin-io/",
+  "display": "standalone",
+  "background_color": "#0D0D0F",
+  "theme_color": "#0D0D0F",
+  "icons": [
+    {
+      "src": "brand/munro-appicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "brand/munro-favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }
+  ]
+}
