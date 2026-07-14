@@ -1,7 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
   <rect width="200" height="200" fill="#0D0D0F" rx="36"/>
-  <g transform="translate(20, 70)">
-    <path fill="none" stroke="#C9A84C" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" d="M 0 60 L 28 60 L 56 60 L 80 -22 L 104 60 L 132 60 L 160 60"/>
+
+  <g transform="translate(50, 50)">
+    <!-- Cardinal ticks only (4 lines, not 8) -->
+    <g stroke="#C9A84C" stroke-width="2.5" stroke-linecap="round" opacity="0.45">
+      <line x1="50" y1="0"   x2="50" y2="8"/>
+      <line x1="0"   y1="50" x2="8"   y2="50"/>
+      <line x1="92" y1="50" x2="100" y2="50"/>
+      <line x1="50" y1="92" x2="50" y2="100"/>
+    </g>
+
+    <!-- Halo arc -->
+    <path fill="none" stroke="#C9A84C" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" d="
+      M 8 70
+      Q 38 18 50 14
+      Q 62 18 92 70
+    "/>
+
+    <!-- Satellites -->
+    <circle cx="26" cy="46" r="2.5" fill="#C9A84C"/>
+    <circle cx="74" cy="46" r="2.5" fill="#C9A84C"/>
+
+    <!-- Focal -->
+    <circle cx="50" cy="70" r="9" fill="#C9A84C"/>
   </g>
 </svg>

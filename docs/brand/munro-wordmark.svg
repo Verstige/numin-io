@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200" width="720" height="200">
   <rect width="720" height="200" fill="#0D0D0F"/>
-  <text x="60" y="135" font-family="'Inter', 'Helvetica Neue', system-serif" font-weight="900" font-size="92" letter-spacing="8" fill="#ECECEC">MUNRO</text>
+  <text x="60" y="135" font-family="'Inter', 'Helvetica Neue', system-serif"
+        font-weight="900" font-size="92" letter-spacing="8" fill="#ECECEC">MUNRO</text>
 </svg>

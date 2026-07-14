@@ -1,8 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 280" width="800" height="280">
   <rect width="800" height="280" fill="#FFFFFF"/>
-  <g transform="translate(80, 100)">
-    <path fill="none" stroke="#0D0D0F" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" d="M 0 80 L 30 80 L 60 80 L 86 -34 L 112 80 L 132 80 L 156 80"/>
+  <g transform="translate(80, 80)">
+    <g stroke="#0D0D0F" stroke-width="2" stroke-linecap="round" opacity="0.4">
+      <line x1="100" y1="0"   x2="100" y2="14"/>
+      <line x1="100" y1="186" x2="100" y2="200"/>
+      <line x1="0"   y1="100" x2="14"  y2="100"/>
+      <line x1="186" y1="100" x2="200" y2="100"/>
+      <line x1="34"  y1="34"  x2="42"  y2="42"/>
+      <line x1="158" y1="34"  x2="166" y2="42"/>
+      <line x1="34"  y1="166" x2="42"  y2="158"/>
+      <line x1="158" y1="166" x2="166" y2="158"/>
+    </g>
+    <path fill="none" stroke="#0D0D0F" stroke-width="4" stroke-linecap="round" d="
+      M 18 134 Q 78 38 100 28 Q 122 38 182 134
+    "/>
+    <circle cx="48"  cy="92"  r="4" fill="#0D0D0F"/>
+    <circle cx="152" cy="92"  r="4" fill="#0D0D0F"/>
+    <circle cx="100" cy="134" r="14" fill="#0D0D0F"/>
   </g>
   <text x="320" y="200" font-family="'Inter', sans-serif" font-weight="900" font-size="96" letter-spacing="8" fill="#0D0D0F">MUNRO</text>
   <text x="80" y="252" font-family="'Inter', sans-serif" font-size="13" fill="#666" letter-spacing="4" font-weight="600">FINDS THE SIGNAL IN THE NOISE</text>
