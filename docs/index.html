@@ -717,6 +717,134 @@ h1.hero-h {
     font-style: italic;
     color: var(--text-mute);
   }
+  /* ====== Munroe Cloud section ====== */
+  .cloud {
+    background: var(--bg);
+    padding: 140px 52px 120px;
+    position: relative;
+    z-index: 1;
+  }
+  .cloud-head {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 64px;
+  }
+  .cloud-head .body-text {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* The "layer cake" — four stacked cards, biggest at the bottom */
+  .cloud-stack {
+    display: flex;
+    flex-direction: column;
+    max-width: 880px;
+    margin: 0 auto 64px;
+    gap: 14px;
+  }
+  .cloud-layer {
+    background: linear-gradient(160deg, var(--bg-2) 0%, var(--bg) 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 28px;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 24px;
+    align-items: center;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .cloud-layer:hover {
+    border-color: rgba(var(--accent-rgb), 0.35);
+    transform: translateY(-2px);
+  }
+  /* Highlight the middle (Munroe Cloud) layer */
+  .cloud-layer:nth-child(3) {
+    background: linear-gradient(160deg, rgba(var(--accent-rgb), 0.08) 0%, rgba(var(--accent-rgb), 0.02) 100%);
+    border-color: rgba(var(--accent-rgb), 0.35);
+  }
+  .cloud-layer-tag {
+    font-family: ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .cloud-layer-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    margin: 4px 0 6px;
+  }
+  .cloud-layer-desc {
+    font-size: 0.92rem;
+    color: var(--text-mid);
+    line-height: 1.55;
+    margin: 0;
+  }
+  /* On smaller screens, stack the column */
+  @media (max-width: 768px) {
+    .cloud {
+      padding: 80px 16px;
+    }
+    .cloud-layer {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 18px 20px;
+    }
+  }
+
+  /* Three-column detail row */
+  .cloud-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto 56px;
+  }
+  .cloud-detail {
+    padding: 28px 0;
+    border-top: 1px solid var(--border);
+  }
+  .cloud-detail h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    margin: 0 0 10px;
+  }
+  .cloud-detail p {
+    font-size: 0.92rem;
+    color: var(--text-mid);
+    line-height: 1.55;
+    margin: 0;
+  }
+  @media (max-width: 1024px) {
+    .cloud-details {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 768px) {
+    .cloud-details {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .cloud-foot {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .cloud-foot .body-text {
+    margin-left: auto;
+    margin-right: auto;
+    color: var(--text-mute);
+    font-size: 0.95rem;
+  }
+
   @media (max-width: 768px) {
     .how {
       padding: 80px 16px;
@@ -3946,7 +4074,7 @@ h1.hero-h {
       <div class="how-tick">T+1:00</div>
       <div class="how-content">
         <h3>We provision your box</h3>
-        <p>Orgo spins up a dedicated Linux container. Munro Code installs (Hermes agent + 57 skills + crawl4ai). Channels wire. We DM you a Telegram link.</p>
+        <p>Your dedicated box spins up on Munroe Cloud. Munro Code installs (Hermes agent + 57 skills + crawl4ai). Channels wire. We DM you a Telegram link.</p>
       </div>
     </div>
 
@@ -3986,6 +4114,57 @@ h1.hero-h {
 
   <div class="how-foot">
     <p class="body-text center-h">Most people text their agent the first day. Most people never open Claude or ChatGPT again within a month.</p>
+  </div>
+</section>
+
+
+<section class="cloud" id="munroe-cloud">
+  <div class="cloud-head">
+    <div class="eyebrow" style="justify-content:center">What you're paying for</div>
+    <h2 class="h2">Your agent runs on <span class="dim">Munroe Cloud.</span></h2>
+    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">Munroe Cloud is the infrastructure layer underneath every Munroe. When you connect, your agent is provisioned onto its own computer — isolated, persistent, and reachable from anywhere.</p>
+  </div>
+
+  <div class="cloud-stack">
+    <div class="cloud-layer">
+      <div class="cloud-layer-tag">CHANNEL</div>
+      <div class="cloud-layer-name">Your messaging app</div>
+      <div class="cloud-layer-desc">iMessage, WhatsApp, Telegram, Discord, or web. You text it. It replies. Same conversation context across all of them.</div>
+    </div>
+    <div class="cloud-layer">
+      <div class="cloud-layer-tag">RUNTIME</div>
+      <div class="cloud-layer-name">Munroe Code</div>
+      <div class="cloud-layer-desc">The agent itself. Hermes-powered, with 57 pre-installed skills and a web-fetch engine baked in. Tuned by us. Updated automatically.</div>
+    </div>
+    <div class="cloud-layer">
+      <div class="cloud-layer-tag">INFRASTRUCTURE</div>
+      <div class="cloud-layer-name">Munroe Cloud</div>
+      <div class="cloud-layer-desc">Your dedicated Linux computer. Boots in under a second. Persistent memory across restarts. Isolated from every other customer. Yours alone.</div>
+    </div>
+    <div class="cloud-layer">
+      <div class="cloud-layer-tag">USAGE</div>
+      <div class="cloud-layer-name">Token allowance</div>
+      <div class="cloud-layer-desc">From 1.7B tokens/month on Starter to 12.5B on Scale. Same model family Claude Code uses — with 10× the volume and lower price.</div>
+    </div>
+  </div>
+
+  <div class="cloud-details">
+    <div class="cloud-detail">
+      <h3>Your own computer. Not shared.</h3>
+      <p>Every customer agent runs on its own dedicated machine. Persistent memory survives restarts. State survives crashes. The agent boots in under a second so it's always there when you text.</p>
+    </div>
+    <div class="cloud-detail">
+      <h3>Persistent memory of your business.</h3>
+      <p>The agent remembers every conversation, every task, every decision. By month three, it knows your clients by name, your preferences by heart, and your weekly cadence without you telling it.</p>
+    </div>
+    <div class="cloud-detail">
+      <h3>Source-code access. Take it with you.</h3>
+      <p>The agent code is on your GitHub. The skill library is on your machine. The computer is yours. Cancel anytime and take everything with you — no lock-in, no exit fees.</p>
+    </div>
+  </div>
+
+  <div class="cloud-foot">
+    <p class="body-text center-h">Prefer your own infrastructure? On the Scale plan and up, you can bring your own Linux box, your own cloud account, or your own LLM key. Munroe Cloud is the default. You're never locked in.</p>
   </div>
 </section>
 
