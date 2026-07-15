@@ -545,6 +545,97 @@ h1.hero-h {
     border-left: 1px solid rgba(255, 255, 255, 0.1);
   }
 
+  /* ====== Built-in section ("every box ships with...") ====== */
+  .builtin {
+    background: var(--bg);
+    padding: 140px 52px 120px;
+    position: relative;
+    z-index: 1;
+  }
+  .builtin-head {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 64px;
+  }
+  .builtin-head .body-text {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .builtin-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  .builtin-card {
+    background: linear-gradient(160deg, var(--bg-2) 0%, var(--bg) 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 28px;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .builtin-card:hover {
+    border-color: rgba(var(--accent-rgb), 0.35);
+    transform: translateY(-4px);
+  }
+  .builtin-num {
+    font-family: ui-monospace, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .builtin-card h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .builtin-card p {
+    font-size: 0.92rem;
+    color: var(--text-mid);
+    line-height: 1.55;
+    margin: 0 0 18px 0;
+  }
+  .builtin-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 90px;
+    background: rgba(var(--accent-rgb), 0.08);
+    border: 1px solid rgba(var(--accent-rgb), 0.2);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .builtin-foot {
+    text-align: center;
+    max-width: 720px;
+    margin: 56px auto 0;
+  }
+  .builtin-foot .body-text {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  @media (max-width: 1024px) {
+    .builtin-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 768px) {
+    .builtin {
+      padding: 80px 16px;
+    }
+    .builtin-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
+
 /* ====== Pricing comparison table ====== */
   .pricing-compare {
     margin-top: 64px;
@@ -2581,7 +2672,7 @@ h1.hero-h {
   <div class="marketplace-head">
     <div class="eyebrow" style="justify-content:center">Skills that grow with you</div>
     <h2 class="h2">Every Munro ships with <span class="dim">Munro Code.</span></h2>
-    <p class="body-text center-h">41 skills across 9 categories, tuned and battle-tested, baked into your box from the moment it boots. We maintain them; you use them. Plus 12 more in the silent agent-infrastructure layer &mdash; the skills that make your agent adaptive, proactive, and self-improving.</p>
+    <p class="body-text center-h">57 skills across 9 categories, tuned and battle-tested, baked into your box from the moment it boots. We maintain them; you use them. Plus 12 more in the silent agent-infrastructure layer &mdash; the skills that make your agent adaptive, proactive, and self-improving.</p>
   </div>
 
   <div class="marketplace-track" id="mpTrack">
@@ -3678,8 +3769,64 @@ h1.hero-h {
 </section>
 
 
+<section class="builtin" id="built-in">
+  <div class="builtin-head">
+    <div class="eyebrow" style="justify-content:center">What's in the box</div>
+    <h2 class="h2">Every Munro ships with <span class="dim">Munro Code.</span></h2>
+    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">Your box comes pre-loaded. No skill installs. No LLM setup. No infrastructure work. You sign up, we provision, you text the bot, it works.</p>
+  </div>
 
-<section class="pricing" <section class="pricing" <section class="pricing" id="pricing">
+  <div class="builtin-grid">
+    <div class="builtin-card">
+      <div class="builtin-num">01</div>
+      <h3>The agent</h3>
+      <p>A persistent AI agent running on your dedicated cloud box. Stays online 24/7. Persistent memory of your business. Boots in under 500ms.</p>
+      <div class="builtin-tag">MUNRO CODE</div>
+    </div>
+
+    <div class="builtin-card">
+      <div class="builtin-num">02</div>
+      <h3>57-skill library</h3>
+      <p>Battle-tested skills across sales, marketing, finance, research, productivity, knowledge, code, browser automation, and 12 silent agent-infrastructure skills. We maintain them. You use them.</p>
+      <div class="builtin-tag">9 CATEGORIES</div>
+    </div>
+
+    <div class="builtin-card">
+      <div class="builtin-num">03</div>
+      <h3>Web fetch engine</h3>
+      <p>Open-source crawler handles JavaScript pages, anti-bot protected sites, and structured extraction. No per-fetch API costs. Runs on your box.</p>
+      <div class="builtin-tag">CRAWL4AI · APACHE 2.0</div>
+    </div>
+
+    <div class="builtin-card">
+      <div class="builtin-num">04</div>
+      <h3>Channel wiring</h3>
+      <p>iMessage, WhatsApp, Telegram, or Discord &mdash; whichever you already use. One conversation context across all of them. Pick up on iPhone where you left off on Mac.</p>
+      <div class="builtin-tag">4 CHANNELS</div>
+    </div>
+
+    <div class="builtin-card">
+      <div class="builtin-num">05</div>
+      <h3>Token allowance</h3>
+      <p>From 1.7B tokens / month on Starter to 12.5B on Scale. Buy more at any time at $0.50 / million tokens. Or bring your own LLM key on Scale.</p>
+      <div class="builtin-tag">FLEXIBLE</div>
+    </div>
+
+    <div class="builtin-card">
+      <div class="builtin-num">06</div>
+      <h3>Source-code access</h3>
+      <p>The agent code is on your GitHub. The skill library is on your machine. The box is yours. Take it with you if you cancel.</p>
+      <div class="builtin-tag">YOURS TO KEEP</div>
+    </div>
+  </div>
+
+  <div class="builtin-foot">
+    <p class="body-text center-h">We tune the library. You run the business. When we ship a new skill, every customer gets it on next restart.</p>
+  </div>
+</section>
+
+
+<section class="pricing" id="pricing">
   <div class="pricing-head">
     <div class="eyebrow" style="justify-content:center">Pricing</div>
     <h2 class="h2">Pay for what you use.<br><span class="dim">Agents scale with you.</span></h2>
@@ -3981,7 +4128,7 @@ const SKIN_COPY = {
     'line1-bright': 'One business.',
     'line2-dim': 'Running',
     'line2-bright': 'on your Mac.',
-    sub: 'Munro deploys six specialized AI agents that run your entire business — operations, sales, support, and communications — 24/7. Built for entrepreneurs, CEOs, and operators. Text them on iMessage, WhatsApp, Telegram, or web.',
+    sub: 'Munro Code is an AI agent with a 57-skill library pre-installed on a dedicated cloud box. We set it up. You text it. It runs your business operations 24/7. Built for entrepreneurs, CEOs, and operators who want a real team member, not another tool.',
     primary: 'Start free trial →',
     secondary: 'See how it works',
     ctaSub: '14-day free trial. Runs on your Mac. No cloud required.',
@@ -4000,7 +4147,7 @@ const SKIN_COPY = {
     'line1-bright': 'Zero hardware.',
     'line2-dim': 'Hosted',
     'line2-bright': 'on your cloud Mac.',
-    sub: 'Get the full Munro experience without buying a Mac. We provision a dedicated cloud Mac, your agent is online in minutes. Reach it from iMessage, WhatsApp, Telegram, or any browser. Built for entrepreneurs, CEOs, and operators.',
+    sub: 'Munro Code is an AI agent with a 57-skill library pre-installed on a dedicated Linux box. We provision it, you reach it from iMessage, WhatsApp, Telegram, or any browser. Built for operators who want a working team member without managing infrastructure.',
     primary: 'Provision your agent →',
     secondary: 'Watch cloud demo',
     ctaSub: '14-day free trial. Browser access. Your dedicated cloud computer.',
@@ -4008,10 +4155,10 @@ const SKIN_COPY = {
     eyebrow: 'The cloud advantage',
     h2a: 'Most AI tools',
     h2aDim: 'need your hardware.',
-    h2b: 'Munro Cloud',
+    h2b: 'Munro',
     h2bDim: 'runs',
     h2bSuffix: ' on ours.',
-    body: 'Skip the install. We spin up a dedicated cloud Mac pre-configured with your agents. Isolated, persistent, and reachable from anywhere.',
+    body: 'Skip the install. We spin up a dedicated cloud box pre-loaded with Munro Code &mdash; the agent, the 57-skill library, and the web-fetch engine. Isolated, persistent, and reachable from anywhere.',
   },
 };
 
