@@ -636,6 +636,105 @@ h1.hero-h {
     }
   }
 
+/* ====== How it works (timeline) ====== */
+  .how {
+    background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+    padding: 140px 52px 120px;
+    position: relative;
+    z-index: 1;
+  }
+  .how-head {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 72px;
+  }
+  .how-head .body-text {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .how-timeline {
+    max-width: 880px;
+    margin: 0 auto;
+    position: relative;
+    padding-left: 0;
+  }
+  /* Vertical thread */
+  .how-timeline::before {
+    content: "";
+    position: absolute;
+    left: 110px;
+    top: 16px;
+    bottom: 16px;
+    width: 1px;
+    background: linear-gradient(180deg, rgba(201, 168, 76, 0.4) 0%, rgba(201, 168, 76, 0.05) 100%);
+  }
+  .how-step {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 32px;
+    margin-bottom: 48px;
+    align-items: start;
+  }
+  .how-step:last-child {
+    margin-bottom: 0;
+  }
+  .how-tick {
+    font-family: ui-monospace, monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    background: var(--bg);
+    border: 1px solid rgba(var(--accent-rgb), 0.4);
+    border-radius: 90px;
+    padding: 6px 12px;
+    text-align: center;
+    width: max-content;
+    position: relative;
+    z-index: 1;
+  }
+  .how-content h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+    color: var(--text);
+  }
+  .how-content p {
+    font-size: 0.95rem;
+    color: var(--text-mid);
+    line-height: 1.6;
+    margin: 0;
+  }
+  .how-foot {
+    text-align: center;
+    max-width: 720px;
+    margin: 64px auto 0;
+  }
+  .how-foot .body-text {
+    margin-left: auto;
+    margin-right: auto;
+    font-style: italic;
+    color: var(--text-mute);
+  }
+  @media (max-width: 768px) {
+    .how {
+      padding: 80px 16px;
+    }
+    .how-timeline::before {
+      left: 60px;
+    }
+    .how-step {
+      grid-template-columns: 100px 1fr;
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+    .how-tick {
+      font-size: 0.7rem;
+      padding: 4px 8px;
+    }
+  }
+
 /* ====== Pricing comparison table ====== */
   .pricing-compare {
     margin-top: 64px;
@@ -3822,6 +3921,71 @@ h1.hero-h {
 
   <div class="builtin-foot">
     <p class="body-text center-h">We tune the library. You run the business. When we ship a new skill, every customer gets it on next restart.</p>
+  </div>
+</section>
+
+
+<section class="how" id="how-it-works">
+  <div class="how-head">
+    <div class="eyebrow" style="justify-content:center">Your first 3 minutes</div>
+    <h2 class="h2">From <span class="dim">payment</span> to a personal agent in under 3 minutes.</h2>
+    <p class="body-text center-h" style="margin-left:auto;margin-right:auto">No terminal. No configuration files. No "documentation to read first." You submit a form, we provision the box, you text the bot.</p>
+  </div>
+
+  <div class="how-timeline">
+
+    <div class="how-step">
+      <div class="how-tick">T+0:00</div>
+      <div class="how-content">
+        <h3>Pay and submit the form</h3>
+        <p>$499 setup + first month. A 6-question form: business basics, primary goal, current stack, channel preference. Two minutes, no jargon.</p>
+      </div>
+    </div>
+
+    <div class="how-step">
+      <div class="how-tick">T+1:00</div>
+      <div class="how-content">
+        <h3>We provision your box</h3>
+        <p>Orgo spins up a dedicated Linux container. Munro Code installs (Hermes agent + 57 skills + crawl4ai). Channels wire. We DM you a Telegram link.</p>
+      </div>
+    </div>
+
+    <div class="how-step">
+      <div class="how-tick">T+2:00</div>
+      <div class="how-content">
+        <h3>Your agent introduces itself</h3>
+        <p>Open the channel. Your agent says hello, asks three questions about your business: what you do, who you serve, what success looks like. Two sentences each.</p>
+      </div>
+    </div>
+
+    <div class="how-step">
+      <div class="how-tick">T+2:30</div>
+      <div class="how-content">
+        <h3>Personalize in plain English</h3>
+        <p>Tell it how you like to communicate (formal, terse, casual, data-first). Tell it what to focus on first (sales, marketing, ops). It remembers. The capability sticks.</p>
+      </div>
+    </div>
+
+    <div class="how-step">
+      <div class="how-tick">T+3:00</div>
+      <div class="how-content">
+        <h3>Start delegating</h3>
+        <p>"Draft a follow-up to my last three unread emails." "Summarize my morning meetings." "Find me five prospects in [industry]." Real work, in your existing chat.</p>
+      </div>
+    </div>
+
+    <div class="how-step">
+      <div class="how-tick">Day 7</div>
+      <div class="how-content">
+        <h3>It's already getting better</h3>
+        <p>Your agent remembers every conversation, every task, every decision. By week two, it knows your clients by name. By month three, it's anticipating what you need before you ask.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="how-foot">
+    <p class="body-text center-h">Most people text their agent the first day. Most people never open Claude or ChatGPT again within a month.</p>
   </div>
 </section>
 
