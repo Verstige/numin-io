@@ -1,0 +1,77 @@
+apiVersion: orgo.ai/v1
+kind: Template
+metadata:
+  name: munro-code
+  namespace: default
+  version: 1.0.0
+  description: >
+    Munro Code is a custom agent runtime: Hermes + 53 proprietary skills +
+    crawl4ai. Every customer box spins up from this template, so the same
+    skill library ships to every customer at minute zero.
+spec:
+  base: system/hermes-agent@1.0.0
+
+  # Hardware defaults — overridable per-launch
+  hardware:
+    cpu: 2
+    ram_gb: 8
+    disk_gb: 40
+
+  # Build steps run when the golden snapshot is created
+  build:
+    - name: install-crawl4ai
+      kind: shell
+      script: |
+        pip install -U crawl4ai
+        python -m playwright install --with-deps chromium-headless-shell
+
+    - name: stage-skills
+      kind: copy
+      from: ./skills
+      to: /root/.hermes/skills/
+
+    - name: stage-prompts
+      kind: copy
+      from: ./prompts
+      to: /root/.hermes/prompts/
+
+    - name: stage-inherited
+      kind: copy
+      from: ./inherited
+      to: /root/.hermes/inherited/
+
+    - name: stage-helpers
+      kind: copy
+      from: ./bin
+      to: /root/.hermes/bin/
+
+    - name: verify-install
+      kind: shell
+      script: |
+        hermes doctor
+        python -c "from crawl4ai import AsyncWebCrawler; print('crawl4ai ok')"
+
+  # Runtime secrets — mounted from environment on launch
+  secrets:
+    - name: MUNRO_LLM_KEY
+      required: true
+      description: LLM API key (default MiniMax; OpenAI or Anthropic also supported)
+    - name: ORGO_TOKEN_FOR_TELEGRAM
+      required: false
+      description: Customer's Telegram bot token, if channel=telegram
+
+  # Lifecycle hooks
+  hooks:
+    post_start:
+      kind: shell
+      script: |
+        hermes doctor
+        echo "Munro Code box online."
+        echo "Skills installed: $(ls /root/.hermes/skills/ | wc -l)"
+
+  # Metadata for the customer dashboard
+  metadata:
+    brand: "Munro Code"
+    version: "1.0.0"
+    skill_count: 53
+    web_engine: "crawl4ai 0.9.2"
