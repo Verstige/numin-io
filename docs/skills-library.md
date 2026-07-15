@@ -155,4 +155,37 @@ This is the strategic asset Munro sells: **the same skill library, tuned and bat
 
 ---
 
-_Last inventory: July 14, 2026. Source: `~/Projects/zoras-memory-system/skills/` (canonical)._
+## The Web Fetch Layer
+
+Every skill that needs to pull content from the public web runs on top of **crawl4ai** — the open-source LLM-friendly web crawler (Apache-2.0, 73k stars on GitHub). It's pre-installed in every Munro Code box at provision time.
+
+**What this means for the customer:**
+- No per-fetch API costs. Whether you summarize 10 articles or 10,000, the cost is the same.
+- No rate limits from hosted services. The crawler runs on your dedicated box.
+- JavaScript-heavy pages render properly. SPA dashboards, Next.js apps, Vue sites — they all work.
+- Anti-bot protected sites (Cloudflare, DataDome) handled via stealth mode.
+
+**What this means for the agent's capability:**
+The skills below are all built on crawl4ai as their web-fetch foundation. The customer never sees "crawl4ai" — they see the skill they asked for. But under the hood, every URL fetch goes through the same robust engine.
+
+| Skill | How crawl4ai powers it |
+|---|---|
+| `summarize` | Fetches the URL, returns clean markdown, then summarizes. |
+| `feed-diet` | Audits Hacker News + RSS feeds — fetches each item's page to extract category metadata. |
+| `youtube-watcher` | Fetches the YouTube transcript page; markdown returned for the LLM to consume. |
+| `chrome-relay` | Complements live browser sessions with headless fetches when the user isn't at the keyboard. |
+| `listing-swarm` | The engine behind directory submissions — fetches each form, fills it, submits. |
+| `business-development` | Prospect research: crawls a target company's site, summarizes positioning, products, hiring signals. |
+| `content-creator` | SEO content audits and competitor content extraction. |
+| `marketing-strategy-pmm` | Competitive intelligence: deep-crawls competitor sites for positioning, pricing, features. |
+
+**Where new skills come from this layer:**
+- **Daily competitor monitor** — once a week, deep-crawl a watchlist of competitor domains and email what changed.
+- **Lead enrichment** — given a list of company URLs, enrich with team size, funding, products.
+- **Weekly research digest** — automatically fetch + summarise a configured RSS list into a Telegram brief every Monday.
+
+All of these are now practical because crawl4ai ships in every box. No additional infrastructure.
+
+---
+
+_Last inventory: July 15, 2026. Source: `~/Projects/zoras-memory-system/skills/` (canonical). Web fetch layer: crawl4ai 0.9.2._
