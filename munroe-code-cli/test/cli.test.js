@@ -49,13 +49,19 @@ test('saveProjectConfig persists supported settings atomically', async () => {
 test('auto routing prefers MiniMax and reports Kimi credential state', () => {
   assert.deepEqual(resolveModelPolicy('auto', { MINIMAX_API_KEY: 'x' }), {
     provider: 'minimax',
-    model: null,
+    model: 'minimax/minimax-m2',
     label: 'Munroe Auto',
     accessConfigured: true,
   });
   assert.equal(resolveModelPolicy('kimi', {}).accessConfigured, false);
   assert.equal(resolveModelPolicy('kimi', { KIMI_API_KEY: 'x' }).provider, 'kimi');
   assert.equal(resolveModelPolicy('kimi', { KIMI_API_KEY: 'x' }).accessConfigured, true);
+});
+
+test('explicit policies include a default model per provider', () => {
+  assert.equal(resolveModelPolicy('minimax', { MINIMAX_API_KEY: 'x' }).model, 'minimax/minimax-m2');
+  assert.equal(resolveModelPolicy('kimi', { KIMI_API_KEY: 'x' }).model, 'kimi/kimi-k2');
+  assert.equal(resolveModelPolicy('auto', { MINIMAX_API_KEY: 'x' }).model, 'minimax/minimax-m2');
 });
 
 test('runtime invocation uses argv arrays and safe project defaults', () => {

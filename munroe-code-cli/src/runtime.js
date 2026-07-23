@@ -6,6 +6,13 @@ import { projectSessionName, stateDir } from './config.js';
 
 const TOOLSETS = 'terminal,file,code_execution,skills,memory,session_search,delegation,todo,clarify';
 
+const PROVIDER_DEFAULT_MODELS = {
+  minimax: 'minimax/minimax-m2',
+  kimi: 'kimi/kimi-k2',
+  openrouter: 'openrouter/auto',
+  google: 'google/gemini-2.5-pro',
+};
+
 export function resolveModelPolicy(policy, env = process.env) {
   const modelAccess = {
     minimax: Boolean(env.MINIMAX_API_KEY),
@@ -15,21 +22,27 @@ export function resolveModelPolicy(policy, env = process.env) {
   };
 
   if (policy === 'kimi') {
-    return { provider: 'kimi', model: null, label: 'Munroe Kimi', accessConfigured: modelAccess.kimi };
+    return { provider: 'kimi', model: PROVIDER_DEFAULT_MODELS.kimi, label: 'Munroe Kimi', accessConfigured: modelAccess.kimi };
   }
 
   if (policy === 'minimax') {
-    return { provider: 'minimax', model: null, label: 'Munroe Core', accessConfigured: modelAccess.minimax };
+    return { provider: 'minimax', model: PROVIDER_DEFAULT_MODELS.minimax, label: 'Munroe Core', accessConfigured: modelAccess.minimax };
   }
 
   if (policy === 'auto') {
     if (modelAccess.minimax) {
-      return { provider: 'minimax', model: null, label: 'Munroe Auto', accessConfigured: true };
+      return { provider: 'minimax', model: PROVIDER_DEFAULT_MODELS.minimax, label: 'Munroe Auto', accessConfigured: true };
     }
     if (modelAccess.kimi) {
-      return { provider: 'kimi', model: null, label: 'Munroe Auto', accessConfigured: true };
+      return { provider: 'kimi', model: PROVIDER_DEFAULT_MODELS.kimi, label: 'Munroe Auto', accessConfigured: true };
     }
-    return { provider: null, model: null, label: 'Munroe Auto', accessConfigured: modelAccess.openrouter || modelAccess.google };
+    if (modelAccess.openrouter) {
+      return { provider: 'openrouter', model: PROVIDER_DEFAULT_MODELS.openrouter, label: 'Munroe Auto', accessConfigured: true };
+    }
+    if (modelAccess.google) {
+      return { provider: 'google', model: PROVIDER_DEFAULT_MODELS.google, label: 'Munroe Auto', accessConfigured: true };
+    }
+    return { provider: null, model: null, label: 'Munroe Auto', accessConfigured: false };
   }
 
   throw new Error(`Unsupported model policy: ${policy}`);

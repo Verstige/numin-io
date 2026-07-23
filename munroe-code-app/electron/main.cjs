@@ -99,13 +99,24 @@ async function createWindow() {
   else await mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
 }
 
+async function resolveProjectPath(value) {
+  const requested = path.resolve(value);
+  if (!path.isAbsolute(requested)) throw new Error('Project path must be absolute.');
+  try { return fs.realpathSync(requested); } catch { return requested; }
+}
+
 ipcMain.handle('munroe:bootstrap', async (event) => {
   ensureRendererTrusted(event);
   try {
     const api = await loadService();
-    const initial = process.env.MUNROE_INITIAL_PROJECT || process.cwd();
+    const rawInitial = process.env.MUNROE_INITIAL_PROJECT || process.cwd();
+    const initial = await resolveProjectPath(rawInitial);
     await api.registerProject(initial);
-    for (const project of await api.listProjects()) registeredProjects.set(project.path, project);
+    const projects = await api.listProjects();
+    for (const project of projects) {
+      const real = await resolveProjectPath(project.path).catch(() => project.path);
+      registeredProjects.set(real, project);
+    }
     return { initialProject: initial, projects: await api.listProjects() };
   } catch (error) {
     return { error: { message: String(error?.message || error) } };
@@ -120,7 +131,10 @@ ipcMain.handle('munroe:project:choose', async (event) => {
   const api = await loadService();
   await api.registerProject(project);
   const projects = await api.listProjects();
-  for (const item of projects) registeredProjects.set(item.path, item);
+  for (const item of projects) {
+    const real = await resolveProjectPath(item.path).catch(() => item.path);
+    registeredProjects.set(real, item);
+  }
   return project;
 });
 
