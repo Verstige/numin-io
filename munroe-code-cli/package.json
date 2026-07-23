@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "test": "node --test",
-    "lint": "node --check bin/munroe.js && node --check src/config.js && node --check src/runtime.js && node --check src/service.js && node --check src/cli.js",
+    "lint": "node --check bin/munroe.js && node --check src/config.js && node --check src/env.js && node --check src/runtime.js && node --check src/service.js && node --check src/cli.js",
     "verify": "npm run lint && npm test && npm pack --dry-run"
   },
   "engines": {

@@ -31,6 +31,7 @@ button { color: inherit; }
 .sidebar-bottom { margin-top: auto; border-top: 1px solid #222225; padding-top: 13px; }
 .status-line { padding: 0 10px 10px; color: #6f6f72; font: 9px DM Mono; }
 .live-dot { display: inline-block; width: 5px; height: 5px; margin-right: 7px; border-radius: 50%; background: #70a67a; box-shadow: 0 0 7px #70a67a; }
+.live-dot.offline { background: #b96453; box-shadow: 0 0 7px #b96453; }
 .sidebar-bottom button { display: flex; gap: 8px; width: 100%; padding: 9px 10px; border: 0; background: transparent; color: #77777b; font-size: 11px; cursor: pointer; }
 .workspace { min-width: 0; display: grid; grid-template-rows: 54px minmax(0, 1fr) auto; background: radial-gradient(ellipse 65% 55% at 54% 45%, rgba(201,168,76,.035), transparent 70%), #0d0d0f; }
 .topbar { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid #202023; -webkit-app-region: drag; }

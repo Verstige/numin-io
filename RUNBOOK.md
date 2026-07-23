@@ -34,7 +34,17 @@ The brand mark is a **constellation** — peak + cardinal ticks + focal dot, gol
 
 ## Live NOW
 
-- **Munroe Code v1.0**: complete local product with CLI + signed native macOS application. The global `munroe` executable initializes and resumes project workspaces, runs one-shot coding tasks, exposes setup/status/projects/model/permissions/doctor/app commands, routes model policies (`auto`, `minimax`, `kimi`), and shares `.munroe/` project state with the desktop app. The Munroe Code desktop app provides project selection, persistent conversations, native chat, model switching, Safe/Standard permissions, usage metadata, and a context-isolated Electron bridge. Packaged app: `munroe-code-app/release/mac/Munroe Code.app` (`ai.munroe.code`), signed with Apple Development identity. Real desktop model invocation returned `MUNROE_DESKTOP_LIVE`. Verification: 10 CLI/service tests, TypeScript checks, Vite production build, zero production npm vulnerabilities, security sentinels, code-sign inspection, visual QA, and persisted conversation reload.
+- **Munroe Code v1.0**: complete local product with CLI + signed native macOS application. The global `munroe` executable initializes and resumes project workspaces, runs one-shot coding tasks, exposes setup/status/projects/model/permissions/doctor/app commands, routes model policies (`auto`, `minimax`, `kimi`), and shares `.munroe/` project state with the desktop app. The Munroe Code desktop app provides project selection, persistent conversations, native chat, model switching, Safe/Standard permissions, usage metadata, and a context-isolated Electron bridge. Packaged app: `munroe-code-app/release/mac/Munroe Code.app` (`ai.munroe.code`), signed with Apple Development identity. Real desktop model invocation returned `MUNROE_DESKTOP_LIVE`. Verification: 17 CLI/service tests, TypeScript checks, Vite production build, zero production npm vulnerabilities, security sentinels, code-sign inspection, visual QA, and persisted conversation reload.
+
+### Munroe Code credentials
+
+The CLI and desktop app read model credentials in this order:
+
+1. The shell environment that launched `munroe` or the desktop app.
+2. `~/.munroe/.env` (machine-wide, user-scoped).
+3. `<project>/.munroe/.env` (per-project override).
+
+Supported keys: `MINIMAX_API_KEY`, `KIMI_API_KEY`, `KIMI_CODING_API_KEY`, `OPENROUTER_API_KEY`, `GOOGLE_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`. Files are parsed line-by-line; comments (`#`) and quoted values are supported. The desktop footer surfaces the active credential names.
 
 - **Landing page**: `https://verstige.github.io/numin-io/` — fully rebranded to Munroe, 17 sections, GSAP-driven card animations, Constellation mark in nav, mobile-responsive.
 

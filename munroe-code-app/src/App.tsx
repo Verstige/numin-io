@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Bot, ChevronDown, Code2, Folder, FolderOpen, Menu, MessageSquarePlus, Send, Settings2, ShieldCheck, Sparkles, Square, TerminalSquare } from 'lucide-react'
-import type { Conversation, Message, Project, Usage } from './types'
+import type { Conversation, Message, Project, ProjectStatus, Usage } from './types'
 
 const MODEL_OPTIONS = [
   { value: 'auto', label: 'Auto', detail: 'Best available intelligence' },
   { value: 'minimax', label: 'Core', detail: 'Fast, capable, long context' },
   { value: 'kimi', label: 'Kimi', detail: 'Deep coding and reasoning' },
 ]
+const PERMISSION_OPTIONS = [
+  { value: 'safe', label: 'Safe', detail: 'Read and review only' },
+  { value: 'standard', label: 'Standard', detail: 'Asks before risky commands' },
+]
+const MODEL_BY_VALUE = Object.fromEntries(MODEL_OPTIONS.map((option) => [option.value, option]))
+const PERMISSION_BY_VALUE = Object.fromEntries(PERMISSION_OPTIONS.map((option) => [option.value, option]))
 
 export default function App() {
   const [project, setProject] = useState('')
@@ -15,7 +21,8 @@ export default function App() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [model, setModel] = useState('auto')
-  const [permissions, setPermissions] = useState('standard')
+  const [permissions, setPermissions] = useState<'safe' | 'standard'>('standard')
+  const [status, setStatus] = useState<ProjectStatus | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [usage, setUsage] = useState<Usage | null>(null)
@@ -36,6 +43,21 @@ export default function App() {
   useEffect(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), [messages.length, busy])
 
   async function loadConversations(cwd: string) {
+    try {
+      const [loaded, projectStatus] = await Promise.all([
+        window.munroe.loadProject(cwd),
+        window.munroe.projectStatus(cwd),
+      ])
+      if (projectStatus.model === 'auto' || projectStatus.model === 'minimax' || projectStatus.model === 'kimi') {
+        setModel(projectStatus.model)
+      }
+      if (projectStatus.permissions === 'safe' || projectStatus.permissions === 'standard') {
+        setPermissions(projectStatus.permissions)
+      }
+      setStatus(projectStatus)
+    } catch (e) {
+      setStatus({ model: 'auto', permissions: 'standard', modelLabel: 'Not configured', modelAccessConfigured: false, envLayers: [], runtime: 'missing' })
+    }
     let rows = await window.munroe.listConversations(cwd)
     if (rows.length === 0) rows = [await window.munroe.newConversation(cwd)]
     setConversations(rows)
@@ -47,6 +69,7 @@ export default function App() {
     if (!next) return
     setProject(next)
     setProjects(await window.munroe.listProjects())
+    setUsage(null)
     await loadConversations(next)
   }
 
@@ -85,6 +108,12 @@ export default function App() {
     }
   }
 
+  const runtimeLabel = status?.runtime === 'available' ? 'Runtime online' : 'Runtime unavailable'
+  const permissionsLabel = PERMISSION_BY_VALUE[permissions]?.label ?? permissions
+  const envSummary = (status?.envLayers ?? []).length === 0
+    ? null
+    : `Credentials: ${status!.envLayers.join(', ')}`
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -111,7 +140,7 @@ export default function App() {
         </nav>
 
         <div className="sidebar-bottom">
-          <div className="status-line"><span className="live-dot" /> Runtime online</div>
+          <div className="status-line"><span className={status?.runtime === 'available' ? 'live-dot' : 'live-dot offline'} /> {runtimeLabel}</div>
           <button><Settings2 size={15} /> Settings</button>
         </div>
       </aside>
@@ -121,15 +150,15 @@ export default function App() {
           <div className="session-title"><Square size={9} fill="#c9a84c" /> {active?.title || 'New conversation'}</div>
           <div className="top-actions">
             <div className="model-control">
-              <button onClick={() => setModelOpen(v => !v)}><Sparkles size={14} /> {MODEL_OPTIONS.find(x => x.value === model)?.label}<ChevronDown size={13} /></button>
+              <button onClick={() => setModelOpen(v => !v)}><Sparkles size={14} /> {MODEL_BY_VALUE[model]?.label ?? model}<ChevronDown size={13} /></button>
               {modelOpen && <div className="model-menu">
                 {MODEL_OPTIONS.map(option => <button key={option.value} className={option.value === model ? 'selected' : ''} onClick={() => { setModel(option.value); setModelOpen(false) }}>
                   <span><strong>{option.label}</strong><small>{option.detail}</small></span>{option.value === model && <span className="check">✓</span>}
                 </button>)}
               </div>}
             </div>
-            <select aria-label="Permission mode" value={permissions} onChange={e => setPermissions(e.target.value)}>
-              <option value="safe">Safe</option><option value="standard">Standard</option>
+            <select aria-label="Permission mode" value={permissions} onChange={e => setPermissions(e.target.value as 'safe' | 'standard')}>
+              {PERMISSION_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </div>
         </header>
@@ -160,11 +189,14 @@ export default function App() {
           <div className="composer">
             <textarea value={draft} onChange={e => setDraft(e.target.value)} onKeyDown={onKeyDown} placeholder="Message Munroe Code…" rows={1} />
             <div className="composer-bottom">
-              <div className="context-pills"><span><Folder size={12} />{project.split('/').pop() || 'No project'}</span><span><ShieldCheck size={12} />{permissions}</span></div>
-              <button className="send" disabled={!draft.trim() || busy} onClick={send}>{busy ? <Square size={14} /> : <Send size={15} />}</button>
+              <div className="context-pills"><span><Folder size={12} />{project.split('/').pop() || 'No project'}</span><span><ShieldCheck size={12} />{permissionsLabel}</span></div>
+              <button className="send" disabled={!draft.trim() || busy || status?.runtime !== 'available'} onClick={send}>{busy ? <Square size={14} /> : <Send size={15} />}</button>
             </div>
           </div>
-          <div className="footer-meta"><span><TerminalSquare size={12} /> Munroe can make mistakes. Review changes before shipping.</span>{usage && <span>{usage.total_tokens?.toLocaleString() || 0} tokens · {usage.api_calls || 0} calls</span>}</div>
+          <div className="footer-meta">
+            <span><TerminalSquare size={12} /> Munroe can make mistakes. Review changes before shipping. {envSummary ? `· ${envSummary}` : ''}</span>
+            {usage && <span>{usage.total_tokens?.toLocaleString() || 0} tokens · {usage.api_calls || 0} calls</span>}
+          </div>
         </footer>
       </main>
     </div>
