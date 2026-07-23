@@ -59,6 +59,30 @@ export async function listConversations(cwd) {
   return readJson(path.join(stateDir(cwd), 'conversations.json'), []);
 }
 
+export async function deleteConversation(cwd, conversationId) {
+  const file = path.join(stateDir(cwd), 'conversations.json');
+  return serialize(file, (current) => current.filter((item) => item.id !== conversationId), []);
+}
+
+export async function clearConversations(cwd) {
+  const file = path.join(stateDir(cwd), 'conversations.json');
+  await serialize(file, () => [], []);
+  return true;
+}
+
+export async function renameConversation(cwd, conversationId, title) {
+  if (typeof title !== 'string' || !title.trim()) throw new Error('Title required.');
+  const file = path.join(stateDir(cwd), 'conversations.json');
+  let updated;
+  await serialize(file, (current) => {
+    const idx = current.findIndex((item) => item.id === conversationId);
+    if (idx < 0) throw new Error('Conversation not found.');
+    updated = { ...current[idx], title: title.trim(), updatedAt: new Date().toISOString() };
+    return [updated, ...current.filter((item) => item.id !== conversationId)];
+  }, []);
+  return updated;
+}
+
 export async function createConversation(cwd, title = 'New conversation') {
   const file = path.join(stateDir(cwd), 'conversations.json');
   const item = {

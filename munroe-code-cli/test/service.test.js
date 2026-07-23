@@ -7,7 +7,10 @@ import path from 'node:path';
 import {
   appendConversationMessage,
   createConversation,
+  deleteConversation,
   listConversations,
+  clearConversations,
+  renameConversation,
   listProjects,
   loadProject,
   projectRuntimeStatus,
@@ -85,4 +88,29 @@ test('queryMunroe rejects trusted permissions programmatically', async () => {
     () => queryMunroe({ cwd, prompt: 'noop', permissions: 'trusted', env }),
     /Trusted mode cannot be enabled programmatically/,
   );
+});
+
+test('deleteConversation removes the targeted conversation', async () => {
+  const cwd = await tempDir('munroe-delete-');
+  const a = await createConversation(cwd, 'A');
+  await createConversation(cwd, 'B');
+  const after = await deleteConversation(cwd, a.id);
+  assert.equal(after.length, 1);
+  assert.notEqual(after[0].id, a.id);
+});
+
+test('renameConversation updates the title', async () => {
+  const cwd = await tempDir('munroe-rename-');
+  const conv = await createConversation(cwd, 'Original');
+  const renamed = await renameConversation(cwd, conv.id, 'Renamed');
+  assert.equal(renamed.title, 'Renamed');
+});
+
+test('clearConversations empties the conversation store', async () => {
+  const cwd = await tempDir('munroe-clear-');
+  await createConversation(cwd);
+  await createConversation(cwd);
+  await clearConversations(cwd);
+  const rows = await listConversations(cwd);
+  assert.equal(rows.length, 0);
 });

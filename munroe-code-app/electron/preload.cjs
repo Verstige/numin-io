@@ -6,8 +6,28 @@ contextBridge.exposeInMainWorld('munroe', {
   listProjects: () => ipcRenderer.invoke('munroe:projects:list'),
   loadProject: (cwd) => ipcRenderer.invoke('munroe:project:load', cwd),
   projectStatus: (cwd) => ipcRenderer.invoke('munroe:project:status', cwd),
+  updateProject: (cwd, updates) => ipcRenderer.invoke('munroe:project:update', cwd, updates),
+  openProject: (cwd) => ipcRenderer.invoke('munroe:project:open', cwd),
   listConversations: (cwd) => ipcRenderer.invoke('munroe:conversations:list', cwd),
   newConversation: (cwd) => ipcRenderer.invoke('munroe:conversation:new', cwd),
   appendMessage: (cwd, id, message) => ipcRenderer.invoke('munroe:conversation:append', cwd, id, message),
+  deleteConversation: (cwd, id) => ipcRenderer.invoke('munroe:conversation:delete', cwd, id),
+  renameConversation: (cwd, id, title) => ipcRenderer.invoke('munroe:conversation:rename', cwd, id, title),
+  clearConversations: (cwd) => ipcRenderer.invoke('munroe:conversations:clear', cwd),
   send: (payload) => ipcRenderer.invoke('munroe:chat:send', payload),
+  startTurn: (payload) => ipcRenderer.invoke('munroe:turn:start', payload),
+  interruptTurn: (turnId) => ipcRenderer.invoke('munroe:turn:interrupt', turnId),
+  approveTurn: (payload) => ipcRenderer.invoke('munroe:turn:approve', payload),
+  listThreads: (query) => ipcRenderer.invoke('munroe:threads:list', query),
+  renameThread: (id, title) => ipcRenderer.invoke('munroe:threads:rename', id, title),
+  deleteThread: (id) => ipcRenderer.invoke('munroe:threads:delete', id),
+  listCheckpoints: (cwd) => ipcRenderer.invoke('munroe:checkpoints:list', cwd),
+  createCheckpoint: (cwd) => ipcRenderer.invoke('munroe:checkpoints:create', cwd),
+  rollbackCheckpoint: (cwd, id) => ipcRenderer.invoke('munroe:checkpoints:rollback', cwd, id),
+  runSlash: (command, cwd) => ipcRenderer.invoke('munroe:slash', command, cwd),
+  onTurnEvent: (handler) => {
+    const listener = (_event, payload) => handler(payload);
+    ipcRenderer.on('munroe:turn:event', listener);
+    return () => ipcRenderer.removeListener('munroe:turn:event', listener);
+  },
 })

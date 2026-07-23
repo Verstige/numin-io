@@ -8,6 +8,7 @@ const RENDERER_PERMISSIONS = new Set(['safe', 'standard'])
 const PROJECT_MAX_PATH_LENGTH = 4096
 
 const registeredProjects = new Map()
+const activeTurns = new Map()
 
 function trustedOrigin(origin) {
   if (!origin) return null;
@@ -40,6 +41,8 @@ function safePermissions(value) {
 
 let mainWindow
 let service
+let turn
+let threads
 
 async function loadService() {
   if (service) return service;
@@ -48,6 +51,24 @@ async function loadService() {
     : path.join(__dirname, '..', '..', 'munroe-code-cli', 'src', 'service.js');
   service = await import(pathToFileURL(servicePath).href);
   return service;
+}
+
+async function loadTurn() {
+  if (turn) return turn;
+  const turnPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'munroe-code-cli', 'src', 'turn.js')
+    : path.join(__dirname, '..', '..', 'munroe-code-cli', 'src', 'turn.js');
+  turn = await import(pathToFileURL(turnPath).href);
+  return turn;
+}
+
+async function loadThreads() {
+  if (threads) return threads;
+  const threadsPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'munroe-code-cli', 'src', 'threads.js')
+    : path.join(__dirname, '..', '..', 'munroe-code-cli', 'src', 'threads.js');
+  threads = await import(pathToFileURL(threadsPath).href);
+  return threads;
 }
 
 function safeProjectPath(value) {
@@ -176,6 +197,145 @@ ipcMain.handle('munroe:chat:send', async (event, payload) => {
   const project = safeProjectPath(payload.cwd);
   const permissions = payload.permissions ? safePermissions(payload.permissions) : undefined;
   return (await loadService()).queryMunroe({ cwd: project, prompt: payload.prompt, model: payload.model, permissions });
+});
+
+ipcMain.handle('munroe:turn:start', async (event, payload) => {
+  ensureRendererTrusted(event);
+  if (!payload || typeof payload.prompt !== 'string' || payload.prompt.trim().length === 0) throw new Error('Enter a message.');
+  const project = safeProjectPath(payload.cwd);
+  const permissions = payload.permissions ? safePermissions(payload.permissions) : undefined;
+  const turnModule = await loadTurn();
+  const handle = await turnModule.startTurn({
+    cwd: project,
+    prompt: payload.prompt,
+    model: payload.model,
+    permissions,
+    images: Array.isArray(payload.images) ? payload.images : [],
+    sessionId: payload.sessionId,
+    onEvent: (event) => {
+      try {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('munroe:turn:event', event);
+        }
+      } catch { /* ignore */ }
+    },
+  });
+  activeTurns.set(handle.turnId, handle);
+  return { turnId: handle.turnId };
+});
+
+ipcMain.handle('munroe:turn:interrupt', async (event, turnId) => {
+  ensureRendererTrusted(event);
+  if (typeof turnId !== 'string') throw new Error('Turn id required.');
+  const handle = activeTurns.get(turnId);
+  if (!handle) throw new Error('Turn not found.');
+  await handle.abort();
+  activeTurns.delete(turnId);
+  return { interrupted: true };
+});
+
+ipcMain.handle('munroe:turn:approve', async (event, payload) => {
+  ensureRendererTrusted(event);
+  if (!payload || typeof payload.turnId !== 'string' || typeof payload.approvalId !== 'string' || !['approve', 'reject', 'always'].includes(payload.decision)) {
+    throw new Error('Invalid approval.');
+  }
+  const handle = activeTurns.get(payload.turnId);
+  if (!handle) throw new Error('Turn not found.');
+  await handle.approve(payload.approvalId, payload.decision);
+  return { approved: true };
+});
+
+ipcMain.handle('munroe:threads:list', async (event, query) => {
+  ensureRendererTrusted(event);
+  const t = await loadThreads();
+  return query ? t.searchThreads(query) : t.listThreads();
+});
+
+ipcMain.handle('munroe:threads:rename', async (event, id, title) => {
+  ensureRendererTrusted(event);
+  if (typeof id !== 'string' || typeof title !== 'string') throw new Error('id and title required.');
+  const t = await loadThreads();
+  return t.renameThread(id, title);
+});
+
+ipcMain.handle('munroe:threads:delete', async (event, id) => {
+  ensureRendererTrusted(event);
+  if (typeof id !== 'string') throw new Error('id required.');
+  const t = await loadThreads();
+  return t.deleteThread(id);
+});
+
+ipcMain.handle('munroe:checkpoints:list', async (event, cwd) => {
+  ensureRendererTrusted(event);
+  const project = safeProjectPath(cwd);
+  const t = await loadThreads();
+  return t.listCheckpoints(project);
+});
+
+ipcMain.handle('munroe:checkpoints:create', async (event, cwd) => {
+  ensureRendererTrusted(event);
+  const project = safeProjectPath(cwd);
+  const t = await loadThreads();
+  return t.createCheckpoint(project);
+});
+
+ipcMain.handle('munroe:checkpoints:rollback', async (event, cwd, id) => {
+  ensureRendererTrusted(event);
+  const project = safeProjectPath(cwd);
+  if (typeof id !== 'string') throw new Error('id required.');
+  const t = await loadThreads();
+  return t.rollbackToCheckpoint(project, id);
+});
+
+ipcMain.handle('munroe:slash', async (event, command, cwd) => {
+  ensureRendererTrusted(event);
+  const project = safeProjectPath(cwd);
+  if (typeof command !== 'string') throw new Error('Command required.');
+  const api = await loadService();
+  const sanitized = command.startsWith('/') ? command.slice(1) : command;
+  return api.queryMunroe({ cwd: project, prompt: `Run the ${sanitized} slash command and respond briefly.` });
+});
+
+ipcMain.handle('munroe:conversation:delete', async (event, cwd, id) => {
+  ensureRendererTrusted(event);
+  const project = safeProjectPath(cwd);
+  if (typeof id !== 'string') throw new Error('id required.');
+  const api = await loadService();
+  return api.deleteConversation(project, id);
+});
+
+ipcMain.handle('munroe:conversation:rename', async (event, cwd, id, title) => {
+  ensureRendererTrusted(event);
+  const project = safeProjectPath(cwd);
+  if (typeof id !== 'string' || typeof title !== 'string') throw new Error('id and title required.');
+  const api = await loadService();
+  return api.renameConversation(project, id, title);
+});
+
+ipcMain.handle('munroe:conversations:clear', async (event, cwd) => {
+  ensureRendererTrusted(event);
+  const project = safeProjectPath(cwd);
+  const api = await loadService();
+  return api.clearConversations(project);
+});
+
+ipcMain.handle('munroe:project:update', async (event, cwd, updates) => {
+  ensureRendererTrusted(event);
+  const project = safeProjectPath(cwd);
+  if (!updates || typeof updates !== 'object') throw new Error('Updates required.');
+  const allowed = {};
+  if (updates.model && ['auto', 'minimax', 'kimi'].includes(updates.model)) allowed.model = updates.model;
+  if (updates.permissions && ['safe', 'standard'].includes(updates.permissions)) allowed.permissions = updates.permissions;
+  if (Object.keys(allowed).length === 0) return await (await loadService()).loadProject(project);
+  const api = await loadService();
+  return api.saveProjectConfig(project, allowed);
+});
+
+ipcMain.handle('munroe:project:open', async (event, cwd) => {
+  ensureRendererTrusted(event);
+  const project = safeProjectPath(cwd);
+  shell.openPath(project);
+  return { opened: true };
 });
 
 app.whenReady().then(createWindow);
