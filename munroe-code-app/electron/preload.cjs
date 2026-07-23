@@ -30,8 +30,17 @@ contextBridge.exposeInMainWorld('munroe', {
   cronResume: (id) => ipcRenderer.invoke('munroe:cron:resume', id),
   cronRun: (id) => ipcRenderer.invoke('munroe:cron:run', id),
   cronDelete: (id) => ipcRenderer.invoke('munroe:cron:delete', id),
+  cronCreate: (payload) => ipcRenderer.invoke('munroe:cron:create', payload),
+  workspaceAdd: (cwd, folder) => ipcRenderer.invoke('munroe:workspace:add', cwd, folder),
+  workspaceChoose: (cwd) => ipcRenderer.invoke('munroe:workspace:choose', cwd),
+  workspaceRemove: (cwd, folder) => ipcRenderer.invoke('munroe:workspace:remove', cwd, folder),
   addAttachment: (payload) => ipcRenderer.invoke('munroe:attachments:add', payload),
   about: () => ipcRenderer.invoke('munroe:about'),
+  memoryStatus: () => ipcRenderer.invoke('munroe:systems:memory'),
+  memoryRead: (filePath) => ipcRenderer.invoke('munroe:systems:memory:read', filePath),
+  listProfiles: () => ipcRenderer.invoke('munroe:systems:profiles'),
+  computerUseStatus: () => ipcRenderer.invoke('munroe:systems:computer-use'),
+  computerUseDoctor: () => ipcRenderer.invoke('munroe:systems:computer-use:doctor'),
   onTurnEvent: (handler) => {
     const listener = (_event, payload) => handler(payload);
     ipcRenderer.on('munroe:turn:event', listener);

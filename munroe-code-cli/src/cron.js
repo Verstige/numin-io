@@ -95,6 +95,23 @@ function cronMutationSucceeded(result) {
   return !/not found|failed|error/i.test(combined);
 }
 
+export async function createCronJob({ schedule, prompt = '', name = '', deliver = 'local', workdir = '' } = {}) {
+  const runtimePath = await findRuntime().catch(() => null);
+  if (!runtimePath) return { ok: false, message: 'Runtime unavailable' };
+  if (!schedule || typeof schedule !== 'string') return { ok: false, message: 'Schedule required' };
+  const args = ['cron', 'create', schedule];
+  if (prompt) args.push(prompt);
+  if (name) args.push('--name', name);
+  if (deliver) args.push('--deliver', deliver);
+  if (workdir) args.push('--workdir', workdir);
+  const result = spawnSync(runtimePath, args, { shell: false, encoding: 'utf8' });
+  const combined = `${result.stdout || ''}${result.stderr || ''}`;
+  if (result.status !== 0 || /failed|error/i.test(combined)) {
+    return { ok: false, message: combined.trim() || `exit ${result.status}` };
+  }
+  return { ok: true, message: combined.trim() || 'Created' };
+}
+
 export async function cronStatus() {
   const runtimePath = await findRuntime().catch(() => null);
   if (!runtimePath) return { running: false };

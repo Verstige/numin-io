@@ -149,6 +149,8 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
 .activity-timer { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 999px; background: rgba(201,168,76,.12); border: 1px solid rgba(201,168,76,.28); color: var(--accent); font: 10px 'DM Mono', ui-monospace, monospace; }
 .attach-btn { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; background: #0a0a0c; border: 1px solid var(--border); color: var(--muted); font-size: 10px; cursor: pointer; }
 .attach-btn:hover { color: var(--text); border-color: var(--accent); }
+.attach-btn.listening { color: var(--danger); border-color: rgba(217,115,115,.45); }
+.memory-preview { margin: 0; max-height: 160px; overflow: auto; padding: 8px; border-radius: 8px; background: #0a0a0c; border: 1px solid var(--border); color: var(--muted); font: 10px 'DM Mono', ui-monospace, monospace; white-space: pre-wrap; }
 .attachment-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .attachment-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; background: #141418; border: 1px solid var(--border); color: var(--text); font-size: 11px; }
 .attachment-chip button { display: grid; place-items: center; border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 0; }
@@ -162,6 +164,10 @@ body { background: var(--bg); color: var(--text); overflow: hidden; font-size: 1
 .cron-actions button { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--border); background: #0a0a0c; color: var(--muted); cursor: pointer; }
 .cron-actions button:hover { color: var(--text); border-color: var(--accent); }
 .cron-actions button.danger:hover { color: var(--danger); border-color: rgba(217,115,115,.4); }
+.cron-form { display: flex; flex-direction: column; gap: 6px; padding: 0 4px 8px; }
+.cron-form input, .cron-form textarea { width: 100%; padding: 7px 8px; border-radius: 6px; background: #0a0a0c; border: 1px solid var(--border); color: var(--text); font-size: 11px; font-family: inherit; }
+.cron-form input:focus, .cron-form textarea:focus { outline: 1px solid var(--accent); border-color: transparent; }
+.cron-form textarea { resize: vertical; min-height: 56px; }
 
 .toast-stack { position: fixed; right: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 8px; z-index: 80; max-width: 320px; }
 .toast { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #15151b; box-shadow: 0 12px 28px rgba(0,0,0,.35); }

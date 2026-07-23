@@ -2,7 +2,12 @@ export type Message = { role: 'user' | 'assistant'; content: string; createdAt?:
 export type Conversation = { id: string; title: string; createdAt: string; updatedAt: string; messages: Message[] }
 export type Project = { path: string; name: string; sessionName: string; openedAt: string }
 export type Usage = { total_tokens?: number; estimated_cost_usd?: number; api_calls?: number }
-export type ProjectConfig = { model: 'auto' | 'minimax' | 'kimi'; permissions: 'safe' | 'standard' | 'trusted' }
+export type ProjectConfig = {
+  model: 'auto' | 'minimax' | 'kimi'
+  permissions: 'safe' | 'standard' | 'trusted'
+  workspaceFolders?: string[]
+  version?: number
+}
 export type ProjectStatus = { model: string; permissions: string; modelLabel: string; modelAccessConfigured: boolean; envLayers: string[]; runtime: 'available' | 'missing' }
 
 export type TurnEvent =
@@ -48,6 +53,10 @@ export type About = {
   docs: string
   support: string
 }
+export type MemoryFile = { path: string; name: string; bytes: number; updatedAt: string }
+export type MemoryStatus = { ok: boolean; message: string; files: MemoryFile[] }
+export type ProfileInfo = { name: string; active?: boolean; label: string }
+export type ComputerUseStatus = { ok: boolean; installed: boolean; message: string }
 
 export interface MunroeBridge {
   bootstrap(): Promise<{ initialProject: string; projects: Project[]; error?: { message: string } }>
@@ -79,8 +88,17 @@ export interface MunroeBridge {
   cronResume(id: string): Promise<boolean>
   cronRun(id: string): Promise<boolean>
   cronDelete(id: string): Promise<boolean>
+  cronCreate(payload: { schedule: string; prompt?: string; name?: string; deliver?: string; workdir?: string }): Promise<{ ok: boolean; message: string }>
+  workspaceAdd(cwd: string, folder: string): Promise<{ path: string; config: ProjectConfig }>
+  workspaceChoose(cwd: string): Promise<{ path: string; config: ProjectConfig } | null>
+  workspaceRemove(cwd: string, folder: string): Promise<{ path: string; config: ProjectConfig }>
   addAttachment(payload: { name: string; data: string; cwd?: string }): Promise<Attachment>
   about(): Promise<About>
+  memoryStatus(): Promise<MemoryStatus>
+  memoryRead(filePath: string): Promise<{ path: string; content: string }>
+  listProfiles(): Promise<{ ok: boolean; profiles: ProfileInfo[]; raw: string }>
+  computerUseStatus(): Promise<ComputerUseStatus>
+  computerUseDoctor(): Promise<{ ok: boolean; message: string }>
   onTurnEvent(handler: (event: TurnEvent) => void): () => void
 }
 

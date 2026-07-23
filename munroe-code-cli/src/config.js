@@ -9,6 +9,7 @@ const DEFAULT_CONFIG = Object.freeze({
   version: 1,
   model: 'auto',
   permissions: 'standard',
+  workspaceFolders: Object.freeze([]),
 });
 
 export function stateDir(cwd) {
@@ -33,6 +34,18 @@ function validateConfig(value) {
   }
   if (!VALID_PERMISSIONS.has(config.permissions)) {
     throw new Error(`Unsupported permission policy: ${config.permissions}`);
+  }
+  if (config.workspaceFolders != null) {
+    if (!Array.isArray(config.workspaceFolders)) {
+      throw new Error('workspaceFolders must be an array of absolute paths');
+    }
+    config.workspaceFolders = [...new Set(
+      config.workspaceFolders
+        .filter((entry) => typeof entry === 'string' && entry.trim())
+        .map((entry) => path.resolve(entry.trim())),
+    )].slice(0, 20);
+  } else {
+    config.workspaceFolders = [];
   }
   return config;
 }

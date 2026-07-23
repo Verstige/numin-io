@@ -47,6 +47,7 @@ let service
 let turn
 let threads
 let cron
+let systems
 
 async function loadService() {
   if (service) return service;
@@ -131,6 +132,15 @@ async function loadCron() {
     : path.join(__dirname, '..', '..', 'munroe-code-cli', 'src', 'cron.js');
   cron = await import(pathToFileURL(cronPath).href);
   return cron;
+}
+
+async function loadSystems() {
+  if (systems) return systems;
+  const systemsPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'munroe-code-cli', 'src', 'systems.js')
+    : path.join(__dirname, '..', '..', 'munroe-code-cli', 'src', 'systems.js');
+  systems = await import(pathToFileURL(systemsPath).href);
+  return systems;
 }
 
 async function resolveProjectPath(value) {
@@ -389,6 +399,67 @@ ipcMain.handle('munroe:cron:delete', async (event, id) => {
   return c.deleteCronJob(id);
 });
 
+ipcMain.handle('munroe:cron:create', async (event, payload) => {
+  ensureRendererTrusted(event);
+  if (!payload || typeof payload.schedule !== 'string' || !payload.schedule.trim()) {
+    throw new Error('Schedule required.');
+  }
+  const c = await loadCron();
+  const workdir = payload.workdir ? safeProjectPath(payload.workdir) : undefined;
+  return c.createCronJob({
+    schedule: payload.schedule.trim(),
+    prompt: typeof payload.prompt === 'string' ? payload.prompt : '',
+    name: typeof payload.name === 'string' ? payload.name : '',
+    deliver: typeof payload.deliver === 'string' ? payload.deliver : 'local',
+    workdir,
+  });
+});
+
+ipcMain.handle('munroe:workspace:choose', async (event, cwd) => {
+  ensureRendererTrusted(event);
+  const project = safeProjectPath(cwd);
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory', 'createDirectory'],
+    title: 'Add folder to workspace',
+  });
+  if (result.canceled || !result.filePaths[0]) return null;
+  const resolved = await resolveProjectPath(result.filePaths[0]);
+  if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
+    throw new Error('Folder does not exist.');
+  }
+  registeredProjects.set(resolved, { path: resolved, name: path.basename(resolved) });
+  const api = await loadService();
+  const current = await api.loadProject(project);
+  const folders = Array.isArray(current.config.workspaceFolders) ? [...current.config.workspaceFolders] : [];
+  if (!folders.includes(resolved) && resolved !== project) folders.push(resolved);
+  return api.saveProjectConfig(project, { workspaceFolders: folders });
+});
+
+ipcMain.handle('munroe:workspace:add', async (event, cwd, folder) => {
+  ensureRendererTrusted(event);
+  const project = safeProjectPath(cwd);
+  const resolved = await resolveProjectPath(folder);
+  if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
+    throw new Error('Folder does not exist.');
+  }
+  registeredProjects.set(resolved, { path: resolved, name: path.basename(resolved) });
+  const api = await loadService();
+  const current = await api.loadProject(project);
+  const folders = Array.isArray(current.config.workspaceFolders) ? [...current.config.workspaceFolders] : [];
+  if (!folders.includes(resolved) && resolved !== project) folders.push(resolved);
+  return api.saveProjectConfig(project, { workspaceFolders: folders });
+});
+
+ipcMain.handle('munroe:workspace:remove', async (event, cwd, folder) => {
+  ensureRendererTrusted(event);
+  const project = safeProjectPath(cwd);
+  const resolved = path.resolve(folder);
+  const api = await loadService();
+  const current = await api.loadProject(project);
+  const folders = (current.config.workspaceFolders || []).filter((entry) => entry !== resolved);
+  return api.saveProjectConfig(project, { workspaceFolders: folders });
+});
+
 ipcMain.handle('munroe:attachments:add', async (event, payload) => {
   ensureRendererTrusted(event);
   if (!payload || typeof payload.name !== 'string' || typeof payload.data !== 'string') {
@@ -407,7 +478,6 @@ ipcMain.handle('munroe:attachments:add', async (event, payload) => {
 
 ipcMain.handle('munroe:about', async (event) => {
   ensureRendererTrusted(event);
-  const api = await loadService();
   const version = require('../package.json').version;
   return {
     product: 'Munroe Code',
@@ -419,6 +489,31 @@ ipcMain.handle('munroe:about', async (event) => {
     docs: 'https://github.com/Verstige/munroe',
     support: 'https://github.com/Verstige/munroe/issues',
   };
+});
+
+ipcMain.handle('munroe:systems:memory', async (event) => {
+  ensureRendererTrusted(event);
+  return (await loadSystems()).memoryStatus();
+});
+
+ipcMain.handle('munroe:systems:memory:read', async (event, filePath) => {
+  ensureRendererTrusted(event);
+  return (await loadSystems()).readMemoryFile(filePath);
+});
+
+ipcMain.handle('munroe:systems:profiles', async (event) => {
+  ensureRendererTrusted(event);
+  return (await loadSystems()).listProfiles();
+});
+
+ipcMain.handle('munroe:systems:computer-use', async (event) => {
+  ensureRendererTrusted(event);
+  return (await loadSystems()).computerUseStatus();
+});
+
+ipcMain.handle('munroe:systems:computer-use:doctor', async (event) => {
+  ensureRendererTrusted(event);
+  return (await loadSystems()).computerUseDoctor();
 });
 
 app.whenReady().then(createWindow);

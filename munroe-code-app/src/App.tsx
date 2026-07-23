@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Bell, Bot, ChevronDown, Clock, Code2, Folder, FolderOpen, GitBranch, Info, Menu, MessageSquarePlus, Paperclip, Pause, Play, RefreshCcw, RotateCcw, Save, Search, Send, Settings2, ShieldCheck, Sparkles, Square, TerminalSquare, Trash2, X, Zap } from 'lucide-react'
-import type { About, Attachment, Checkpoint, Conversation, CronJob, CronStatus, Message, Project, ProjectStatus, ThreadSummary, TurnEvent, Usage } from './types'
+import { Bell, Bot, ChevronDown, Clock, Code2, Folder, FolderOpen, GitBranch, Info, Menu, MessageSquarePlus, Mic, MicOff, Paperclip, Pause, Play, RefreshCcw, RotateCcw, Save, Search, Send, Settings2, ShieldCheck, Sparkles, Square, TerminalSquare, Trash2, X, Zap } from 'lucide-react'
+import type { About, Attachment, Checkpoint, ComputerUseStatus, Conversation, CronJob, CronStatus, MemoryStatus, Message, ProfileInfo, Project, ProjectStatus, ThreadSummary, TurnEvent, Usage } from './types'
 
 const MODEL_OPTIONS = [
   { value: 'auto', label: 'Auto', detail: 'Best available intelligence' },
@@ -105,6 +105,17 @@ export default function App() {
   const [paletteQuery, setPaletteQuery] = useState('')
   const [aboutOpen, setAboutOpen] = useState(false)
   const [aboutInfo, setAboutInfo] = useState<About | null>(null)
+  const [workspaceFolders, setWorkspaceFolders] = useState<string[]>([])
+  const [cronFormOpen, setCronFormOpen] = useState(false)
+  const [cronName, setCronName] = useState('')
+  const [cronSchedule, setCronSchedule] = useState('every 1d')
+  const [cronPrompt, setCronPrompt] = useState('')
+  const [memoryStatus, setMemoryStatus] = useState<MemoryStatus | null>(null)
+  const [profiles, setProfiles] = useState<ProfileInfo[]>([])
+  const [computerUse, setComputerUse] = useState<ComputerUseStatus | null>(null)
+  const [memoryPreview, setMemoryPreview] = useState('')
+  const [listening, setListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const composerRef = useRef<HTMLTextAreaElement>(null)
   const projectRef = useRef(project)
@@ -128,6 +139,7 @@ export default function App() {
       await refreshCheckpoints(data.initialProject)
       await refreshCron()
       try { setAboutInfo(await window.munroe.about()) } catch (e) { /* ignore */ }
+      void refreshSystems()
     }).catch(e => setError(String(e.message || e)))
   }, [])
 
@@ -245,6 +257,75 @@ export default function App() {
     }, 6000)
   }
 
+  async function refreshSystems() {
+    try {
+      const [memory, profileList, cu] = await Promise.all([
+        window.munroe.memoryStatus(),
+        window.munroe.listProfiles(),
+        window.munroe.computerUseStatus(),
+      ])
+      setMemoryStatus(memory)
+      setProfiles(profileList.profiles || [])
+      setComputerUse(cu)
+    } catch (e) {
+      notify('error', 'Failed to refresh systems', String((e as Error).message || e))
+    }
+  }
+
+  async function openMemoryFile(filePath: string) {
+    try {
+      const file = await window.munroe.memoryRead(filePath)
+      setMemoryPreview(file.content)
+      notify('info', `Opened ${file.path.split('/').pop()}`)
+    } catch (e) {
+      notify('error', 'Failed to read memory file', String((e as Error).message || e))
+    }
+  }
+
+  async function runComputerUseDoctor() {
+    try {
+      const result = await window.munroe.computerUseDoctor()
+      notify(result.ok ? 'success' : 'error', 'Computer use doctor', result.message.slice(0, 180))
+      setComputerUse(await window.munroe.computerUseStatus())
+    } catch (e) {
+      notify('error', 'Doctor failed', String((e as Error).message || e))
+    }
+  }
+
+  function toggleDictation() {
+    const w = window as unknown as { SpeechRecognition?: new () => any; webkitSpeechRecognition?: new () => any }
+    const SpeechRecognitionImpl = w.SpeechRecognition || w.webkitSpeechRecognition
+    if (!SpeechRecognitionImpl) {
+      notify('error', 'Voice dictation unavailable in this runtime')
+      return
+    }
+    if (listening && recognitionRef.current) {
+      recognitionRef.current.stop()
+      setListening(false)
+      return
+    }
+    const recognition = new SpeechRecognitionImpl()
+    recognition.continuous = false
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+    recognition.onresult = (event: any) => {
+      let text = ''
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        text += event.results[i][0].transcript
+      }
+      if (text.trim()) setDraft((current) => (current ? `${current} ${text.trim()}` : text.trim()))
+    }
+    recognition.onerror = () => {
+      setListening(false)
+      notify('error', 'Dictation error')
+    }
+    recognition.onend = () => setListening(false)
+    recognitionRef.current = recognition
+    recognition.start()
+    setListening(true)
+    notify('info', 'Listening…')
+  }
+
   async function refreshCron() {
     try {
       const result = await window.munroe.cronList()
@@ -279,6 +360,53 @@ export default function App() {
     const ok = await window.munroe.cronDelete(id)
     notify(ok ? 'success' : 'error', ok ? 'Cron job removed' : 'Failed to remove cron job')
     await refreshCron()
+  }
+
+  async function createCronJob() {
+    if (!cronSchedule.trim()) {
+      notify('error', 'Schedule required')
+      return
+    }
+    const result = await window.munroe.cronCreate({
+      schedule: cronSchedule.trim(),
+      prompt: cronPrompt.trim() || 'Summarize project status and next actions.',
+      name: cronName.trim() || 'Munroe scheduled task',
+      deliver: 'local',
+      workdir: project || undefined,
+    })
+    if (result.ok) {
+      notify('success', 'Cron job created', result.message)
+      setCronFormOpen(false)
+      setCronName('')
+      setCronPrompt('')
+      setCronSchedule('every 1d')
+      await refreshCron()
+    } else {
+      notify('error', 'Failed to create cron job', result.message)
+    }
+  }
+
+  async function addWorkspaceFolder() {
+    if (!project) return
+    try {
+      const result = await window.munroe.workspaceChoose(project)
+      if (!result) return
+      setWorkspaceFolders(result.config.workspaceFolders || [])
+      notify('success', 'Folder added to workspace')
+    } catch (e) {
+      notify('error', 'Failed to add folder', String((e as Error).message || e))
+    }
+  }
+
+  async function removeWorkspaceFolder(folder: string) {
+    if (!project) return
+    try {
+      const result = await window.munroe.workspaceRemove(project, folder)
+      setWorkspaceFolders(result.config.workspaceFolders || [])
+      notify('info', 'Folder removed from workspace')
+    } catch (e) {
+      notify('error', 'Failed to remove folder', String((e as Error).message || e))
+    }
   }
 
   async function fileToBase64(file: File): Promise<string> {
@@ -381,7 +509,7 @@ export default function App() {
 
   async function loadConversations(cwd: string) {
     try {
-      const [_, projectStatus] = await Promise.all([
+      const [loaded, projectStatus] = await Promise.all([
         window.munroe.loadProject(cwd),
         window.munroe.projectStatus(cwd),
       ])
@@ -392,8 +520,10 @@ export default function App() {
         setPermissions(projectStatus.permissions)
       }
       setStatus(projectStatus)
+      setWorkspaceFolders(loaded.config.workspaceFolders || [])
     } catch {
       setStatus({ model: 'auto', permissions: 'standard', modelLabel: 'Not configured', modelAccessConfigured: false, envLayers: [], runtime: 'missing' })
+      setWorkspaceFolders([])
     }
     const rows = await window.munroe.listConversations(cwd)
     if (rows.length === 0) {
@@ -605,6 +735,16 @@ export default function App() {
           <span><small>PROJECT</small><strong>{project ? project.split('/').pop() : 'Choose project'}</strong></span>
           <ChevronDown size={14} />
         </button>
+        <div className="section-label">WORKSPACE</div>
+        <button className="checkpoint-create" onClick={addWorkspaceFolder}><Folder size={14} /> Add folder</button>
+        <nav className="conversation-list">
+          {workspaceFolders.length === 0 ? <span className="empty-hint">Only the root project</span> : workspaceFolders.map((folder) => (
+            <button key={folder} className="thread-row" title={folder}>
+              <span><Folder size={11} /> <small>{folder.split('/').pop()}</small></span>
+              <button className="thread-delete" onClick={(e) => { e.stopPropagation(); void removeWorkspaceFolder(folder) }}><X size={11} /></button>
+            </button>
+          ))}
+        </nav>
 
         <div className="section-label">CONVERSATIONS</div>
         <nav className="conversation-list">
@@ -639,6 +779,15 @@ export default function App() {
         </nav>
 
         <div className="section-label">CRON {cronStatus && <span className={cronStatus.running ? 'live-dot' : 'live-dot offline'} style={{ marginLeft: 6, verticalAlign: 'middle' }} />}</div>
+        <button className="checkpoint-create" onClick={() => setCronFormOpen((v) => !v)}><Zap size={14} /> {cronFormOpen ? 'Close form' : 'New cron job'}</button>
+        {cronFormOpen && (
+          <div className="cron-form">
+            <input value={cronName} onChange={(e) => setCronName(e.target.value)} placeholder="Name" />
+            <input value={cronSchedule} onChange={(e) => setCronSchedule(e.target.value)} placeholder="Schedule (every 1d or 0 9 * * *)" />
+            <textarea value={cronPrompt} onChange={(e) => setCronPrompt(e.target.value)} placeholder="Prompt / task" rows={3} />
+            <button className="checkpoint-create" onClick={createCronJob}><Zap size={14} /> Create job</button>
+          </div>
+        )}
         <nav className="conversation-list">
           {cronJobs.length === 0 ? <span className="empty-hint">{cronStatus ? cronStatus.message || 'No cron jobs' : 'No cron jobs'}</span> : cronJobs.slice(0, 6).map(job => (
             <div key={job.id} className="cron-row">
@@ -744,6 +893,36 @@ export default function App() {
               <button className="settings-action" onClick={() => refreshThreads()}><RotateCcw size={13} /> Refresh threads</button>
               <button className="settings-action" onClick={() => refreshCheckpoints(project)}><RotateCcw size={13} /> Refresh checkpoints</button>
               <button className="settings-action" onClick={createCheckpoint}><Save size={13} /> Save checkpoint</button>
+              <button className="settings-action" onClick={addWorkspaceFolder}><Folder size={13} /> Add folder</button>
+            </div>
+          </fieldset>
+
+          <fieldset className="settings-group">
+            <legend>Memory</legend>
+            <div className="settings-row"><label>Status</label><span>{memoryStatus?.ok ? 'Connected' : 'Unavailable'}</span></div>
+            <div className="settings-row"><label>Files</label><span>{memoryStatus?.files?.length ?? 0}</span></div>
+            <div className="settings-actions">
+              <button className="settings-action" onClick={refreshSystems}><RotateCcw size={13} /> Refresh</button>
+              {(memoryStatus?.files || []).map((file) => (
+                <button key={file.path} className="settings-action" onClick={() => openMemoryFile(file.path)}>{file.name}</button>
+              ))}
+            </div>
+            {memoryPreview && <pre className="memory-preview">{memoryPreview.slice(0, 1200)}</pre>}
+          </fieldset>
+
+          <fieldset className="settings-group">
+            <legend>Profiles</legend>
+            {profiles.length === 0 ? <p className="settings-hint">No profiles detected</p> : profiles.map((profile) => (
+              <div key={profile.name} className="settings-row"><label>{profile.active ? 'Active' : 'Profile'}</label><span>{profile.name}</span></div>
+            ))}
+          </fieldset>
+
+          <fieldset className="settings-group">
+            <legend>Computer use</legend>
+            <div className="settings-row"><label>Driver</label><span>{computerUse?.installed ? 'Installed' : 'Missing'}</span></div>
+            <p className="settings-hint">{computerUse?.message?.slice(0, 160) || 'Status unknown'}</p>
+            <div className="settings-actions">
+              <button className="settings-action" onClick={runComputerUseDoctor}><ShieldCheck size={13} /> Run doctor</button>
             </div>
           </fieldset>
         </section>}
@@ -810,6 +989,9 @@ export default function App() {
                 <span><Folder size={12} />{project.split('/').pop() || 'No project'}</span>
                 <span><ShieldCheck size={12} />{permissionsLabel}</span>
                 <button type="button" className="attach-btn" onClick={attachFiles} title="Attach files"><Paperclip size={12} /> Attach</button>
+                <button type="button" className={`attach-btn ${listening ? 'listening' : ''}`} onClick={toggleDictation} title="Dictate">
+                  {listening ? <MicOff size={12} /> : <Mic size={12} />} {listening ? 'Stop' : 'Dictate'}
+                </button>
               </div>
               <button className="send" disabled={(!draft.trim() && attachments.length === 0) || busy || status?.runtime !== 'available'} onClick={send}>{busy ? <Square size={14} /> : <Send size={15} />}</button>
             </div>
