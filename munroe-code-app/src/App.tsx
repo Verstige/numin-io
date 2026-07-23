@@ -216,8 +216,10 @@ export default function App() {
         return
       }
       if (event.type === 'usage') {
-        setUsage({ total_tokens: event.tokens, estimated_cost_usd: event.cost })
-        setStreamItems((items) => [...items, { kind: 'usage', tokens: event.tokens, cost: event.cost }])
+        const tokens = Number(event.tokens || 0)
+        const cost = Number(event.cost || 0)
+        setUsage({ total_tokens: tokens, estimated_cost_usd: cost })
+        setStreamItems((items) => [...items, { kind: 'usage', tokens, cost }])
         return
       }
     })
@@ -250,7 +252,7 @@ export default function App() {
   }, [])
 
   function notify(kind: 'info' | 'success' | 'error', title: string, body?: string) {
-    const id = crypto.randomUUID()
+    const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `n-${Date.now()}-${Math.random().toString(16).slice(2)}`
     setNotifications((current) => [...current, { id, kind, title, body, createdAt: Date.now() }])
     window.setTimeout(() => {
       setNotifications((current) => current.filter((item) => item.id !== id))
@@ -627,6 +629,20 @@ export default function App() {
   async function send() {
     const prompt = draft.trim()
     if ((!prompt && attachments.length === 0) || !project || busy) return
+
+    let conversationId = activeId
+    if (!conversationId) {
+      try {
+        const created = await window.munroe.newConversation(project)
+        setConversations((current) => [created, ...current])
+        setActiveId(created.id)
+        conversationId = created.id
+      } catch (e) {
+        setError(String((e as Error).message || e))
+        return
+      }
+    }
+
     const attachmentPaths = attachments.map((item) => item.path)
     const attachmentNote = attachmentPaths.length
       ? `\n\n[Attached files — read these paths with tools if needed]\n${attachmentPaths.map((p) => `- ${p}`).join('\n')}`
@@ -635,24 +651,42 @@ export default function App() {
     const userVisible = attachmentPaths.length
       ? `${prompt || 'Attached files'}${attachmentPaths.map((p) => `\n📎 ${p.split('/').pop()}`).join('')}`
       : prompt
+
     setDraft('')
     setAttachments([])
     setError('')
+    setSlashOpen(false)
     setStreamItems([])
+
     if (prompt.startsWith('/')) {
-      setSlashOpen(false)
       const command = prompt.split(/\s+/)[0]
       try {
+        if (command === '/clear') {
+          await newConversation()
+          return
+        }
+        if (command === '/interrupt') {
+          await interrupt()
+          return
+        }
         const result = await window.munroe.runSlash(command, project)
-        setStreamItems([{ kind: 'agent', text: result.text || `${command} executed.` }])
+        const text = result?.text || `${command} executed.`
+        setStreamItems([{ kind: 'agent', text }])
+        const updated = await window.munroe.appendMessage(project, conversationId, { role: 'user', content: prompt })
+        const withAssistant = await window.munroe.appendMessage(project, conversationId, { role: 'assistant', content: text })
+        setConversations((current) => [withAssistant, ...current.filter((c) => c.id !== withAssistant.id && c.id !== updated.id)])
       } catch (e) {
         setError(String((e as Error).message || e))
+        setStreamItems((items) => [...items, { kind: 'error', message: String((e as Error).message || e) }])
       }
       return
     }
-    const updated = await window.munroe.appendMessage(project, activeId!, { role: 'user', content: userVisible })
-    setConversations((current) => [updated, ...current.filter((c) => c.id !== updated.id)])
+
     try {
+      const updated = await window.munroe.appendMessage(project, conversationId, { role: 'user', content: userVisible })
+      setConversations((current) => [updated, ...current.filter((c) => c.id !== updated.id)])
+      setBusy(true)
+      setTurnStartedAt(Date.now())
       await window.munroe.startTurn({
         cwd: project,
         prompt: fullPrompt,
@@ -664,13 +698,19 @@ export default function App() {
       setBusy(false)
       setActiveTurnId(null)
       setTurnStartedAt(null)
-      setError(String((e as Error).message || e))
+      const message = String((e as Error).message || e)
+      setError(message)
+      setStreamItems((items) => [...items, { kind: 'error', message }])
     }
   }
 
   async function interrupt() {
     if (!activeTurnId) return
-    await window.munroe.interruptTurn(activeTurnId)
+    try {
+      await window.munroe.interruptTurn(activeTurnId)
+    } catch (e) {
+      setError(String((e as Error).message || e))
+    }
   }
 
   async function searchThreads() {
@@ -703,13 +743,68 @@ export default function App() {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
       if (slashOpen) {
+        const match = slashFiltered[0]
+        if (match) {
+          setDraft(match.value)
+          setSlashOpen(false)
+          setSlashQuery('')
+          // Defer send so draft state commits first.
+          window.setTimeout(() => { void sendWithPrompt(match.value) }, 0)
+          return
+        }
         setSlashOpen(false)
-        setDraft('')
-      } else {
-        void send()
       }
+      void send()
     } else if (event.key === '/' && draft === '') {
       setSlashOpen(true)
+    } else if (event.key === 'Escape') {
+      setSlashOpen(false)
+    }
+  }
+
+  async function sendWithPrompt(promptText: string) {
+    setDraft(promptText)
+    // Use a microtask after state update path via direct call:
+    const prompt = promptText.trim()
+    if (!prompt || !project || busy) return
+    setDraft('')
+    setSlashOpen(false)
+    setError('')
+    setStreamItems([])
+    let conversationId = activeId
+    if (!conversationId) {
+      const created = await window.munroe.newConversation(project)
+      setConversations((current) => [created, ...current])
+      setActiveId(created.id)
+      conversationId = created.id
+    }
+    try {
+      if (prompt.startsWith('/')) {
+        const command = prompt.split(/\s+/)[0]
+        if (command === '/clear') {
+          await newConversation()
+          return
+        }
+        const result = await window.munroe.runSlash(command, project)
+        const text = result?.text || `${command} executed.`
+        setStreamItems([{ kind: 'agent', text }])
+        await window.munroe.appendMessage(project, conversationId, { role: 'user', content: prompt })
+        const withAssistant = await window.munroe.appendMessage(project, conversationId, { role: 'assistant', content: text })
+        setConversations((current) => [withAssistant, ...current.filter((c) => c.id !== withAssistant.id)])
+        return
+      }
+      const updated = await window.munroe.appendMessage(project, conversationId, { role: 'user', content: prompt })
+      setConversations((current) => [updated, ...current.filter((c) => c.id !== updated.id)])
+      setBusy(true)
+      setTurnStartedAt(Date.now())
+      await window.munroe.startTurn({ cwd: project, prompt, model, permissions })
+    } catch (e) {
+      setBusy(false)
+      setActiveTurnId(null)
+      setTurnStartedAt(null)
+      const message = String((e as Error).message || e)
+      setError(message)
+      setStreamItems([{ kind: 'error', message }])
     }
   }
 
@@ -945,12 +1040,16 @@ export default function App() {
               <div className="message-body">{message.content}</div>
             </article>)}
             {streamItems.map((item, index) => {
-              if (item.kind === 'agent') return <article key={`agent-${index}`} className="message assistant"><div className="message-meta">MUNROE</div><div className="message-body">{item.text}</div></article>
-              if (item.kind === 'reasoning') return <article key={`reasoning-${index}`} className="message reasoning"><div className="message-meta"><Sparkles size={11} /> REASONING</div><div className="message-body">{item.text}</div></article>
-              if (item.kind === 'command') return <article key={`command-${index}`} className="message tool"><div className="message-meta"><TerminalSquare size={11} /> COMMAND · {item.status}</div><div className="message-body"><pre>{item.command}{'\n'}{item.output.join('\n')}</pre></div></article>
+              if (item.kind === 'agent') return <article key={`agent-${index}`} className="message assistant"><div className="message-meta">MUNROE</div><div className="message-body">{item.text || ''}</div></article>
+              if (item.kind === 'reasoning') return <article key={`reasoning-${index}`} className="message reasoning"><div className="message-meta"><Sparkles size={11} /> REASONING</div><div className="message-body">{item.text || ''}</div></article>
+              if (item.kind === 'command') return <article key={`command-${index}`} className="message tool"><div className="message-meta"><TerminalSquare size={11} /> COMMAND · {item.status}</div><div className="message-body"><pre>{item.command}{'\n'}{(item.output || []).join('\n')}</pre></div></article>
               if (item.kind === 'file') return <article key={`file-${index}`} className="message tool"><div className="message-meta"><GitBranch size={11} /> FILE · {item.change}</div><div className="message-body"><code>{item.path}</code></div></article>
-              if (item.kind === 'plan') return <article key={`plan-${index}`} className="message plan"><div className="message-meta">PLAN</div><ol>{item.steps.map((s, i) => <li key={i}>{s}</li>)}</ol></article>
-              if (item.kind === 'usage') return <article key={`usage-${index}`} className="message usage"><div className="message-meta">USAGE</div><div className="message-body">{item.tokens.toLocaleString()} tokens · ${item.cost.toFixed(4)}</div></article>
+              if (item.kind === 'plan') return <article key={`plan-${index}`} className="message plan"><div className="message-meta">PLAN</div><ol>{(item.steps || []).map((s, i) => <li key={i}>{s}</li>)}</ol></article>
+              if (item.kind === 'usage') {
+                const tokens = Number(item.tokens || 0)
+                const cost = Number(item.cost || 0)
+                return <article key={`usage-${index}`} className="message usage"><div className="message-meta">USAGE</div><div className="message-body">{tokens.toLocaleString()} tokens · ${cost.toFixed(4)}</div></article>
+              }
               return <article key={`error-${index}`} className="message error"><div className="message-meta">ERROR</div><div className="message-body">{item.kind === 'error' ? item.message : ''}</div></article>
             })}
             <div ref={bottomRef} />
