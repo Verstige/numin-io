@@ -8,7 +8,12 @@ This is the source of truth for what's shipped, what's pending, and what decisio
 
 ## What is Munroe
 
-Munroe is an AI agent platform. Customers buy a subscription; we provision a private Linux cloud computer running the Hermes agent, wire it to one of four messaging channels (iMessage / Telegram / WhatsApp / Discord), and the agent runs 24/7 doing work for them. The customer never sees the LLM behind it (we default to MiniMax for cost; you can bring your own key). Customers name their own agent.
+Munroe is an AI software company with two connected products:
+
+- **Munroe Code** — a persistent agent runtime installed on a private Linux cloud computer or a customer-owned local computer. It handles skills, automations, scheduled work, memory, browser/computer use, and messaging channels.
+- **Munroe Chat** — a browser-based AI workspace for conversations, files, knowledge, voice, models, and team collaboration. It connects to Munroe Code when work must continue beyond the browser session.
+
+Customers can use either product through **Cloud** (managed by Munroe) or **Local** (installed on customer-controlled infrastructure). Customers name their own agent. Customer-facing surfaces never expose internal runtime or model-provider brands.
 
 The brand promise: Munroe **finds the signal in the noise.** The platform markets six inherited disciplines (scored decisions, liveness, separate reviewer, real "done" definition, reusable code, layered memory) that ship as defaults — no opt-in required.
 
@@ -28,6 +33,8 @@ The brand mark is a **constellation** — peak + cardinal ticks + focal dot, gol
 ---
 
 ## Live NOW
+
+- **Munroe Code v1.0**: complete local product with CLI + signed native macOS application. The global `munroe` executable initializes and resumes project workspaces, runs one-shot coding tasks, exposes setup/status/projects/model/permissions/doctor/app commands, routes model policies (`auto`, `minimax`, `kimi`), and shares `.munroe/` project state with the desktop app. The Munroe Code desktop app provides project selection, persistent conversations, native chat, model switching, Safe/Standard permissions, usage metadata, and a context-isolated Electron bridge. Packaged app: `munroe-code-app/release/mac/Munroe Code.app` (`ai.munroe.code`), signed with Apple Development identity. Real desktop model invocation returned `MUNROE_DESKTOP_LIVE`. Verification: 10 CLI/service tests, TypeScript checks, Vite production build, zero production npm vulnerabilities, security sentinels, code-sign inspection, visual QA, and persisted conversation reload.
 
 - **Landing page**: `https://verstige.github.io/numin-io/` — fully rebranded to Munroe, 17 sections, GSAP-driven card animations, Constellation mark in nav, mobile-responsive.
 
@@ -61,6 +68,13 @@ The brand mark is a **constellation** — peak + cardinal ticks + focal dot, gol
 | Onboarding form | `onboarding/index.html` | Action target — currently points at `formspree.io/f/your-form-id` placeholder |
 | Provisioning script | `scripts/provision.sh` | Operator-side bash: Orgo API + Supabase + Telegram bot token |
 | ToS / Privacy / Refund | `legal/` | Drafts in plain language. Lawyer review needed before any public-facing link. |
+| Munroe Chat product brief | `docs/MUNROE-CHAT.md` | Open WebUI foundation audited; local proof-of-concept and commercial branding rights still required. |
+
+### Munroe Chat licensing gate
+
+Open WebUI is the selected foundation for the initial Munroe Chat proof of concept. Its current license requires the `Open WebUI` branding to remain unless the deployment has no more than 50 end users in a rolling 30-day period, the copyright holder gives written permission, or Munroe obtains an enterprise license permitting rebranding.
+
+**Do not ship a broadly white-labeled Munroe Chat fork without written branding rights.** Until then, keep required attribution, limit use to internal/pilot validation, or build an independent UI against Munroe Code and model APIs. See `docs/MUNROE-CHAT.md` for the architecture and release phases.
 
 ---
 

@@ -1,0 +1,55 @@
+{
+  "name": "munroe-code-app",
+  "productName": "Munroe Code",
+  "version": "1.0.0",
+  "description": "Native Munroe Code workspace",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "concurrently -k \"vite --host 127.0.0.1 --port 5177\" \"wait-on http://127.0.0.1:5177 && cross-env MUNROE_DEV_SERVER=http://127.0.0.1:5177 electron .\"",
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "typecheck": "tsc -p . --noEmit",
+    "test": "vitest run",
+    "pack": "npm run build && electron-builder --dir",
+    "dist:mac": "npm run build && electron-builder --mac"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
+    "vite": "^8.0.10",
+    "typescript": "^5.7.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "lucide-react": "^0.468.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
+    "vitest": "^4.1.10",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "ai.munroe.code",
+    "productName": "Munroe Code",
+    "executableName": "Munroe Code",
+    "artifactName": "Munroe-Code-${version}-${os}-${arch}.${ext}",
+    "icon": "build/icon.icns",
+    "directories": { "output": "release" },
+    "files": ["dist/**", "electron/**", "package.json"],
+    "extraResources": [
+      { "from": "../munroe-code-cli", "to": "munroe-code-cli", "filter": ["bin/**", "src/**", "package.json", "README.md"] }
+    ],
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "target": ["dir", "zip"]
+    }
+  }
+}

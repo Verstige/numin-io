@@ -1,8 +1,11 @@
 # Munroe
 
-Munroe is an AI agent platform. You buy a subscription, we provision a private virtual computer running your agent, wire it to your messaging app of choice, and your agent does work for you 24/7.
+Munroe is an AI software company with two connected products:
 
-It learns your voice. Every week we ship new skills you can teach it.
+- **Munroe Code** — a persistent agent runtime that handles skills, automations, memory, scheduled work, computer use, and messaging channels.
+- **Munroe Chat** — a browser-based AI workspace for conversations, documents, knowledge, voice, and team collaboration.
+
+Both products can be delivered through **Munroe Cloud** as a managed service or installed **locally** on customer-controlled infrastructure.
 
 ## Quick start
 
@@ -12,8 +15,24 @@ It learns your voice. Every week we ship new skills you can teach it.
 ## Repo layout
 
 ```
-docs/                ← the live marketing landing (single self-contained HTML)
+docs/                ← live marketing site and product documentation
   index.html
+  MUNROE-CHAT.md      ← Munroe Chat product, licensing, architecture, and release brief
+
+munroe-code-cli/     ← installable Munroe Code terminal product
+  bin/munroe.js
+  src/
+  test/
+
+munroe-code-app/     ← native Munroe Code chat application
+  electron/
+  src/
+  release/mac/Munroe Code.app
+
+chat/                ← legacy Open WebUI experiment; not the core Munroe product
+  compose.yaml
+  .env.example
+  README.md
 
 dashboard/           ← customer-facing UI (host separately when accounts ready)
   index.html

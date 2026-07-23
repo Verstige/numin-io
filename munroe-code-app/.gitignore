@@ -1,0 +1,10 @@
+node_modules/
+release/mac/
+dist/
+out/
+*.tsbuildinfo
+*.d.ts
+.vite/
+.tmp/
+.munroe/conversations.json
+.munroe/usage/

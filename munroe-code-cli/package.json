@@ -1,0 +1,30 @@
+{
+  "name": "@munroe/code",
+  "version": "1.0.0",
+  "description": "Munroe Code — an agentic coding workspace for your terminal",
+  "type": "module",
+  "bin": {
+    "munroe": "./bin/munroe.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "lint": "node --check bin/munroe.js && node --check src/config.js && node --check src/runtime.js && node --check src/service.js && node --check src/cli.js",
+    "verify": "npm run lint && npm test && npm pack --dry-run"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "munroe",
+    "coding-agent",
+    "ai",
+    "cli"
+  ],
+  "license": "UNLICENSED",
+  "private": true
+}
