@@ -133,6 +133,14 @@ export default function App() {
   const [credentials, setCredentials] = useState<CredentialsStatus | null>(null)
   const [credentialDrafts, setCredentialDrafts] = useState<Record<string, string>>({})
   const [credentialsBusy, setCredentialsBusy] = useState(false)
+  const [sidebarTabs, setSidebarTabs] = useState<Record<string, boolean>>({
+    conversations: true,
+    workspace: false,
+    threads: false,
+    checkpoints: false,
+    cron: false,
+    tools: true,
+  })
   const recognitionRef = useRef<any>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const composerRef = useRef<HTMLTextAreaElement>(null)
@@ -1003,6 +1011,10 @@ export default function App() {
     : `Credentials: ${status!.envLayers.join(', ')}`
   const slashFiltered = SLASH_COMMANDS.filter((c) => c.value.startsWith(slashQuery || '/'))
 
+  function toggleSidebarTab(id: string) {
+    setSidebarTabs((current) => ({ ...current, [id]: !current[id] }))
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -1014,90 +1026,188 @@ export default function App() {
         <button className="new-chat" onClick={newConversation}><MessageSquarePlus size={16} /> New conversation</button>
 
         <button className="project-picker" onClick={chooseProject}>
-          <FolderOpen size={16} />
+          <span className="tab-emoji" aria-hidden>📂</span>
           <span><small>PROJECT</small><strong>{project ? project.split('/').pop() : 'Choose project'}</strong></span>
           <ChevronDown size={14} />
         </button>
-        <div className="section-label">WORKSPACE</div>
-        <button className="checkpoint-create" onClick={addWorkspaceFolder}><Folder size={14} /> Add folder</button>
-        <nav className="conversation-list">
-          {workspaceFolders.length === 0 ? <span className="empty-hint">Only the root project</span> : workspaceFolders.map((folder) => (
-            <button key={folder} className="thread-row" title={folder}>
-              <span><Folder size={11} /> <small>{folder.split('/').pop()}</small></span>
-              <button className="thread-delete" onClick={(e) => { e.stopPropagation(); void removeWorkspaceFolder(folder) }}><X size={11} /></button>
-            </button>
-          ))}
-        </nav>
 
-        <div className="section-label">CONVERSATIONS</div>
-        <nav className="conversation-list">
-          {conversations.map(item => (
-            <button key={item.id} className={item.id === activeId ? 'active' : ''} onClick={() => setActiveId(item.id)}>
-              <span>{item.title}</span><small>{new Date(item.updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</small>
+        <div className="sidebar-scroll">
+          <section className={`sidebar-tab ${sidebarTabs.conversations ? 'open' : ''}`}>
+            <button type="button" className="sidebar-tab-head" onClick={() => toggleSidebarTab('conversations')}>
+              <span className="tab-emoji" aria-hidden>💬</span>
+              <span className="tab-title">Conversations</span>
+              <span className="tab-count">{conversations.length}</span>
+              <ChevronDown size={13} className="tab-chevron" />
             </button>
-          ))}
-        </nav>
-
-        <div className="section-label">THREADS</div>
-        <div className="thread-search-row">
-          <input value={threadSearch} onChange={e => setThreadSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchThreads()} placeholder="Search threads…" />
-        </div>
-        <nav className="conversation-list">
-          {threads.length === 0 ? <span className="empty-hint">No past threads</span> : threads.map(t => (
-            <button key={t.id} className="thread-row">
-              <span><small>{t.title || t.id}</small></span>
-              <button className="thread-delete" onClick={(e) => { e.stopPropagation(); deleteThread(t.id) }}><X size={11} /></button>
-            </button>
-          ))}
-        </nav>
-
-        <div className="section-label">CHECKPOINTS</div>
-        <button className="checkpoint-create" onClick={createCheckpoint}><Save size={14} /> Save checkpoint</button>
-        <nav className="conversation-list">
-          {checkpoints.length === 0 ? <span className="empty-hint">No checkpoints yet</span> : checkpoints.map((cp, idx) => (
-            <button key={idx} className="thread-row" onClick={() => cp.label && rollbackCheckpoint(cp.label)}>
-              <span><RotateCcw size={11} /> <small>{cp.label}</small></span>
-            </button>
-          ))}
-        </nav>
-
-        <div className="section-label">CRON {cronStatus && <span className={cronStatus.running ? 'live-dot' : 'live-dot offline'} style={{ marginLeft: 6, verticalAlign: 'middle' }} />}</div>
-        <button className="checkpoint-create" onClick={() => setCronFormOpen((v) => !v)}><Zap size={14} /> {cronFormOpen ? 'Close form' : 'New cron job'}</button>
-        {cronFormOpen && (
-          <div className="cron-form">
-            <input value={cronName} onChange={(e) => setCronName(e.target.value)} placeholder="Name" />
-            <input value={cronSchedule} onChange={(e) => setCronSchedule(e.target.value)} placeholder="Schedule (every 1d or 0 9 * * *)" />
-            <textarea value={cronPrompt} onChange={(e) => setCronPrompt(e.target.value)} placeholder="Prompt / task" rows={3} />
-            <button className="checkpoint-create" onClick={createCronJob}><Zap size={14} /> Create job</button>
-          </div>
-        )}
-        <nav className="conversation-list">
-          {cronJobs.length === 0 ? <span className="empty-hint">{cronStatus ? cronStatus.message || 'No cron jobs' : 'No cron jobs'}</span> : cronJobs.slice(0, 6).map(job => (
-            <div key={job.id} className="cron-row">
-              <div className="cron-row-head">
-                <span className={job.status === 'active' ? 'live-dot' : 'live-dot offline'} />
-                <small>{job.name || job.id}</small>
+            {sidebarTabs.conversations && (
+              <div className="sidebar-tab-body">
+                <nav className="conversation-list">
+                  {conversations.length === 0 ? (
+                    <span className="empty-hint">No conversations yet</span>
+                  ) : conversations.map(item => (
+                    <button key={item.id} className={item.id === activeId ? 'active' : ''} onClick={() => setActiveId(item.id)}>
+                      <span>{item.title}</span>
+                      <small>{new Date(item.updatedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</small>
+                    </button>
+                  ))}
+                </nav>
               </div>
-              <small className="cron-schedule">{job.schedule || 'no schedule'}</small>
-              <div className="cron-actions">
-                {job.status === 'active' ? (
-                  <button onClick={() => pauseCron(job.id)} title="Pause"><Pause size={10} /></button>
-                ) : (
-                  <button onClick={() => resumeCron(job.id)} title="Resume"><Play size={10} /></button>
+            )}
+          </section>
+
+          <section className={`sidebar-tab ${sidebarTabs.workspace ? 'open' : ''}`}>
+            <button type="button" className="sidebar-tab-head" onClick={() => toggleSidebarTab('workspace')}>
+              <span className="tab-emoji" aria-hidden>🗂️</span>
+              <span className="tab-title">Workspace</span>
+              <span className="tab-count">{workspaceFolders.length}</span>
+              <ChevronDown size={13} className="tab-chevron" />
+            </button>
+            {sidebarTabs.workspace && (
+              <div className="sidebar-tab-body">
+                <button className="checkpoint-create" onClick={addWorkspaceFolder}><Folder size={14} /> Add folder</button>
+                <nav className="conversation-list">
+                  {workspaceFolders.length === 0 ? (
+                    <span className="empty-hint">Only the root project</span>
+                  ) : workspaceFolders.map((folder) => (
+                    <button key={folder} className="thread-row" title={folder}>
+                      <span><Folder size={11} /> <small>{folder.split('/').pop()}</small></span>
+                      <button className="thread-delete" onClick={(e) => { e.stopPropagation(); void removeWorkspaceFolder(folder) }}><X size={11} /></button>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            )}
+          </section>
+
+          <section className={`sidebar-tab ${sidebarTabs.threads ? 'open' : ''}`}>
+            <button type="button" className="sidebar-tab-head" onClick={() => toggleSidebarTab('threads')}>
+              <span className="tab-emoji" aria-hidden>🧵</span>
+              <span className="tab-title">Threads</span>
+              <span className="tab-count">{threads.length}</span>
+              <ChevronDown size={13} className="tab-chevron" />
+            </button>
+            {sidebarTabs.threads && (
+              <div className="sidebar-tab-body">
+                <div className="thread-search-row">
+                  <input value={threadSearch} onChange={e => setThreadSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchThreads()} placeholder="Search threads…" />
+                </div>
+                <nav className="conversation-list">
+                  {threads.length === 0 ? (
+                    <span className="empty-hint">No past threads</span>
+                  ) : threads.map(t => (
+                    <button key={t.id} className="thread-row">
+                      <span><small>{t.title || t.id}</small></span>
+                      <button className="thread-delete" onClick={(e) => { e.stopPropagation(); deleteThread(t.id) }}><X size={11} /></button>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            )}
+          </section>
+
+          <section className={`sidebar-tab ${sidebarTabs.checkpoints ? 'open' : ''}`}>
+            <button type="button" className="sidebar-tab-head" onClick={() => toggleSidebarTab('checkpoints')}>
+              <span className="tab-emoji" aria-hidden>💾</span>
+              <span className="tab-title">Checkpoints</span>
+              <span className="tab-count">{checkpoints.length}</span>
+              <ChevronDown size={13} className="tab-chevron" />
+            </button>
+            {sidebarTabs.checkpoints && (
+              <div className="sidebar-tab-body">
+                <button className="checkpoint-create" onClick={createCheckpoint}><Save size={14} /> Save checkpoint</button>
+                <nav className="conversation-list">
+                  {checkpoints.length === 0 ? (
+                    <span className="empty-hint">No checkpoints yet</span>
+                  ) : checkpoints.map((cp, idx) => (
+                    <button key={idx} className="thread-row" onClick={() => cp.label && rollbackCheckpoint(cp.label)}>
+                      <span><RotateCcw size={11} /> <small>{cp.label}</small></span>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            )}
+          </section>
+
+          <section className={`sidebar-tab ${sidebarTabs.cron ? 'open' : ''}`}>
+            <button type="button" className="sidebar-tab-head" onClick={() => toggleSidebarTab('cron')}>
+              <span className="tab-emoji" aria-hidden>⏰</span>
+              <span className="tab-title">Cron</span>
+              {cronStatus && <span className={cronStatus.running ? 'live-dot' : 'live-dot offline'} />}
+              <span className="tab-count">{cronJobs.length}</span>
+              <ChevronDown size={13} className="tab-chevron" />
+            </button>
+            {sidebarTabs.cron && (
+              <div className="sidebar-tab-body">
+                <button className="checkpoint-create" onClick={() => setCronFormOpen((v) => !v)}><Zap size={14} /> {cronFormOpen ? 'Close form' : 'New cron job'}</button>
+                {cronFormOpen && (
+                  <div className="cron-form">
+                    <input value={cronName} onChange={(e) => setCronName(e.target.value)} placeholder="Name" />
+                    <input value={cronSchedule} onChange={(e) => setCronSchedule(e.target.value)} placeholder="Schedule (every 1d or 0 9 * * *)" />
+                    <textarea value={cronPrompt} onChange={(e) => setCronPrompt(e.target.value)} placeholder="Prompt / task" rows={3} />
+                    <button className="checkpoint-create" onClick={createCronJob}><Zap size={14} /> Create job</button>
+                  </div>
                 )}
-                <button onClick={() => runCron(job.id)} title="Run now"><Zap size={10} /></button>
-                <button onClick={() => deleteCron(job.id)} title="Remove" className="danger"><Trash2 size={10} /></button>
+                <nav className="conversation-list">
+                  {cronJobs.length === 0 ? (
+                    <span className="empty-hint">{cronStatus ? cronStatus.message || 'No cron jobs' : 'No cron jobs'}</span>
+                  ) : cronJobs.slice(0, 8).map(job => (
+                    <div key={job.id} className="cron-row">
+                      <div className="cron-row-head">
+                        <span className={job.status === 'active' ? 'live-dot' : 'live-dot offline'} />
+                        <small>{job.name || job.id}</small>
+                      </div>
+                      <small className="cron-schedule">{job.schedule || 'no schedule'}</small>
+                      <div className="cron-actions">
+                        {job.status === 'active' ? (
+                          <button onClick={() => pauseCron(job.id)} title="Pause"><Pause size={10} /></button>
+                        ) : (
+                          <button onClick={() => resumeCron(job.id)} title="Resume"><Play size={10} /></button>
+                        )}
+                        <button onClick={() => runCron(job.id)} title="Run now"><Zap size={10} /></button>
+                        <button onClick={() => deleteCron(job.id)} title="Remove" className="danger"><Trash2 size={10} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </nav>
               </div>
-            </div>
-          ))}
-        </nav>
+            )}
+          </section>
+
+          <section className={`sidebar-tab ${sidebarTabs.tools ? 'open' : ''}`}>
+            <button type="button" className="sidebar-tab-head" onClick={() => toggleSidebarTab('tools')}>
+              <span className="tab-emoji" aria-hidden>🧰</span>
+              <span className="tab-title">Tools</span>
+              <ChevronDown size={13} className="tab-chevron" />
+            </button>
+            {sidebarTabs.tools && (
+              <div className="sidebar-tab-body tools-list">
+                <button type="button" onClick={() => setPaletteOpen(true)}>
+                  <span className="tab-emoji" aria-hidden>⌨️</span>
+                  <span>Command palette</span>
+                  <small>⌘K</small>
+                </button>
+                <button type="button" onClick={() => { setMcpOpen((v) => !v); setSettingsOpen(false); if (!mcpOpen) void refreshMcp() }}>
+                  <span className="tab-emoji" aria-hidden>🔌</span>
+                  <span>MCP connections</span>
+                </button>
+                <button type="button" onClick={() => { setSettingsOpen((v) => !v); setMcpOpen(false) }}>
+                  <span className="tab-emoji" aria-hidden>⚙️</span>
+                  <span>Settings</span>
+                </button>
+                <button type="button" onClick={openAbout}>
+                  <span className="tab-emoji" aria-hidden>ℹ️</span>
+                  <span>About</span>
+                </button>
+              </div>
+            )}
+          </section>
+        </div>
 
         <div className="sidebar-bottom">
-          <div className="status-line"><span className={status?.runtime === 'available' ? 'live-dot' : 'live-dot offline'} /> {runtimeLabel}</div>
-          <button onClick={() => setPaletteOpen(true)}><Search size={15} /> Command palette <small>⌘K</small></button>
-          <button onClick={() => { setMcpOpen((v) => !v); setSettingsOpen(false); if (!mcpOpen) void refreshMcp() }}><Plug size={15} /> MCP connections</button>
-          <button onClick={() => { setSettingsOpen((v) => !v); setMcpOpen(false) }}><Settings2 size={15} /> Settings</button>
-          <button onClick={openAbout}><Info size={15} /> About</button>
+          <div className="status-line">
+            <span className={status?.runtime === 'available' ? 'live-dot' : 'live-dot offline'} />
+            {runtimeLabel}
+          </div>
         </div>
       </aside>
 
