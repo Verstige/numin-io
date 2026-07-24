@@ -139,7 +139,14 @@ export async function startTurn(options) {
   let stderrText = '';
   const task = (async () => {
     try {
-      options.onEvent({ type: 'turnStarted', turnId });
+      const emit = async (payload) => {
+        try {
+          await Promise.resolve(options.onEvent(payload));
+        } catch {
+          // Event listeners must never kill the turn.
+        }
+      };
+      await emit({ type: 'turnStarted', turnId });
       child = spawn(invocation.command, invocation.args, {
         cwd: invocation.cwd,
         env: {
@@ -160,7 +167,7 @@ export async function startTurn(options) {
           if (!trimmed && !line.includes('\n')) continue;
           const delta = `${trimmed}\n`;
           fullText += delta;
-          options.onEvent({ type: 'agentMessageDelta', delta });
+          void emit({ type: 'agentMessageDelta', delta });
         }
       };
       child.stdout.on('data', (chunk) => {
@@ -171,7 +178,7 @@ export async function startTurn(options) {
         if (aborted) return;
         const text = chunk.toString('utf8');
         stderrText += text;
-        options.onEvent({ type: 'commandExecOutput', toolCallId: 'runtime', stream: 'stderr', chunk: text });
+        void emit({ type: 'commandExecOutput', toolCallId: 'runtime', stream: 'stderr', chunk: text });
       });
       const code = await new Promise((resolve) => {
         if (!child) return resolve(-1);
@@ -183,16 +190,16 @@ export async function startTurn(options) {
       });
       if (buffer.trim()) {
         fullText += buffer.trim();
-        options.onEvent({ type: 'agentMessageDelta', delta: buffer.trim() });
+        await emit({ type: 'agentMessageDelta', delta: buffer.trim() });
       }
       if (aborted) {
-        options.onEvent({ type: 'turnInterrupted' });
+        await emit({ type: 'turnInterrupted' });
         return;
       }
       const after = await snapshotWithHashes(options.cwd);
       const changes = await diffGitSnapshots(before, after);
       for (const change of changes) {
-        options.onEvent({ type: 'fileChange', path: change.path, kind: change.kind });
+        await emit({ type: 'fileChange', path: change.path, kind: change.kind });
       }
       let usage = null;
       if (usagePath) {
@@ -206,26 +213,30 @@ export async function startTurn(options) {
         }
       }
       if (usage) {
-        options.onEvent({ type: 'usage', tokens: usage.total_tokens ?? 0, cost: usage.estimated_cost_usd ?? 0 });
+        await emit({ type: 'usage', tokens: usage.total_tokens ?? 0, cost: usage.estimated_cost_usd ?? 0 });
       }
       const text = fullText.trim();
       if (code === 0 && text) {
-        options.onEvent({ type: 'turnCompleted', text, sessionId });
+        await emit({ type: 'turnCompleted', text, sessionId });
       } else if (code === 0 && !text) {
         const detail = stderrText.trim().slice(0, 500);
-        options.onEvent({
+        await emit({
           type: 'turnFailed',
           message: detail || 'Model returned an empty response. Check your API key in Settings → AI providers.',
         });
       } else {
         const detail = stderrText.trim().slice(0, 500);
-        options.onEvent({
+        await emit({
           type: 'turnFailed',
           message: detail || `Runtime exited with code ${code}`,
         });
       }
     } catch (error) {
-      options.onEvent({ type: 'turnFailed', message: String(error instanceof Error ? error.message : error) });
+      try {
+        await Promise.resolve(options.onEvent({ type: 'turnFailed', message: String(error instanceof Error ? error.message : error) }));
+      } catch {
+        // ignore
+      }
     }
   })();
   void task;

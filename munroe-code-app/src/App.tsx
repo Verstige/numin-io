@@ -44,28 +44,38 @@ type StreamItem =
   | { kind: 'error'; message: string }
 
 function mergeAgent(items: StreamItem[], text: string): StreamItem[] {
-  if (!items.length) return [{ kind: 'agent', text }]
+  const chunk = typeof text === 'string' ? text : String(text ?? '')
+  if (!chunk) return items
+  if (!items.length) return [{ kind: 'agent', text: chunk }]
   const last = items[items.length - 1]
-  if (last.kind === 'agent') return [...items.slice(0, -1), { kind: 'agent', text: last.text + text }]
-  return [...items, { kind: 'agent', text }]
+  if (last.kind === 'agent') return [...items.slice(0, -1), { kind: 'agent', text: last.text + chunk }]
+  return [...items, { kind: 'agent', text: chunk }]
 }
 
 function mergeReasoning(items: StreamItem[], text: string): StreamItem[] {
-  if (!items.length) return [{ kind: 'reasoning', text }]
+  const chunk = typeof text === 'string' ? text : String(text ?? '')
+  if (!chunk) return items
+  if (!items.length) return [{ kind: 'reasoning', text: chunk }]
   const last = items[items.length - 1]
-  if (last.kind === 'reasoning') return [...items.slice(0, -1), { kind: 'reasoning', text: last.text + text }]
-  return [...items, { kind: 'reasoning', text }]
+  if (last.kind === 'reasoning') return [...items.slice(0, -1), { kind: 'reasoning', text: last.text + chunk }]
+  return [...items, { kind: 'reasoning', text: chunk }]
 }
 
 function mergeCommandOutput(items: StreamItem[], toolCallId: string, chunk: string, stream: 'stdout' | 'stderr'): StreamItem[] {
+  // Ignore noisy runtime stderr stream unless we already opened a command card.
+  const id = toolCallId || 'runtime'
+  const text = typeof chunk === 'string' ? chunk : String(chunk ?? '')
+  if (!text) return items
   const next = [...items]
-  let idx = next.findIndex((item) => item.kind === 'command' && item.toolCallId === toolCallId)
+  let idx = next.findIndex((item) => item.kind === 'command' && item.toolCallId === id)
   if (idx < 0) {
-    next.push({ kind: 'command', toolCallId, command: toolCallId, status: 'running', output: [] })
+    if (id === 'runtime' && stream === 'stderr') return items
+    next.push({ kind: 'command', toolCallId: id, command: id, status: 'running', output: [] })
     idx = next.length - 1
   }
   const cmd = next[idx] as Extract<StreamItem, { kind: 'command' }>
-  next[idx] = { ...cmd, output: [...cmd.output, `[${stream}] ${chunk}`] }
+  const output = [...(cmd.output || []), `[${stream}] ${text}`].slice(-80)
+  next[idx] = { ...cmd, output }
   return next
 }
 
@@ -150,7 +160,7 @@ export default function App() {
   activeIdRef.current = activeId
 
   const active = useMemo(() => conversations.find((c) => c.id === activeId) ?? null, [conversations, activeId])
-  const messages = active?.messages ?? []
+  const messages = Array.isArray(active?.messages) ? active!.messages : []
 
   useEffect(() => {
     window.munroe.bootstrap().then(async (data) => {
@@ -173,100 +183,118 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = window.munroe.onTurnEvent((event) => {
-      if (event.type === 'turnStarted') {
-        setActiveTurnId(event.turnId)
-        setBusy(true)
-        setError('')
-        setStreamItems([])
-        setTurnStartedAt(Date.now())
-        return
-      }
-      if (event.type === 'turnCompleted') {
-        setBusy(false)
-        setActiveTurnId(null)
-        setTurnStartedAt(null)
-        const cwd = projectRef.current
-        const convId = activeIdRef.current
-        const text = event.text?.trim()
-        if (!text) {
-          const message = 'Model returned an empty response. Check Settings → AI providers & API keys.'
-          setError(message)
-          setStreamItems((items) => [...items, { kind: 'error', message }])
-          notify('error', 'No response', message)
+      try {
+        if (!event || typeof event !== 'object' || !event.type) return
+        if (event.type === 'turnStarted') {
+          setActiveTurnId(event.turnId)
+          setBusy(true)
+          setError('')
+          setStreamItems([])
+          setTurnStartedAt(Date.now())
           return
         }
-        notify('success', 'Turn completed')
-        if (cwd && convId) {
-          void window.munroe.appendMessage(cwd, convId, { role: 'assistant', content: text }).then((updated) => {
-            setConversations((current) => [updated, ...current.filter((c) => c.id !== updated.id)])
+        if (event.type === 'turnCompleted') {
+          setBusy(false)
+          setActiveTurnId(null)
+          setTurnStartedAt(null)
+          const text = typeof event.text === 'string' ? event.text.trim() : ''
+          if (!text) {
+            const message = 'Model returned an empty response. Check Settings → AI providers & API keys.'
+            setError(message)
+            setStreamItems((items) => [...items, { kind: 'error', message }])
+            notify('error', 'No response', message)
+            return
+          }
+          notify('success', 'Turn completed')
+          // Prefer conversation already persisted by main process.
+          const persisted = (event as { conversation?: Conversation }).conversation
+          if (persisted && persisted.id) {
+            setConversations((current) => [persisted, ...current.filter((c) => c.id !== persisted.id)])
             setStreamItems([])
-          }).catch((e) => {
+            return
+          }
+          if ((event as { persistError?: string }).persistError) {
+            setError(String((event as { persistError?: string }).persistError))
+          }
+          const cwd = projectRef.current
+          const convId = activeIdRef.current || (event as { conversationId?: string }).conversationId
+          if (cwd && convId) {
+            void window.munroe.appendMessage(cwd, convId, { role: 'assistant', content: text }).then((updated) => {
+              setConversations((current) => [updated, ...current.filter((c) => c.id !== updated.id)])
+              setStreamItems([])
+            }).catch((e) => {
+              setStreamItems((items) => {
+                const hasAgent = items.some((item) => item.kind === 'agent')
+                return hasAgent ? items : [...items, { kind: 'agent', text }]
+              })
+              setError(String((e as Error).message || e))
+            })
+          } else {
             setStreamItems((items) => {
               const hasAgent = items.some((item) => item.kind === 'agent')
-              return hasAgent ? items : [...items, { kind: 'agent', text }]
+              return hasAgent ? items : [{ kind: 'agent', text }]
             })
-            setError(String((e as Error).message || e))
-          })
-        } else {
-          setStreamItems((items) => {
-            const hasAgent = items.some((item) => item.kind === 'agent')
-            return hasAgent ? items : [{ kind: 'agent', text }]
-          })
+          }
+          return
         }
-        return
-      }
-      if (event.type === 'turnFailed') {
+        if (event.type === 'turnFailed') {
+          setBusy(false)
+          setActiveTurnId(null)
+          setTurnStartedAt(null)
+          const message = String(event.message || 'Turn failed')
+          setError(message)
+          setStreamItems((items) => [...items, { kind: 'error', message }])
+          notify('error', 'Turn failed', message)
+          return
+        }
+        if (event.type === 'turnInterrupted') {
+          setBusy(false)
+          setActiveTurnId(null)
+          setTurnStartedAt(null)
+          notify('info', 'Turn interrupted')
+          setStreamItems((items) => [...items, { kind: 'error', message: 'Interrupted' }])
+          return
+        }
+        if (event.type === 'agentMessageDelta') {
+          setStreamItems((items) => mergeAgent(items, event.delta))
+          return
+        }
+        if (event.type === 'reasoningDelta') {
+          setStreamItems((items) => mergeReasoning(items, event.delta))
+          return
+        }
+        if (event.type === 'commandExecBegin') {
+          setStreamItems((items) => [...items, { kind: 'command', toolCallId: event.toolCallId || 'cmd', command: event.command || '', status: 'running', output: [] }])
+          return
+        }
+        if (event.type === 'commandExecOutput') {
+          setStreamItems((items) => mergeCommandOutput(items, event.toolCallId, event.chunk, event.stream === 'stderr' ? 'stderr' : 'stdout'))
+          return
+        }
+        if (event.type === 'commandExecEnd') {
+          setStreamItems((items) => items.map((item) => item.kind === 'command' && item.toolCallId === event.toolCallId ? { ...item, status: event.status || 'ok' } : item))
+          return
+        }
+        if (event.type === 'fileChange') {
+          setStreamItems((items) => [...items, { kind: 'file', path: event.path || '', change: event.kind || 'modified' }])
+          return
+        }
+        if (event.type === 'planProposed') {
+          const steps = Array.isArray(event.steps) ? event.steps.map((s) => String(s)) : []
+          setStreamItems((items) => [...items, { kind: 'plan', steps }])
+          return
+        }
+        if (event.type === 'usage') {
+          const tokens = Number(event.tokens || 0)
+          const cost = Number(event.cost || 0)
+          setUsage({ total_tokens: Number.isFinite(tokens) ? tokens : 0, estimated_cost_usd: Number.isFinite(cost) ? cost : 0 })
+          setStreamItems((items) => [...items, { kind: 'usage', tokens: Number.isFinite(tokens) ? tokens : 0, cost: Number.isFinite(cost) ? cost : 0 }])
+          return
+        }
+      } catch (err) {
+        console.error('Turn event handler failed', err, event)
         setBusy(false)
-        setActiveTurnId(null)
-        setTurnStartedAt(null)
-        setError(event.message)
-        setStreamItems((items) => [...items, { kind: 'error', message: event.message }])
-        notify('error', 'Turn failed', event.message)
-        return
-      }
-      if (event.type === 'turnInterrupted') {
-        setBusy(false)
-        setActiveTurnId(null)
-        setTurnStartedAt(null)
-        notify('info', 'Turn interrupted')
-        setStreamItems((items) => [...items, { kind: 'error', message: 'Interrupted' }])
-        return
-      }
-      if (event.type === 'agentMessageDelta') {
-        setStreamItems((items) => mergeAgent(items, event.delta))
-        return
-      }
-      if (event.type === 'reasoningDelta') {
-        setStreamItems((items) => mergeReasoning(items, event.delta))
-        return
-      }
-      if (event.type === 'commandExecBegin') {
-        setStreamItems((items) => [...items, { kind: 'command', toolCallId: event.toolCallId, command: event.command, status: 'running', output: [] }])
-        return
-      }
-      if (event.type === 'commandExecOutput') {
-        setStreamItems((items) => mergeCommandOutput(items, event.toolCallId, event.chunk, event.stream))
-        return
-      }
-      if (event.type === 'commandExecEnd') {
-        setStreamItems((items) => items.map((item) => item.kind === 'command' && item.toolCallId === event.toolCallId ? { ...item, status: event.status } : item))
-        return
-      }
-      if (event.type === 'fileChange') {
-        setStreamItems((items) => [...items, { kind: 'file', path: event.path, change: event.kind }])
-        notify('info', `${event.kind} ${event.path}`)
-        return
-      }
-      if (event.type === 'planProposed') {
-        setStreamItems((items) => [...items, { kind: 'plan', steps: event.steps }])
-        return
-      }
-      if (event.type === 'usage') {
-        const tokens = Number(event.tokens || 0)
-        const cost = Number(event.cost || 0)
-        setUsage({ total_tokens: tokens, estimated_cost_usd: cost })
-        setStreamItems((items) => [...items, { kind: 'usage', tokens, cost }])
-        return
+        setError(String((err as Error)?.message || err || 'UI event error'))
       }
     })
     return unsubscribe
@@ -881,15 +909,19 @@ export default function App() {
     try {
       const updated = await window.munroe.appendMessage(project, conversationId, { role: 'user', content: userVisible })
       setConversations((current) => [updated, ...current.filter((c) => c.id !== updated.id)])
+      activeIdRef.current = conversationId
+      setActiveId(conversationId)
       setBusy(true)
       setTurnStartedAt(Date.now())
-      await window.munroe.startTurn({
+      const started = await window.munroe.startTurn({
         cwd: project,
         prompt: fullPrompt,
         model,
         permissions,
         images: attachmentPaths,
-      })
+        conversationId,
+      } as any)
+      if (started?.turnId) setActiveTurnId(started.turnId)
     } catch (e) {
       setBusy(false)
       setActiveTurnId(null)
@@ -897,6 +929,7 @@ export default function App() {
       const message = String((e as Error).message || e)
       setError(message)
       setStreamItems((items) => [...items, { kind: 'error', message }])
+      notify('error', 'Could not start turn', message)
     }
   }
 
@@ -1481,9 +1514,9 @@ export default function App() {
               <button onClick={() => setDraft('/plan')}>Run a plan</button>
             </div>
           </div> : <div className="messages">
-            {messages.map((message: Message, index) => <article key={`${message.createdAt}-${index}`} className={`message ${message.role}`}>
+            {messages.map((message: Message, index) => <article key={`${message.createdAt || index}-${index}`} className={`message ${message.role === 'assistant' ? 'assistant' : 'user'}`}>
               <div className="message-meta">{message.role === 'user' ? 'YOU' : 'MUNROE'}</div>
-              <div className="message-body">{message.content}</div>
+              <div className="message-body">{typeof message.content === 'string' ? message.content : String(message.content ?? '')}</div>
             </article>)}
             {streamItems.map((item, index) => {
               if (item.kind === 'agent') return <article key={`agent-${index}`} className="message assistant"><div className="message-meta">MUNROE</div><div className="message-body">{item.text || ''}</div></article>
@@ -1543,7 +1576,7 @@ export default function App() {
           </div>
           <div className="footer-meta">
             <span><TerminalSquare size={12} /> Munroe can make mistakes. Review changes before shipping. {envSummary ? `· ${envSummary}` : ''}</span>
-            {usage && <span>{usage.total_tokens?.toLocaleString() || 0} tokens · {usage.api_calls || 0} calls</span>}
+            {usage && <span>{Number(usage.total_tokens || 0).toLocaleString()} tokens{typeof usage.estimated_cost_usd === 'number' ? ` · $${Number(usage.estimated_cost_usd || 0).toFixed(4)}` : ''}</span>}
           </div>
         </footer>
       </main>

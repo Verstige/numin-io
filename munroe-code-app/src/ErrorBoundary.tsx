@@ -16,6 +16,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.error) {
+      const message = String(this.state.error?.message || this.state.error || 'Unknown UI error')
       return (
         <div style={{
           height: '100vh',
@@ -27,11 +28,11 @@ export class ErrorBoundary extends Component<Props, State> {
           padding: 24,
           textAlign: 'center',
         }}>
-          <div style={{ maxWidth: 480 }}>
+          <div style={{ maxWidth: 520 }}>
             <div style={{ color: '#c9a84c', letterSpacing: '0.2em', fontSize: 11, marginBottom: 12 }}>MUNROE CODE</div>
             <h1 style={{ fontSize: 22, fontWeight: 500, margin: '0 0 8px' }}>Something went wrong</h1>
             <p style={{ color: '#88888c', fontSize: 13, lineHeight: 1.5 }}>
-              The chat UI hit an unexpected error. Your project is fine — reload the window to continue.
+              The chat UI hit an unexpected error. Your project and API keys are fine — reload and continue the conversation.
             </p>
             <pre style={{
               textAlign: 'left',
@@ -42,26 +43,44 @@ export class ErrorBoundary extends Component<Props, State> {
               fontSize: 11,
               color: '#d97373',
               overflow: 'auto',
-              maxHeight: 160,
+              maxHeight: 180,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
             }}>
-              {this.state.error.message}
+              {message}
             </pre>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              style={{
-                marginTop: 16,
-                background: '#c9a84c',
-                color: '#0d0d0f',
-                border: 0,
-                borderRadius: 8,
-                padding: '10px 16px',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              Reload Munroe Code
-            </button>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 16 }}>
+              <button
+                type="button"
+                onClick={() => this.setState({ error: null })}
+                style={{
+                  background: 'transparent',
+                  color: '#ececea',
+                  border: '1px solid #303035',
+                  borderRadius: 8,
+                  padding: '10px 16px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Try recover
+              </button>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                style={{
+                  background: '#c9a84c',
+                  color: '#0d0d0f',
+                  border: 0,
+                  borderRadius: 8,
+                  padding: '10px 16px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Reload Munroe Code
+              </button>
+            </div>
           </div>
         </div>
       )

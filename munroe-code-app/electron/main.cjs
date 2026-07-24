@@ -250,7 +250,9 @@ ipcMain.handle('munroe:turn:start', async (event, payload) => {
   if (payload.prompt.length > 100000) throw new Error('Message is too long.');
   const project = safeProjectPath(payload.cwd);
   const permissions = payload.permissions ? safePermissions(payload.permissions) : undefined;
+  const conversationId = typeof payload.conversationId === 'string' ? payload.conversationId : null;
   const turnModule = await loadTurn();
+  const api = await loadService();
   const handle = await turnModule.startTurn({
     cwd: project,
     prompt: payload.prompt || 'Review the attached files.',
@@ -258,16 +260,38 @@ ipcMain.handle('munroe:turn:start', async (event, payload) => {
     permissions,
     images: hasImages ? payload.images.filter((p) => typeof p === 'string') : [],
     sessionId: payload.sessionId,
-    onEvent: (event) => {
+    onEvent: async (turnEvent) => {
       try {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('munroe:turn:event', event);
+        // Persist assistant reply in main process so UI races / crashes can't drop it.
+        if (turnEvent?.type === 'turnCompleted' && conversationId && typeof turnEvent.text === 'string' && turnEvent.text.trim()) {
+          try {
+            const updated = await api.appendConversationMessage(project, conversationId, {
+              role: 'assistant',
+              content: turnEvent.text.trim(),
+            });
+            turnEvent = { ...turnEvent, conversation: updated, conversationId };
+          } catch (persistError) {
+            turnEvent = {
+              ...turnEvent,
+              persistError: String(persistError?.message || persistError),
+            };
+          }
         }
-      } catch { /* ignore */ }
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('munroe:turn:event', turnEvent);
+        }
+      } catch {
+        // Never let event delivery kill the turn task.
+      }
     },
   });
   activeTurns.set(handle.turnId, handle);
-  return { turnId: handle.turnId };
+  // Clean up finished turns.
+  void Promise.resolve(handle).then(async () => {
+    // handle has no done promise — rely on events; keep map for interrupt window then drop after 30m
+    setTimeout(() => activeTurns.delete(handle.turnId), 30 * 60 * 1000);
+  });
+  return { turnId: handle.turnId, conversationId };
 });
 
 ipcMain.handle('munroe:turn:interrupt', async (event, turnId) => {

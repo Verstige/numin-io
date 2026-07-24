@@ -56,7 +56,12 @@ export async function listProjects(env = process.env) {
 
 export async function listConversations(cwd) {
   await ensureProjectState(cwd);
-  return readJson(path.join(stateDir(cwd), 'conversations.json'), []);
+  const rows = await readJson(path.join(stateDir(cwd), 'conversations.json'), []);
+  if (!Array.isArray(rows)) return [];
+  return rows.map((item) => ({
+    ...item,
+    messages: Array.isArray(item?.messages) ? item.messages : [],
+  }));
 }
 
 export async function deleteConversation(cwd, conversationId) {
@@ -100,20 +105,23 @@ export async function appendConversationMessage(cwd, conversationId, message) {
   const file = path.join(stateDir(cwd), 'conversations.json');
   let updated;
   await serialize(file, (current) => {
-    const index = current.findIndex((item) => item.id === conversationId);
+    const list = Array.isArray(current) ? current : [];
+    const index = list.findIndex((item) => item.id === conversationId);
     if (index < 0) throw new Error('Conversation not found.');
-    const currentConv = current[index];
-    const nextTitle = currentConv.messages.length === 0 && message.role === 'user'
-      ? message.content.trim().slice(0, 56) || currentConv.title
+    const currentConv = list[index];
+    const existingMessages = Array.isArray(currentConv.messages) ? currentConv.messages : [];
+    const content = typeof message?.content === 'string' ? message.content : String(message?.content ?? '');
+    const nextTitle = existingMessages.length === 0 && message.role === 'user'
+      ? content.trim().slice(0, 56) || currentConv.title
       : currentConv.title;
-    const nextMessage = { ...message, createdAt: new Date().toISOString() };
+    const nextMessage = { role: message.role, content, createdAt: new Date().toISOString() };
     updated = {
       ...currentConv,
       title: nextTitle,
       updatedAt: nextMessage.createdAt,
-      messages: [...currentConv.messages, nextMessage],
+      messages: [...existingMessages, nextMessage],
     };
-    return [updated, ...current.filter((item) => item.id !== conversationId)];
+    return [updated, ...list.filter((item) => item.id !== conversationId)];
   }, []);
   return updated;
 }

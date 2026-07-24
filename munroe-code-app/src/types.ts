@@ -111,7 +111,7 @@ export interface MunroeBridge {
   renameConversation(cwd: string, id: string, title: string): Promise<Conversation>
   clearConversations(cwd: string): Promise<boolean>
   send(payload: { cwd: string; prompt: string; model: string; permissions: 'safe' | 'standard' }): Promise<{ text: string; usage: Usage | null }>
-  startTurn(payload: { cwd: string; prompt: string; model: string; permissions: 'safe' | 'standard'; images?: string[]; sessionId?: string }): Promise<{ turnId: string }>
+  startTurn(payload: { cwd: string; prompt: string; model: string; permissions: 'safe' | 'standard'; images?: string[]; sessionId?: string; conversationId?: string }): Promise<{ turnId: string; conversationId?: string | null }>
   interruptTurn(turnId: string): Promise<{ interrupted: boolean }>
   approveTurn(payload: { turnId: string; approvalId: string; decision: 'approve' | 'reject' | 'always' }): Promise<{ approved: boolean }>
   listThreads(query?: string): Promise<ThreadSummary[]>

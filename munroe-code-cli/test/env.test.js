@@ -61,8 +61,10 @@ test('envWithKeys does not overwrite existing entries', () => {
 
 test('projectRuntimeStatus does not throw on missing home env file', async () => {
   const project = await mkdtemp(path.join(os.tmpdir(), 'munroe-noenv-'));
-  const env = { HOME: '/nonexistent', MUNROE_HOME: '', PATH: process.env.PATH };
+  const isolatedHome = await mkdtemp(path.join(os.tmpdir(), 'munroe-home-'));
+  const env = { HOME: isolatedHome, MUNROE_HOME: path.join(isolatedHome, '.munroe'), PATH: process.env.PATH };
   const status = await projectRuntimeStatus(project, env);
   assert.deepEqual(status.envLayers, []);
   await rm(project, { recursive: true, force: true });
+  await rm(isolatedHome, { recursive: true, force: true });
 });
